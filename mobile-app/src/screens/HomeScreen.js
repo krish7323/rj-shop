@@ -199,6 +199,26 @@ export default function HomeScreen({ navigation }) {
         )}
       </View>
 
+      {/* Features Row */}
+      <View style={styles.featuresRow}>
+        <View style={styles.featureCard}>
+          <Text style={styles.featureIcon}>🛡️</Text>
+          <Text style={styles.featureTitle}>100% Tested</Text>
+        </View>
+        <View style={styles.featureCard}>
+          <Text style={styles.featureIcon}>🛠️</Text>
+          <Text style={styles.featureTitle}>Premium Tools</Text>
+        </View>
+        <View style={styles.featureCard}>
+          <Text style={styles.featureIcon}>💬</Text>
+          <Text style={styles.featureTitle}>Live Chat</Text>
+        </View>
+        <View style={styles.featureCard}>
+          <Text style={styles.featureIcon}>🚗</Text>
+          <Text style={styles.featureTitle}>Store Pick</Text>
+        </View>
+      </View>
+
       {!live && (
         <View style={styles.demoBanner}>
           <Text style={styles.demoBannerText}>Offline Demo Catalog Mode</Text>
@@ -264,7 +284,72 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
       )}
+
+      {/* Social Proof & Trust Factors */}
+      <MobileTestimonials />
+      <MobileFAQ />
     </ScrollView>
+  );
+}
+
+function MobileTestimonials() {
+  const reviews = [
+    { name: "Rohan Sharma", role: "Local Customer", text: "OnePlus 9 was perfect, battery is great!" },
+    { name: "Pooja Hegde", role: "Verified Buyer", text: "WhatsApp checkout was very smooth." },
+    { name: "Amit Patel", role: "DIY Hobbyist", text: "Precision screwdriver kit is premium." }
+  ];
+
+  return (
+    <View style={styles.nativeSection}>
+      <Text style={styles.nativeSectionHeader}>⭐ What Our Customers Say</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
+        {reviews.map((r, idx) => (
+          <View key={idx} style={styles.testimonialCard}>
+            <Text style={styles.testimonialText}>"{r.text}"</Text>
+            <View style={{ marginTop: 8, borderTopWidth: 1, borderColor: "#f1f5f9", paddingTop: 4 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", color: colors.navy }}>{r.name}</Text>
+              <Text style={{ fontSize: 9, color: colors.sub }}>{r.role}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function MobileFAQ() {
+  const faqs = [
+    { q: "Do you offer warranty on Old phones?", a: "Yes! 6-month warranty on manufacturing defects, plus 7-day easy replacement." },
+    { q: "Can I collect in-store today?", a: "Absolutely! Just place the order and collect it at our MG Road store." },
+    { q: "Are the repair kits beginner-friendly?", a: "Yes! Curated for beginners. We also offer guidance via WhatsApp." }
+  ];
+
+  const [openIndex, setOpenIndex] = useState(null);
+
+  return (
+    <View style={[styles.nativeSection, { marginBottom: 30 }]}>
+      <Text style={styles.nativeSectionHeader}>❓ Frequently Asked Questions</Text>
+      <View style={{ paddingHorizontal: 16, gap: 8 }}>
+        {faqs.map((faq, idx) => {
+          const isOpen = openIndex === idx;
+          return (
+            <View key={idx} style={styles.faqCard}>
+              <TouchableOpacity
+                onPress={() => setOpenIndex(isOpen ? null : idx)}
+                style={styles.faqHeader}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.faqQuestion}>{faq.q}</Text>
+                <Ionicons name={isOpen ? "remove" : "add"} size={16} color={colors.sub} />
+              </TouchableOpacity>
+              {isOpen && (
+                <Text style={styles.faqAnswer}>{faq.a}</Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -406,4 +491,67 @@ const styles = StyleSheet.create({
   },
   addBtnDisabled: { opacity: 0.5 },
   addBtnText: { color: colors.navy, fontWeight: "850", fontSize: 12 },
+
+  featuresRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    gap: 8,
+  },
+  featureCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  featureIcon: { fontSize: 18, marginBottom: 2 },
+  featureTitle: { fontSize: 9, fontWeight: "800", color: colors.text },
+
+  nativeSection: {
+    marginTop: spacing.lg,
+    backgroundColor: "#fff",
+    paddingVertical: spacing.md,
+    borderRadius: radius.xl,
+    marginHorizontal: spacing.sm,
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+  },
+  nativeSectionHeader: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  testimonialCard: {
+    width: 200,
+    backgroundColor: colors.bg,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+  },
+  testimonialText: { fontSize: 11, color: colors.sub, fontStyle: "italic", lineHeight: 15 },
+
+  faqCard: {
+    borderBottomWidth: 1,
+    borderColor: "#f1f5f9",
+    paddingVertical: spacing.sm,
+  },
+  faqHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  faqQuestion: { fontSize: 12, fontWeight: "750", color: colors.text, flex: 1, marginRight: 8 },
+  faqAnswer: { fontSize: 11, color: colors.sub, marginTop: 6, lineHeight: 15, paddingHorizontal: 4 },
 });
