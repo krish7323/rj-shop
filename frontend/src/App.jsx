@@ -13,6 +13,7 @@ import CartDrawer from "./components/CartDrawer";
 import Checkout from "./components/Checkout";
 import { CatalogAPI, AuthAPI } from "./lib/api";
 import { DEMO_CATALOG } from "./lib/format";
+import logo from "./assets/logo.png";
 
 function Storefront() {
   const [products, setProducts] = useState([]);
