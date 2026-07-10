@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "RJ Shop",
+    "slug": "rj-shop-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "rjshop",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0d131b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rjshop.mobile"
+    },
+    "android": {
+      "package": "com.rjshop.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0d131b"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:5000/api"
+    }
+  }
+}
