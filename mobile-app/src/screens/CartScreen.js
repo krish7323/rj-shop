@@ -18,6 +18,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
@@ -200,6 +201,21 @@ export default function CartScreen({ navigation }) {
         <TouchableOpacity style={styles.checkoutBtn} onPress={() => setCheckoutOpen(true)}>
           <Text style={styles.checkoutText}>Proceed to Checkout</Text>
           <Ionicons name="arrow-forward" size={18} color={colors.navy} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.checkoutBtn, styles.whatsappBtn]}
+          onPress={() => {
+            const message = `Hi RJ Mobile Store! I want to buy:\n${items
+              .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
+              .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
+            const encoded = encodeURIComponent(message);
+            const phone = "919999999999"; 
+            Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+          }}
+        >
+          <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+          <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
         </TouchableOpacity>
       </View>
 
@@ -406,6 +422,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   checkoutText: { color: colors.navy, fontWeight: "800", fontSize: 15 },
+  whatsappBtn: {
+    backgroundColor: "#10b981",
+    marginTop: spacing.sm,
+  },
 
   modalHeader: {
     flexDirection: "row",

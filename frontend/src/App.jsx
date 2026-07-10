@@ -120,6 +120,14 @@ function Storefront() {
             <p className="max-w-xl text-sm text-slate-300">
               Your local destination for precision mobile repair kits, high-quality pre-owned devices, and cool smart gadgets.
             </p>
+            <a
+              href="https://g.page/r/CfQowZnHRUxZECI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-2 rounded-full bg-accent-500 px-4 py-2 text-xs font-bold text-navy-900 shadow-soft transition hover:bg-accent-400 active:scale-[.97]"
+            >
+              📍 Visit Physical Store / Get Directions
+            </a>
           </div>
         </div>
       </section>
@@ -199,7 +207,12 @@ function Storefront() {
       {/* Footer */}
       <footer className="mt-8 border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} RJ Mobile Store. All rights reserved.</p>
+          <div>
+            <p>© {new Date().getFullYear()} RJ Mobile Store. All rights reserved.</p>
+            <a href="https://g.page/r/CfQowZnHRUxZECI" target="_blank" rel="noopener noreferrer" className="mt-1 block text-xs text-accent-600 hover:underline">
+              📍 Find us on Google Maps (Directions)
+            </a>
+          </div>
           <p className="flex items-center gap-1">
             Powered by MERN · Razorpay · Shiprocket
           </p>

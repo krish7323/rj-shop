@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CatalogAPI } from "../lib/api";
@@ -173,6 +174,13 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.heroSub}>Smart choice · Better life</Text>
           </View>
         </View>
+        <TouchableOpacity
+          style={styles.directionsBtn}
+          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
+        >
+          <Ionicons name="location" size={14} color={colors.navy} />
+          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchWrap}>
@@ -280,6 +288,19 @@ const styles = StyleSheet.create({
   heroSmall: { color: colors.muted, fontSize: 12 },
   heroTitle: { color: "#fff", fontSize: 22, fontWeight: "950", marginTop: 1 },
   heroSub: { color: "#cbd5e1", fontSize: 11, marginTop: 2 },
+  directionsBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 8,
+    marginTop: spacing.md,
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing.md,
+  },
+  directionsText: { color: colors.navy, fontWeight: "800", fontSize: 11 },
 
   searchWrap: {
     flexDirection: "row",
