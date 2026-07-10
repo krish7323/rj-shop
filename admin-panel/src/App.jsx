@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import UsersList from "./pages/UsersList";
 import Orders from "./pages/Orders";
+import Login from "./pages/Login";
 import { AuthAPI, OrderAPI } from "./lib/api";
 
 // View registry maps the sidebar keys to page components + header metadata.
@@ -40,24 +41,7 @@ export default function App() {
   const [view, setView] = useState("dashboard");
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   const [lastOrderId, setLastOrderId] = useState(null);
-
-  // Auto-login hook
-  useEffect(() => {
-    (async () => {
-      if (!localStorage.getItem("rj_admin_token")) {
-        try {
-          const res = await AuthAPI.login("admin@rjshop.com", "admin123");
-          if (res.data.success && res.data.token) {
-            localStorage.setItem("rj_admin_token", res.data.token);
-            console.log("✅ Admin auto-logged in as admin@rjshop.com");
-            window.location.reload();
-          }
-        } catch (err) {
-          console.warn("⚠️ Admin auto-login failed:", err.message);
-        }
-      }
-    })();
-  }, []);
+  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("rj_admin_token"));
 
   // Polling hook to look for new orders
   useEffect(() => {
@@ -92,6 +76,10 @@ export default function App() {
   }, [lastOrderId]);
 
   const { title, subtitle, Component } = VIEWS[view];
+
+  if (!loggedIn) {
+    return <Login onLoginSuccess={() => setLoggedIn(true)} />;
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative">

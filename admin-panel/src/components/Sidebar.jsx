@@ -82,7 +82,13 @@ export default function Sidebar({ active, onNavigate }) {
           </p>
         </div>
 
-        <button className="mt-4 flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-400 transition hover:bg-ink-700/70 hover:text-white">
+        <button
+          onClick={() => {
+            localStorage.removeItem("rj_admin_token");
+            window.location.reload();
+          }}
+          className="mt-4 flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-400 transition hover:bg-ink-700/70 hover:text-white"
+        >
           <LogOut className="h-[18px] w-[18px]" />
           Sign out
         </button>
