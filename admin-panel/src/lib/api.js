@@ -39,4 +39,8 @@ export const OrderAPI = {
   updateStatus: (id, payload) => api.put(`/orders/${id}/status`, payload),
 };
 
+export const AuthAPI = {
+  login: (email, password) => api.post("/auth/login", { email, password }),
+};
+
 export default api;

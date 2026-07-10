@@ -11,7 +11,7 @@ import ProductCard from "./components/ProductCard";
 import ProductModal from "./components/ProductModal";
 import CartDrawer from "./components/CartDrawer";
 import Checkout from "./components/Checkout";
-import { CatalogAPI } from "./lib/api";
+import { CatalogAPI, AuthAPI } from "./lib/api";
 import { DEMO_CATALOG } from "./lib/format";
 
 function Storefront() {
@@ -30,6 +30,19 @@ function Storefront() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      // Silent auto-login for development if no token is found
+      if (!localStorage.getItem("rj_token")) {
+        try {
+          const loginRes = await AuthAPI.login("customer@rjshop.com", "customer123");
+          if (loginRes.data.success && loginRes.data.token) {
+            localStorage.setItem("rj_token", loginRes.data.token);
+            console.log("✅ Storefront auto-logged in as customer@rjshop.com");
+          }
+        } catch (err) {
+          console.warn("⚠️ Storefront auto-login failed:", err.message);
+        }
+      }
+
       try {
         const res = await CatalogAPI.list({ limit: 60 });
         if (!mounted) return;

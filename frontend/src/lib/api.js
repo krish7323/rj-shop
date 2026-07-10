@@ -26,4 +26,8 @@ export const OrderAPI = {
   mine: () => api.get("/orders/my-orders"),
 };
 
+export const AuthAPI = {
+  login: (email, password) => api.post("/auth/login", { email, password }),
+};
+
 export default api;

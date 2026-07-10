@@ -3,13 +3,14 @@
 // Lightweight view-router toggle (no external router) that swaps pages inside a
 // premium layout with a persistent Sidebar and a contextual Topbar.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Search } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import UsersList from "./pages/UsersList";
 import Orders from "./pages/Orders";
+import { AuthAPI } from "./lib/api";
 
 // View registry maps the sidebar keys to page components + header metadata.
 const VIEWS = {
@@ -37,6 +38,24 @@ const VIEWS = {
 
 export default function App() {
   const [view, setView] = useState("dashboard");
+
+  useEffect(() => {
+    (async () => {
+      if (!localStorage.getItem("rj_admin_token")) {
+        try {
+          const res = await AuthAPI.login("admin@rjshop.com", "admin123");
+          if (res.data.success && res.data.token) {
+            localStorage.setItem("rj_admin_token", res.data.token);
+            console.log("✅ Admin auto-logged in as admin@rjshop.com");
+            window.location.reload();
+          }
+        } catch (err) {
+          console.warn("⚠️ Admin auto-login failed:", err.message);
+        }
+      }
+    })();
+  }, []);
+
   const { title, subtitle, Component } = VIEWS[view];
 
   return (
