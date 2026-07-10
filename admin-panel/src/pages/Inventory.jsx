@@ -30,10 +30,9 @@ const EMPTY_FORM = {
 
 // Local demo catalog used only when the backend is unreachable.
 const DEMO_PRODUCTS = [
-  { _id: "p1", name: "Wireless Earbuds Pro", sku: "RJ-EAR-01", category: "Electronics", price: 2499, stock: 3, isActive: true },
-  { _id: "p2", name: "Cotton Kurta (M)", sku: "RJ-KUR-11", category: "Fashion", price: 899, stock: 0, isActive: true },
-  { _id: "p3", name: "Steel Water Bottle", sku: "RJ-BOT-07", category: "Home", price: 449, stock: 40, isActive: true },
-  { _id: "p4", name: "LED Desk Lamp", sku: "RJ-LMP-02", category: "Home", price: 1299, stock: 2, isActive: true },
+  { _id: "p1", name: "Professional 24-in-1 Screwdriver Set", sku: "RJ-KIT-01", category: "Repair Kits", price: 499, stock: 45, isActive: true },
+  { _id: "p2", name: "Pre-Owned iPhone 12 Pro (128GB)", sku: "RJ-PHN-01", category: "Old Phones", price: 34999, stock: 6, isActive: true },
+  { _id: "p3", name: "Magnetic 10000mAh Power Bank", sku: "RJ-GDG-01", category: "Cool Gadgets", price: 1499, stock: 32, isActive: true },
 ];
 
 export default function Inventory() {
@@ -188,7 +187,12 @@ export default function Inventory() {
               </div>
               <div>
                 <label className="label">Category</label>
-                <input name="category" value={form.category} onChange={onChange} className="input" placeholder="Electronics" />
+                <select name="category" value={form.category} onChange={onChange} className="input">
+                  <option value="">Select Category</option>
+                  <option value="Repair Kits">Repair Kits</option>
+                  <option value="Old Phones">Old Phones</option>
+                  <option value="Cool Gadgets">Cool Gadgets</option>
+                </select>
               </div>
             </div>
 

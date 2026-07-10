@@ -13,14 +13,16 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CatalogAPI } from "../lib/api";
 import { DEMO_CATALOG, inr, discountPct } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { colors, radius, spacing } from "../lib/theme";
+import logo from "../assets/logo.png";
 
-const CATEGORIES = ["All", "Electronics", "Fashion", "Home"];
+const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
 function ProductTile({ item, onOpen, onAdd }) {
   const pct = discountPct(item.price, item.mrp);
@@ -96,7 +98,6 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [live, setLive] = useState(false);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -127,72 +128,20 @@ export default function HomeScreen({ navigation }) {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return products.filter((p) => {
-      const catOk = category === "All" || p.category === category;
       const termOk =
         !term ||
         p.name?.toLowerCase().includes(term) ||
         p.brand?.toLowerCase().includes(term) ||
         p.category?.toLowerCase().includes(term);
-      return catOk && termOk;
+      return termOk;
     });
-  }, [products, category, search]);
+  }, [products, search]);
+
+  const repairKits = useMemo(() => filtered.filter((p) => p.category === "Repair Kits"), [filtered]);
+  const oldPhones = useMemo(() => filtered.filter((p) => p.category === "Old Phones"), [filtered]);
+  const coolGadgets = useMemo(() => filtered.filter((p) => p.category === "Cool Gadgets"), [filtered]);
 
   const openProduct = (item) => navigation.navigate("ProductDetails", { product: item });
-
-  const header = (
-    <View>
-      <View style={styles.hero}>
-        <Text style={styles.heroSmall}>Welcome to</Text>
-        <Text style={styles.heroTitle}>
-          RJ <Text style={{ color: colors.accent }}>Shop</Text>
-        </Text>
-        <Text style={styles.heroSub}>Premium picks · Razorpay & COD · Fast shipping</Text>
-      </View>
-
-      <View style={styles.searchWrap}>
-        <Ionicons name="search" size={18} color={colors.muted} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search products, brands…"
-          placeholderTextColor={colors.muted}
-          style={styles.searchInput}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch("")}>
-            <Ionicons name="close-circle" size={18} color={colors.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <FlatList
-        horizontal
-        data={CATEGORIES}
-        keyExtractor={(c) => c}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsRow}
-        renderItem={({ item: c }) => {
-          const active = category === c;
-          return (
-            <TouchableOpacity
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => setCategory(c)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{c}</Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
-
-      <View style={styles.sectionRow}>
-        <Text style={styles.sectionTitle}>
-          {category === "All" ? "All Products" : category}{" "}
-          <Text style={styles.sectionCount}>({filtered.length})</Text>
-        </Text>
-        {!live && <Text style={styles.demoTag}>Demo</Text>}
-      </View>
-    </View>
-  );
 
   if (loading) {
     return (
@@ -203,50 +152,134 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  const hasItems = filtered.length > 0;
+
   return (
-    <FlatList
-      data={filtered}
-      keyExtractor={(item) => item._id}
-      numColumns={2}
-      columnWrapperStyle={styles.column}
+    <ScrollView
+      style={styles.container}
       contentContainerStyle={styles.listContent}
-      ListHeaderComponent={header}
-      renderItem={({ item }) => (
-        <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-      )}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
-      ListEmptyComponent={
+    >
+      <View style={styles.hero}>
+        <View style={styles.heroRow}>
+          <Image source={logo} style={styles.heroLogo} />
+          <View style={styles.heroTextCol}>
+            <Text style={styles.heroSmall}>Welcome to</Text>
+            <Text style={styles.heroTitle}>
+              RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
+            </Text>
+            <Text style={styles.heroSub}>Smart choice · Better life</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.searchWrap}>
+        <Ionicons name="search" size={18} color={colors.muted} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search kits, phones & gadgets…"
+          placeholderTextColor={colors.muted}
+          style={styles.searchInput}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch("")}>
+            <Ionicons name="close-circle" size={18} color={colors.muted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {!live && (
+        <View style={styles.demoBanner}>
+          <Text style={styles.demoBannerText}>Offline Demo Catalog Mode</Text>
+        </View>
+      )}
+
+      {!hasItems ? (
         <View style={styles.center}>
           <Ionicons name="search-outline" size={40} color={colors.muted} />
           <Text style={styles.loadingText}>No products found.</Text>
         </View>
-      }
-      initialNumToRender={6}
-      windowSize={7}
-      removeClippedSubviews
-    />
+      ) : (
+        <View style={styles.sectionsContainer}>
+          {/* Section 1: Mobile Repair Kits */}
+          {repairKits.length > 0 && (
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionHeader}>🛠️ Mobile Repair Kits & Tools</Text>
+              <FlatList
+                horizontal
+                data={repairKits}
+                keyExtractor={(item) => item._id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => (
+                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                )}
+              />
+            </View>
+          )}
+
+          {/* Section 2: Old Phones */}
+          {oldPhones.length > 0 && (
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionHeader}>📱 Pre-Owned & Old Phones</Text>
+              <FlatList
+                horizontal
+                data={oldPhones}
+                keyExtractor={(item) => item._id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => (
+                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                )}
+              />
+            </View>
+          )}
+
+          {/* Section 3: Cool Gadgets */}
+          {coolGadgets.length > 0 && (
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionHeader}>⚡ Cool Gadgets & Accessories</Text>
+              <FlatList
+                horizontal
+                data={coolGadgets}
+                keyExtractor={(item) => item._id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                renderItem={({ item }) => (
+                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                )}
+              />
+            </View>
+          )}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 10 },
   loadingText: { color: colors.sub, fontWeight: "600" },
-  listContent: { backgroundColor: colors.bg, paddingBottom: 24 },
-  column: { paddingHorizontal: spacing.md, gap: spacing.md },
+  listContent: { paddingBottom: 32 },
 
   hero: {
     backgroundColor: colors.navy,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: 54,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
   },
-  heroSmall: { color: colors.muted, fontSize: 13 },
-  heroTitle: { color: "#fff", fontSize: 28, fontWeight: "900", marginTop: 2 },
-  heroSub: { color: "#cbd5e1", fontSize: 12, marginTop: 4 },
+  heroRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  heroLogo: { width: 56, height: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent },
+  heroTextCol: { flex: 1 },
+  heroSmall: { color: colors.muted, fontSize: 12 },
+  heroTitle: { color: "#fff", fontSize: 22, fontWeight: "950", marginTop: 1 },
+  heroSub: { color: "#cbd5e1", fontSize: 11, marginTop: 2 },
 
   searchWrap: {
     flexDirection: "row",
@@ -254,9 +287,9 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: "#fff",
     marginHorizontal: spacing.lg,
-    marginTop: -18,
+    marginTop: -20,
     paddingHorizontal: spacing.md,
-    height: 46,
+    height: 44,
     borderRadius: radius.pill,
     elevation: 3,
     shadowColor: "#000",
@@ -266,78 +299,64 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, color: colors.text },
 
-  chipsRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 8 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: "#fff",
+  demoBanner: {
+    backgroundColor: "#fffbeb",
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { color: colors.sub, fontWeight: "600", fontSize: 13 },
-  chipTextActive: { color: colors.navy },
-
-  sectionRow: {
-    flexDirection: "row",
+    borderColor: "#fef3c7",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
   },
-  sectionTitle: { fontSize: 17, fontWeight: "800", color: colors.text },
-  sectionCount: { color: colors.muted, fontWeight: "600", fontSize: 14 },
-  demoTag: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700",
-    backgroundColor: "#fff",
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
+  demoBannerText: { color: colors.accentDark, fontSize: 11, fontWeight: "700" },
+
+  sectionsContainer: { marginTop: spacing.lg, gap: spacing.lg },
+  sectionWrap: { backgroundColor: "#fff", paddingVertical: spacing.md, borderRadius: radius.xl, marginHorizontal: spacing.sm, borderWidth: 1, borderColor: "#f1f5f9" },
+  sectionHeader: { fontSize: 15, fontWeight: "900", color: colors.text, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  horizontalList: { paddingHorizontal: spacing.md },
 
   tile: {
-    flex: 1,
+    width: 165,
     backgroundColor: colors.card,
     borderRadius: radius.lg,
-    marginBottom: spacing.md,
+    marginRight: spacing.sm,
+    marginBottom: spacing.xs,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#f1f5f9",
-    elevation: 2,
+    elevation: 1.5,
     shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
   },
   imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: "#f8fafc" },
   image: { width: "100%", height: "100%" },
   imageFallback: { alignItems: "center", justifyContent: "center" },
   discountTag: {
     position: "absolute",
-    top: 8,
-    left: 8,
+    top: 6,
+    left: 6,
     backgroundColor: colors.danger,
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
-  discountText: { color: "#fff", fontWeight: "800", fontSize: 11 },
+  discountText: { color: "#fff", fontWeight: "850", fontSize: 10 },
   stockTag: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 6,
+    right: 6,
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
-  stockTagText: { color: "#fff", fontWeight: "700", fontSize: 10 },
+  stockTagText: { color: "#fff", fontWeight: "750", fontSize: 9 },
 
-  tileBody: { padding: spacing.md },
-  brand: { color: colors.accentDark, fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
-  name: { color: colors.text, fontSize: 13, fontWeight: "600", marginTop: 2, minHeight: 34 },
+  tileBody: { padding: spacing.sm },
+  brand: { color: colors.accentDark, fontSize: 9, fontWeight: "850", textTransform: "uppercase" },
+  name: { color: colors.text, fontSize: 12, fontWeight: "700", marginTop: 2, minHeight: 32 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
   ratingBadge: {
     flexDirection: "row",
@@ -349,21 +368,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   ratingText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  reviews: { color: colors.muted, fontSize: 11 },
-  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 6, marginTop: 6 },
-  price: { fontSize: 16, fontWeight: "900", color: colors.text },
-  mrp: { fontSize: 12, color: colors.muted, textDecorationLine: "line-through", marginBottom: 1 },
+  reviews: { color: colors.muted, fontSize: 10 },
+  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 5, marginTop: 5 },
+  price: { fontSize: 15, fontWeight: "900", color: colors.text },
+  mrp: { fontSize: 11, color: colors.muted, textDecorationLine: "line-through", marginBottom: 1 },
 
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    gap: 4,
     backgroundColor: colors.accent,
     borderRadius: radius.pill,
-    paddingVertical: 8,
-    marginTop: 10,
+    paddingVertical: 7,
+    marginTop: 8,
   },
   addBtnDisabled: { opacity: 0.5 },
-  addBtnText: { color: colors.navy, fontWeight: "800", fontSize: 13 },
+  addBtnText: { color: colors.navy, fontWeight: "850", fontSize: 12 },
 });

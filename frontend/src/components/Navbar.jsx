@@ -5,8 +5,9 @@
 import { useEffect, useState } from "react";
 import { Search, ShoppingCart, MapPin, Menu, Store } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import logo from "../assets/logo.png";
 
-const CATEGORIES = ["All", "Electronics", "Fashion", "Home"];
+const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
 export default function Navbar({ search, onSearch, category, onCategory, onCartClick }) {
   const { count } = useCart();
@@ -27,11 +28,9 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
           {/* Brand */}
           <a href="#top" className="flex shrink-0 items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-accent-400 to-accent-600">
-              <Store className="h-5 w-5 text-navy-900" />
-            </span>
+            <img src={logo} alt="RJ Mobile Store Logo" className="h-9 w-9 rounded-lg border border-accent-400 object-cover" />
             <span className="text-lg font-extrabold tracking-tight">
-              RJ<span className="text-accent-400">Shop</span>
+              RJ<span className="text-accent-400"> Mobile Store</span>
             </span>
           </a>
 
@@ -49,7 +48,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
             <input
               value={search}
               onChange={(e) => onSearch(e.target.value)}
-              placeholder="Search RJ Shop for products, brands and more…"
+              placeholder="Search RJ Mobile Store for kits, phones and gadgets…"
               className="w-full rounded-full border border-transparent bg-white px-5 py-2.5 pr-12 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-accent-400/40"
               aria-label="Search products"
             />
@@ -85,7 +84,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
       <div className="bg-navy-800 text-slate-200">
         <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2">
           <span className="mr-1 flex items-center gap-1 text-xs font-semibold text-slate-400">
-            <Menu className="h-4 w-4" /> Shop
+            <Menu className="h-4 w-4" /> Shop Sections
           </span>
           {CATEGORIES.map((c) => {
             const active = category === c;
@@ -93,13 +92,9 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
               <button
                 key={c}
                 onClick={() => onCategory(c)}
-                className={`chip whitespace-nowrap ${
-                  active
-                    ? "bg-accent-500 text-navy-900"
-                    : "text-slate-300 hover:bg-navy-700 hover:text-white"
-                }`}
+                className={`chip whitespace-nowrap text-slate-300 hover:bg-navy-700 hover:text-white`}
               >
-                {c}
+                {c === "All" ? "🔝 Top" : c}
               </button>
             );
           })}

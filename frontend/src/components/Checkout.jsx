@@ -146,7 +146,7 @@ export default function Checkout({ onClose }) {
       key: import.meta.env.VITE_RAZORPAY_KEY || "",
       amount: Math.round(grandTotal * 100),
       currency: "INR",
-      name: "RJ Shop",
+      name: "RJ Mobile Store",
       description: `Order ${order._id}`,
       order_id: order.razorpayOrderId,
       prefill: { name: addr.fullName, contact: addr.phone },

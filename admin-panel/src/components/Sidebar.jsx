@@ -10,6 +10,7 @@ import {
   LogOut,
   Sparkles,
 } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, hint: "Overview & analytics" },
@@ -23,11 +24,9 @@ export default function Sidebar({ active, onNavigate }) {
     <aside className="flex h-screen w-72 shrink-0 flex-col bg-ink-900 text-slate-300">
       {/* Brand */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-soft">
-          <Store className="h-6 w-6 text-white" />
-        </div>
+        <img src={logo} alt="RJ Mobile Store Logo" className="h-11 w-11 rounded-xl border border-brand-500 object-cover" />
         <div>
-          <p className="text-base font-extrabold tracking-tight text-white">RJ Shop</p>
+          <p className="text-sm font-extrabold tracking-tight text-white">RJ Mobile Store</p>
           <p className="text-xs font-medium text-slate-400">Admin Console</p>
         </div>
       </div>
