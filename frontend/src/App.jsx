@@ -204,7 +204,6 @@ function Storefront() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="mt-8 border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row">
           <div>
@@ -213,9 +212,6 @@ function Storefront() {
               📍 Find us on Google Maps (Directions)
             </a>
           </div>
-          <p className="flex items-center gap-1">
-            Powered by MERN · Razorpay · Shiprocket
-          </p>
         </div>
       </footer>
 
