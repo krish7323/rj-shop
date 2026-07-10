@@ -78,15 +78,30 @@ function ProductTile({ item, onOpen, onAdd }) {
           {pct > 0 && <Text style={styles.mrp}>{inr(item.mrp)}</Text>}
         </View>
 
-        <TouchableOpacity
-          style={[styles.addBtn, out && styles.addBtnDisabled]}
-          disabled={out}
-          onPress={() => onAdd(item)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="cart" size={15} color={colors.navy} />
-          <Text style={styles.addBtnText}>{out ? "Sold out" : "Add"}</Text>
-        </TouchableOpacity>
+        <View style={styles.tileActionsRow}>
+          <TouchableOpacity
+            style={[styles.addBtn, { flex: 1, marginTop: 0 }, out && styles.addBtnDisabled]}
+            disabled={out}
+            onPress={() => onAdd(item)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cart" size={14} color={colors.navy} />
+            <Text style={styles.addBtnText}>{out ? "Sold out" : "Add"}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.inquireTileBtn}
+            onPress={() => {
+              const message = `Hi RJ Mobile Store! I am interested in inquiring about the product "${item.name}" (Price: ${inr(item.price)}). Can you please share more details or availability?`;
+              const encoded = encodeURIComponent(message);
+              const phone = "919097377388";
+              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="logo-whatsapp" size={15} color="#15803d" />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -554,4 +569,21 @@ const styles = StyleSheet.create({
   },
   faqQuestion: { fontSize: 12, fontWeight: "750", color: colors.text, flex: 1, marginRight: 8 },
   faqAnswer: { fontSize: 11, color: colors.sub, marginTop: 6, lineHeight: 15, paddingHorizontal: 4 },
+
+  tileActionsRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  inquireTileBtn: {
+    height: 30,
+    width: 32,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: "#16a34a",
+    backgroundColor: "#f0fdf4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

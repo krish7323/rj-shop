@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
@@ -140,31 +141,60 @@ export default function ProductDetailsScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Sticky add bar */}
-      {!out && (
-        <View style={styles.bottomBar}>
-          <View style={styles.qtyBox}>
-            <TouchableOpacity style={styles.qtyBtn} onPress={dec}>
-              <Ionicons name="remove" size={18} color={colors.text} />
-            </TouchableOpacity>
-            <Text style={styles.qtyValue}>{qty}</Text>
-            <TouchableOpacity style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]} onPress={inc} disabled={qty >= cap}>
-              <Ionicons name="add" size={18} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
+      {/* Sticky bottom actions bar */}
+      <View style={styles.bottomBar}>
+        {out ? (
           <TouchableOpacity
-            style={[styles.addBtn, added && { backgroundColor: colors.success }]}
-            onPress={handleAdd}
+            style={[styles.addBtn, { backgroundColor: "#16a34a" }]}
+            onPress={() => {
+              const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
+              const encoded = encodeURIComponent(message);
+              const phone = "919097377388";
+              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+            }}
             activeOpacity={0.85}
           >
-            <Ionicons name={added ? "checkmark" : "cart"} size={18} color={added ? "#fff" : colors.navy} />
-            <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
-              {added ? "Added to Cart" : `Add · ${inr(product.price * qty)}`}
-            </Text>
+            <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+            <Text style={[styles.addBtnText, { color: "#fff" }]}>Inquire via WhatsApp</Text>
           </TouchableOpacity>
-        </View>
-      )}
+        ) : (
+          <View style={{ flex: 1, flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
+            <View style={styles.qtyBox}>
+              <TouchableOpacity style={styles.qtyBtn} onPress={dec}>
+                <Ionicons name="remove" size={18} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.qtyValue}>{qty}</Text>
+              <TouchableOpacity style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]} onPress={inc} disabled={qty >= cap}>
+                <Ionicons name="add" size={18} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.addBtn, added && { backgroundColor: colors.success }]}
+              onPress={handleAdd}
+              activeOpacity={0.85}
+            >
+              <Ionicons name={added ? "checkmark" : "cart"} size={18} color={added ? "#fff" : colors.navy} />
+              <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
+                {added ? "Added" : `Add · ${inr(product.price * qty)}`}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.detailsInquireBtn}
+              onPress={() => {
+                const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
+                const encoded = encodeURIComponent(message);
+                const phone = "919097377388";
+                Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="logo-whatsapp" size={20} color="#15803d" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -293,4 +323,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   addBtnText: { color: colors.navy, fontWeight: "800", fontSize: 15 },
+  detailsInquireBtn: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#16a34a",
+    backgroundColor: "#f0fdf4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
