@@ -132,6 +132,40 @@ function Storefront() {
         </div>
       </section>
 
+      {/* Features Bar */}
+      <section className="mx-auto max-w-7xl px-4 mt-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-soft hover:shadow-card transition duration-300">
+            <span className="text-2xl">🛡️</span>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800">100% Tested Devices</h4>
+              <p className="text-[10px] text-slate-400">40+ checkpoints checklist</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-soft hover:shadow-card transition duration-300">
+            <span className="text-2xl">🛠️</span>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800">Premium Repair Kits</h4>
+              <p className="text-[10px] text-slate-400">Original S2 alloy steel tools</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-soft hover:shadow-card transition duration-300">
+            <span className="text-2xl">💬</span>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800">WhatsApp Live Chat</h4>
+              <p className="text-[10px] text-slate-400">Direct query & orders response</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-soft hover:shadow-card transition duration-300">
+            <span className="text-2xl">🚗</span>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800">Store Pickup / COD</h4>
+              <p className="text-[10px] text-slate-400">Locally hosted MG Road store</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Catalog */}
       <main className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-5 flex items-center justify-between">
@@ -202,6 +236,10 @@ function Storefront() {
             )}
           </div>
         )}
+
+        {/* Social Proof & Trust Factors */}
+        <TestimonialsSection />
+        <FAQSection />
       </main>
 
       <footer className="mt-8 border-t border-slate-200 bg-white">
@@ -222,6 +260,113 @@ function Storefront() {
 
       {checkoutOpen && <Checkout onClose={() => setCheckoutOpen(false)} />}
     </div>
+  );
+}
+
+function FAQSection() {
+  const faqs = [
+    {
+      q: "Do you offer warranty on Old/Refurbished phones?",
+      a: "Yes! Every pre-owned phone sold by RJ Mobile Store comes with a 6-month warranty on manufacturing defects, plus a 7-day easy replacement policy."
+    },
+    {
+      q: "Can I buy online and collect in-store today?",
+      a: "Absolutely! Just place the order or message us on WhatsApp, and we will keep the items ready at our local store for immediate pickup."
+    },
+    {
+      q: "Are the repair kits beginner-friendly?",
+      a: "Yes! Our kits (like the 24-in-1 Precision Screwdriver Set) are curated for both absolute beginners and professional technicians. We also offer free guidance via WhatsApp if you get stuck."
+    },
+    {
+      q: "What is your refund policy for online orders?",
+      a: "We offer a 100% money-back guarantee if the item is damaged in transit or doesn't match the description. Contact us on WhatsApp for instant assistance."
+    }
+  ];
+
+  const [openIndex, setOpenIndex] = useState(null);
+
+  return (
+    <section className="bg-white p-6 rounded-3xl shadow-soft mt-10">
+      <h3 className="mb-6 text-xl font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
+        <span>❓</span> Frequently Asked Questions
+      </h3>
+      <div className="space-y-4">
+        {faqs.map((faq, idx) => {
+          const isOpen = openIndex === idx;
+          return (
+            <div key={idx} className="border-b border-slate-100 pb-3">
+              <button
+                onClick={() => setOpenIndex(isOpen ? null : idx)}
+                className="w-full flex justify-between items-center text-left font-bold text-slate-700 hover:text-accent-500 transition py-2"
+              >
+                <span>{faq.q}</span>
+                <span className="text-xl text-slate-400">{isOpen ? "−" : "+"}</span>
+              </button>
+              {isOpen && (
+                <p className="mt-2 text-sm text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-2xl animate-fade-up">
+                  {faq.a}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection() {
+  const reviews = [
+    {
+      name: "Rohan Sharma",
+      role: "Local Customer",
+      avatar: "https://picsum.photos/seed/rohan/100/100",
+      rating: 5,
+      text: "Bought a refurbished OnePlus 9 from here. The screen is perfect, battery health is 89%, and they gave me a free charging cable! Highly recommended."
+    },
+    {
+      name: "Pooja Hegde",
+      role: "Verified Buyer",
+      avatar: "https://picsum.photos/seed/pooja/100/100",
+      rating: 5,
+      text: "The B-7000 adhesive and screwdriver kit saved my cracked iPhone screen. Ordering via WhatsApp was super easy, got delivery in 2 days."
+    },
+    {
+      name: "Amit Patel",
+      role: "DIY Hobbyist",
+      avatar: "https://picsum.photos/seed/amit/100/100",
+      rating: 5,
+      text: "Excellent service. Visited their local shop for picking up the 3-in-1 charger stand. The staff was polite and let me test the product before paying."
+    }
+  ];
+
+  return (
+    <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-soft mt-10">
+      <h3 className="mb-6 text-xl font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
+        <span>⭐</span> What Our Customers Say
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {reviews.map((r, idx) => (
+          <div key={idx} className="bg-white p-5 rounded-2xl shadow-card hover:shadow-hover transition duration-300 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-1 text-amber-500 mb-2">
+                {[...Array(r.rating)].map((_, i) => (
+                  <span key={i}>★</span>
+                ))}
+              </div>
+              <p className="text-slate-600 text-sm italic">"{r.text}"</p>
+            </div>
+            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-100">
+              <img src={r.avatar} alt={r.name} className="w-8 h-8 rounded-full" />
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">{r.name}</h4>
+                <p className="text-[10px] text-slate-400">{r.role}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
