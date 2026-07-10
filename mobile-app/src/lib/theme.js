@@ -2,14 +2,14 @@
 // Central design tokens for a consistent premium look across screens.
 
 export const colors = {
-  bg: "#f3f4f6",
+  bg: "#f8fafc",
   card: "#ffffff",
-  navy: "#0d131b",
-  navy800: "#131a24",
-  navy700: "#1b2430",
-  accent: "#f59e0b",
-  accentDark: "#d97706",
-  text: "#0d131b",
+  navy: "#020617",
+  navy800: "#0b0f19",
+  navy700: "#0f172a",
+  accent: "#0088ff",
+  accentDark: "#0284c7",
+  text: "#0f172a",
   sub: "#6b7280",
   muted: "#9ca3af",
   border: "#e5e7eb",

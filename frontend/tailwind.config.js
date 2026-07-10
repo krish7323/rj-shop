@@ -7,19 +7,19 @@ export default {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        // Amazon-inspired warm accent + deep navy chrome.
+        // Neon/electric blue accent + sleek deep midnight chrome from logo.
         accent: {
-          50: "#fff8eb",
-          100: "#feefc7",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
+          50: "#f0f9ff",
+          100: "#e0f2fe",
+          400: "#38bdf8",
+          500: "#0088ff",
+          600: "#0284c7",
+          700: "#0369a1",
         },
         navy: {
-          700: "#1b2430",
-          800: "#131a24",
-          900: "#0d131b",
+          700: "#0f172a",
+          800: "#0b0f19",
+          900: "#020617",
         },
       },
       boxShadow: {

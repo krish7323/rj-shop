@@ -150,7 +150,7 @@ export default function Checkout({ onClose }) {
       description: `Order ${order._id}`,
       order_id: order.razorpayOrderId,
       prefill: { name: addr.fullName, contact: addr.phone },
-      theme: { color: "#f59e0b" },
+      theme: { color: "#0088ff" },
       handler: () => finalize(order._id),
       modal: { ondismiss: () => setPlacing(false) },
     };
