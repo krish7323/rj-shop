@@ -162,7 +162,7 @@ export default function CartDrawer({ open, onClose, onCheckout }) {
                   .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
                   .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
                 const encoded = encodeURIComponent(message);
-                const phone = import.meta.env.VITE_WHATSAPP_NUMBER || "919999999999";
+                const phone = import.meta.env.VITE_WHATSAPP_NUMBER || "919097377388";
                 window.open(`https://wa.me/${phone}?text=${encoded}`, "_blank");
               }}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-emerald-600 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-soft transition hover:bg-emerald-100 active:scale-[.97]"

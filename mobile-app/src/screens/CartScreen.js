@@ -210,7 +210,7 @@ export default function CartScreen({ navigation }) {
               .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
               .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
             const encoded = encodeURIComponent(message);
-            const phone = "919999999999"; 
+            const phone = "919097377388"; 
             Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
           }}
         >
