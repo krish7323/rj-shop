@@ -3,7 +3,7 @@
 // dynamic floating cart counter that animates as items are added.
 
 import { useEffect, useState } from "react";
-import { Search, ShoppingCart, MapPin, Menu, Store } from "lucide-react";
+import { Search, ShoppingCart, Menu } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import logo from "../assets/logo.png";
 
@@ -33,15 +33,6 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
               RJ<span className="text-accent-400"> Mobile Store</span>
             </span>
           </a>
-
-          {/* Deliver-to (decorative, Amazon-style) */}
-          <div className="hidden items-center gap-1 text-xs text-slate-300 lg:flex">
-            <MapPin className="h-4 w-4 text-accent-400" />
-            <div className="leading-tight">
-              <p className="text-[11px] text-slate-400">Deliver to</p>
-              <p className="font-semibold text-white">India 560001</p>
-            </div>
-          </div>
 
           {/* Search */}
           <div className="relative flex-1">
