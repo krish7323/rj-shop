@@ -18,6 +18,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 401 unauthorized errors globally to force re-login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("rj_admin_token");
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
+
 // --- Endpoint helpers mapped to our backend routes ---
 export const AdminAPI = {
   overview: () => api.get("/admin/metrics/overview"),
