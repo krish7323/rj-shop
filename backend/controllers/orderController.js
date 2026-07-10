@@ -13,6 +13,7 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const razorpay = require("../services/razorpay");
 const shiprocket = require("../services/shiprocket");
+const { sendWebhookNotification } = require("../services/notification");
 
 // Map the requested public status labels onto the model's status enum.
 // The task specifies Ordered/Shipped/Delivered; we accept those plus the full enum.
@@ -252,6 +253,7 @@ const createOrder = async (req, res) => {
 
     // --- COD: fulfilable immediately → push Shiprocket shipment now ---
     await triggerShiprocket(order);
+    sendWebhookNotification(order);
 
     return res.status(201).json({
       success: true,
@@ -333,6 +335,7 @@ const verifyRazorpayPayment = async (req, res) => {
 
     // Payment succeeded → push the shipment to Shiprocket.
     await triggerShiprocket(order);
+    sendWebhookNotification(order);
 
     return res.status(200).json({
       success: true,
@@ -378,6 +381,7 @@ const razorpayWebhook = async (req, res) => {
         if (order.status === "Pending") order.status = "Confirmed";
         await order.save();
         await triggerShiprocket(order);
+        sendWebhookNotification(order);
       }
     }
 
