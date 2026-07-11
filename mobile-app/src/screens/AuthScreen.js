@@ -91,9 +91,11 @@ export default function AuthScreen({ onAuthSuccess }) {
         }
       }
     } catch (err) {
+      const errMsg = err?.response?.data?.message || 
+        (err?.request ? "Server connection failed. Your phone cannot reach the API server. Please check your network or deploy to Render." : "Invalid credentials. Please try again.");
       Alert.alert(
         "Authentication failed",
-        err?.response?.data?.message || "Invalid credentials. Please try again."
+        errMsg
       );
     } finally {
       setAuthLoading(false);
