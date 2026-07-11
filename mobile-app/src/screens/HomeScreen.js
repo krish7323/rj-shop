@@ -2,7 +2,7 @@
 // Home catalog: a performant FlatList of products fetched live from the backend,
 // with search, category chips, pull-to-refresh, images, names and price tags.
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -15,9 +15,14 @@ import {
   RefreshControl,
   ScrollView,
   Linking,
+  Platform,
+  Dimensions,
+  Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CatalogAPI } from "../lib/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CatalogAPI, AuthAPI } from "../lib/api";
 import { DEMO_CATALOG, inr, discountPct } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { colors, radius, spacing } from "../lib/theme";
@@ -108,12 +113,70 @@ function ProductTile({ item, onOpen, onAdd }) {
 }
 
 export default function HomeScreen({ navigation }) {
-  const { addToCart } = useCart();
+  const { addToCart, setToken } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [live, setLive] = useState(false);
   const [search, setSearch] = useState("");
+
+  // Drawer & Profile states
+  const [currentUser, setCurrentUser] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const scrollRef = useRef(null);
+  const windowWidth = Dimensions.get("window").width;
+  const drawerWidth = windowWidth * 0.78;
+  const drawerAnim = useRef(new Animated.Value(-drawerWidth)).current;
+
+  // Toggle drawer animation
+  useEffect(() => {
+    Animated.timing(drawerAnim, {
+      toValue: drawerOpen ? 0 : -drawerWidth,
+      duration: 250,
+      useNativeDriver: Platform.OS !== "web",
+    }).start();
+  }, [drawerOpen]);
+
+  // Load profile data for header
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await AuthAPI.me();
+        setCurrentUser(res.data.user);
+      } catch {
+        // Ignored
+      }
+    })();
+  }, []);
+
+  const handleSignOut = () => {
+    setDrawerOpen(false);
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("rj_token");
+          setToken(null);
+        },
+      },
+    ]);
+  };
+
+  const handleScrollToOffset = (offset) => {
+    setDrawerOpen(false);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ y: offset, animated: true });
+    }
+  };
+
+  const openUrl = (url) => {
+    setDrawerOpen(false);
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Error", "Could not open link on your device.");
+    });
+  };
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -171,139 +234,241 @@ export default function HomeScreen({ navigation }) {
   const hasItems = filtered.length > 0;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.listContent}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
-      }
-    >
-      <View style={styles.hero}>
-        <View style={styles.heroRow}>
-          <Image source={logo} style={styles.heroLogo} />
-          <View style={styles.heroTextCol}>
-            <Text style={styles.heroSmall}>Welcome to</Text>
-            <Text style={styles.heroTitle}>
-              RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
-            </Text>
-            <Text style={styles.heroSub}>Smart choice · Better life</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.container}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        }
+      >
+        <View style={styles.hero}>
+          <View style={styles.heroRow}>
+            <Image source={logo} style={styles.heroLogo} />
+            <View style={styles.heroTextCol}>
+              <Text style={styles.heroSmall}>Welcome to</Text>
+              <Text style={styles.heroTitle}>
+                RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
+              </Text>
+              <Text style={styles.heroSub}>Smart choice · Better life</Text>
+            </View>
+            <TouchableOpacity onPress={() => setDrawerOpen(true)} style={styles.menuBtn}>
+              <Ionicons name="menu-outline" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={styles.directionsBtn}
+            onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
+          >
+            <Ionicons name="location" size={14} color={colors.navy} />
+            <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={18} color={colors.muted} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search kits, phones & gadgets…"
+            placeholderTextColor={colors.muted}
+            style={styles.searchInput}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")}>
+              <Ionicons name="close-circle" size={18} color={colors.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Features Row */}
+        <View style={styles.featuresRow}>
+          <View style={styles.featureCard}>
+            <Text style={styles.featureIcon}>🛡️</Text>
+            <Text style={styles.featureTitle}>100% Tested</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <Text style={styles.featureIcon}>🛠️</Text>
+            <Text style={styles.featureTitle}>Premium Tools</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <Text style={styles.featureIcon}>💬</Text>
+            <Text style={styles.featureTitle}>Live Chat</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <Text style={styles.featureIcon}>🚗</Text>
+            <Text style={styles.featureTitle}>Store Pick</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.directionsBtn}
-          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
-        >
-          <Ionicons name="location" size={14} color={colors.navy} />
-          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.searchWrap}>
-        <Ionicons name="search" size={18} color={colors.muted} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search kits, phones & gadgets…"
-          placeholderTextColor={colors.muted}
-          style={styles.searchInput}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch("")}>
-            <Ionicons name="close-circle" size={18} color={colors.muted} />
-          </TouchableOpacity>
+        {!live && (
+          <View style={styles.demoBanner}>
+            <Text style={styles.demoBannerText}>Offline Demo Catalog Mode</Text>
+          </View>
         )}
-      </View>
 
-      {/* Features Row */}
-      <View style={styles.featuresRow}>
-        <View style={styles.featureCard}>
-          <Text style={styles.featureIcon}>🛡️</Text>
-          <Text style={styles.featureTitle}>100% Tested</Text>
-        </View>
-        <View style={styles.featureCard}>
-          <Text style={styles.featureIcon}>🛠️</Text>
-          <Text style={styles.featureTitle}>Premium Tools</Text>
-        </View>
-        <View style={styles.featureCard}>
-          <Text style={styles.featureIcon}>💬</Text>
-          <Text style={styles.featureTitle}>Live Chat</Text>
-        </View>
-        <View style={styles.featureCard}>
-          <Text style={styles.featureIcon}>🚗</Text>
-          <Text style={styles.featureTitle}>Store Pick</Text>
-        </View>
-      </View>
+        {!hasItems ? (
+          <View style={styles.center}>
+            <Ionicons name="search-outline" size={40} color={colors.muted} />
+            <Text style={styles.loadingText}>No products found.</Text>
+          </View>
+        ) : (
+          <View style={styles.sectionsContainer}>
+            {/* Section 1: Mobile Repair Kits */}
+            {repairKits.length > 0 && (
+              <View style={styles.sectionWrap}>
+                <Text style={styles.sectionHeader}>🛠️ Mobile Repair Kits & Tools</Text>
+                <FlatList
+                  horizontal
+                  data={repairKits}
+                  keyExtractor={(item) => item._id}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalList}
+                  renderItem={({ item }) => (
+                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                  )}
+                />
+              </View>
+            )}
 
-      {!live && (
-        <View style={styles.demoBanner}>
-          <Text style={styles.demoBannerText}>Offline Demo Catalog Mode</Text>
+            {/* Section 2: Old Phones */}
+            {oldPhones.length > 0 && (
+              <View style={styles.sectionWrap}>
+                <Text style={styles.sectionHeader}>📱 Pre-Owned & Old Phones</Text>
+                <FlatList
+                  horizontal
+                  data={oldPhones}
+                  keyExtractor={(item) => item._id}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalList}
+                  renderItem={({ item }) => (
+                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                  )}
+                />
+              </View>
+            )}
+
+            {/* Section 3: Cool Gadgets */}
+            {coolGadgets.length > 0 && (
+              <View style={styles.sectionWrap}>
+                <Text style={styles.sectionHeader}>⚡ Cool Gadgets & Accessories</Text>
+                <FlatList
+                  horizontal
+                  data={coolGadgets}
+                  keyExtractor={(item) => item._id}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalList}
+                  renderItem={({ item }) => (
+                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                  )}
+                />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Social Proof & Trust Factors */}
+        <MobileTestimonials />
+        <MobileFAQ />
+      </ScrollView>
+
+      {/* Slide Out Hamburger Drawer Overlay */}
+      {drawerOpen && (
+        <View style={StyleSheet.absoluteFill}>
+          {/* Backdrop Touch Mask */}
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={() => setDrawerOpen(false)}
+          />
+
+          {/* Drawer container */}
+          <Animated.View style={[styles.drawerSheet, { width: drawerWidth, transform: [{ translateX: drawerAnim }] }]}>
+            {/* Header with Close option */}
+            <View style={styles.drawerHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Image source={logo} style={{ width: 26, height: 26, borderRadius: radius.sm }} />
+                <Text style={styles.drawerHeaderTitle}>RJ STORE MENU</Text>
+              </View>
+              <TouchableOpacity onPress={() => setDrawerOpen(false)}>
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Profile Info Box */}
+            <View style={styles.drawerProfile}>
+              <Text style={styles.loggedLabel}>LOGGED IN AS</Text>
+              <Text style={styles.profileName} numberOfLines={1}>{currentUser?.name || "Customer"}</Text>
+              <Text style={styles.profileEmail} numberOfLines={1}>{currentUser?.email || "pending..."}</Text>
+              
+              <TouchableOpacity 
+                style={styles.drawerOrdersBtn} 
+                onPress={() => {
+                  setDrawerOpen(false);
+                  navigation.navigate("OrdersTab");
+                }}
+              >
+                <Text style={styles.drawerOrdersBtnText}>📦 View My Orders</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.drawerSignoutBtn} onPress={handleSignOut}>
+                <Text style={styles.drawerSignoutBtnText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Navigation options */}
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 14 }}>
+              <Text style={styles.menuLabel}>SHOP CATALOG</Text>
+              
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(0)}>
+                <Ionicons name="home-outline" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Top / Home</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(260)}>
+                <Ionicons name="build-outline" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Repair Kits & Tools</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(680)}>
+                <Ionicons name="phone-portrait-outline" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Pre-Owned Devices</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(1100)}>
+                <Ionicons name="flash-outline" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Smart Gadgets</Text>
+              </TouchableOpacity>
+
+              <View style={styles.drawerDivider} />
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => openUrl("https://maps.google.com/?q=MG+Road+Mobile+Store")}>
+                <Ionicons name="location-outline" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Visit Physical Store</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => openUrl("https://instagram.com/rjmobilerepairing")}>
+                <Ionicons name="logo-instagram" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Instagram Profile</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => openUrl("https://facebook.com/rjmobilerepairing")}>
+                <Ionicons name="logo-facebook" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>Facebook Page</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => openUrl("https://youtube.com/@rjmobile-repairing")}>
+                <Ionicons name="logo-youtube" size={16} color={colors.accent} />
+                <Text style={styles.menuItemText}>YouTube Channel</Text>
+              </TouchableOpacity>
+            </ScrollView>
+
+            <Text style={styles.drawerCopy}>© 2026 RJ Mobile Store.</Text>
+          </Animated.View>
         </View>
       )}
-
-      {!hasItems ? (
-        <View style={styles.center}>
-          <Ionicons name="search-outline" size={40} color={colors.muted} />
-          <Text style={styles.loadingText}>No products found.</Text>
-        </View>
-      ) : (
-        <View style={styles.sectionsContainer}>
-          {/* Section 1: Mobile Repair Kits */}
-          {repairKits.length > 0 && (
-            <View style={styles.sectionWrap}>
-              <Text style={styles.sectionHeader}>🛠️ Mobile Repair Kits & Tools</Text>
-              <FlatList
-                horizontal
-                data={repairKits}
-                keyExtractor={(item) => item._id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                )}
-              />
-            </View>
-          )}
-
-          {/* Section 2: Old Phones */}
-          {oldPhones.length > 0 && (
-            <View style={styles.sectionWrap}>
-              <Text style={styles.sectionHeader}>📱 Pre-Owned & Old Phones</Text>
-              <FlatList
-                horizontal
-                data={oldPhones}
-                keyExtractor={(item) => item._id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                )}
-              />
-            </View>
-          )}
-
-          {/* Section 3: Cool Gadgets */}
-          {coolGadgets.length > 0 && (
-            <View style={styles.sectionWrap}>
-              <Text style={styles.sectionHeader}>⚡ Cool Gadgets & Accessories</Text>
-              <FlatList
-                horizontal
-                data={coolGadgets}
-                keyExtractor={(item) => item._id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                )}
-              />
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* Social Proof & Trust Factors */}
-      <MobileTestimonials />
-      <MobileFAQ />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -585,5 +750,129 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0fdf4",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  // Drawer styling
+  menuBtn: {
+    height: 40,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(3, 7, 18, 0.65)",
+    zIndex: 9999,
+  },
+  drawerSheet: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "#0d131b",
+    zIndex: 10000,
+    borderRightWidth: 1,
+    borderRightColor: "#1e293b",
+    paddingTop: Platform.OS === "ios" ? 54 : 32,
+  },
+  drawerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1e293b",
+  },
+  drawerHeaderTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#fff",
+    letterSpacing: 0.5,
+  },
+  drawerProfile: {
+    backgroundColor: "#030712",
+    margin: 16,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: "#1e293b",
+  },
+  loggedLabel: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: colors.accent,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  profileName: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#fff",
+  },
+  profileEmail: {
+    fontSize: 12,
+    color: colors.muted,
+    marginTop: 2,
+    marginBottom: 12,
+  },
+  drawerOrdersBtn: {
+    backgroundColor: "#2563eb",
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  drawerOrdersBtnText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  drawerSignoutBtn: {
+    backgroundColor: "#1e293b",
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ef444455",
+  },
+  drawerSignoutBtnText: {
+    color: "#f87171",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  menuLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#64748b",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 8,
+  },
+  menuItemText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#cbd5e1",
+  },
+  drawerDivider: {
+    height: 1,
+    backgroundColor: "#1e293b",
+    marginVertical: 4,
+  },
+  drawerCopy: {
+    fontSize: 10,
+    color: "#475569",
+    textAlign: "center",
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#1e293b",
   },
 });
