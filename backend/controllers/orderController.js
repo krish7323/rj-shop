@@ -78,6 +78,7 @@ const createOrder = async (req, res) => {
       shippingPrice = 0,
       taxPrice = 0,
       clientTotal,
+      upiTransactionId,
     } = req.body;
 
     // --- Validate payload shape ---
@@ -86,10 +87,15 @@ const createOrder = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Order must contain at least one item" });
     }
-    if (!paymentMethod || !["COD", "Razorpay"].includes(paymentMethod)) {
+    if (!paymentMethod || !["COD", "Razorpay", "UPI"].includes(paymentMethod)) {
       return res
         .status(400)
-        .json({ success: false, message: "paymentMethod must be 'COD' or 'Razorpay'" });
+        .json({ success: false, message: "paymentMethod must be 'COD', 'Razorpay', or 'UPI'" });
+    }
+    if (paymentMethod === "UPI" && (!upiTransactionId || !upiTransactionId.trim())) {
+      return res
+        .status(400)
+        .json({ success: false, message: "UPI Transaction UTR/Ref ID is required for online UPI payments." });
     }
     if (!shippingAddress || typeof shippingAddress !== "object") {
       return res
@@ -214,7 +220,8 @@ const createOrder = async (req, res) => {
       taxPrice: tax,
       totalPrice,
       paymentMethod,
-      // COD is confirmed immediately; Razorpay stays Pending until payment verified.
+      upiTransactionId: paymentMethod === "UPI" ? upiTransactionId.trim() : "",
+      // COD is confirmed immediately; Razorpay & UPI stay Pending until payment verified.
       status: paymentMethod === "COD" ? "Confirmed" : "Pending",
       paymentStatus: "Pending",
     });
@@ -248,6 +255,15 @@ const createOrder = async (req, res) => {
               keyId: process.env.RAZORPAY_KEY_ID || null,
             }
           : null,
+      });
+    }
+
+    if (paymentMethod === "UPI") {
+      sendWebhookNotification(order);
+      return res.status(201).json({
+        success: true,
+        message: "Order placed successfully. Waiting for admin UPI verification.",
+        order,
       });
     }
 

@@ -77,6 +77,8 @@ export default function Checkout({ onClose }) {
   const [step, setStep] = useState(0);
   const [addr, setAddr] = useState(EMPTY_ADDR);
   const [payment, setPayment] = useState("COD");
+  const [utr, setUtr] = useState("");
+  const [utrError, setUtrError] = useState(null);
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);
   const [placed, setPlaced] = useState(null); // { id, method }
@@ -104,16 +106,30 @@ export default function Checkout({ onClose }) {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const placeOrder = async () => {
-    setPlacing(true);
     setApiError(null);
+    setUtrError(null);
+
+    if (payment === "UPI") {
+      const trimmedUtr = utr.trim();
+      if (!trimmedUtr) {
+        setUtrError("Please enter your 12-digit UPI Transaction UTR Number.");
+        return;
+      }
+      if (!/^[0-9]{12}$/.test(trimmedUtr)) {
+        setUtrError("UPI Reference (UTR) number must be exactly 12 digits.");
+        return;
+      }
+    }
+
+    setPlacing(true);
 
     const payload = {
       items: items.map((i) => ({ product: i._id, quantity: i.qty })),
       shippingAddress: addr,
       paymentMethod: payment,
-      // shipping computed by cart; server recomputes item prices from catalog.
       shippingPrice: shipping,
       taxPrice: 0,
+      upiTransactionId: payment === "UPI" ? utr.trim() : "",
     };
 
     try {
@@ -279,13 +295,69 @@ export default function Checkout({ onClose }) {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-200 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Paying via</p>
-                <p className="mt-1 flex items-center gap-2 font-semibold text-slate-800">
-                  {payment === "Razorpay" ? <CreditCard className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
-                  {payment === "Razorpay" ? "Razorpay Secure Gateway" : "Cash on Delivery"}
-                </p>
+              <div className="space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Select Payment Method</p>
+                
+                <PaymentOption
+                  active={payment === "COD"}
+                  onClick={() => setPayment("COD")}
+                  icon={Wallet}
+                  title="Cash on Delivery (COD)"
+                  desc="Pay cash at your doorstep when device/kit arrives."
+                />
+
+                <PaymentOption
+                  active={payment === "UPI"}
+                  onClick={() => setPayment("UPI")}
+                  icon={CreditCard}
+                  title="Direct UPI Transfer (0% Fee)"
+                  desc="Scan QR Code or pay directly to UPI ID. Fast & Free."
+                  badge="Recommended"
+                />
               </div>
+
+              {payment === "UPI" && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4 animate-fade-up">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Scan to Pay {inr(grandTotal)}</p>
+                    
+                    {/* Dynamic QR Code */}
+                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                          `upi://pay?pa=8999351543@ybl&pn=RJ%20Mobile%25Store&am=${grandTotal}&cu=INR`
+                        )}`}
+                        alt="UPI Payment QR Code"
+                        className="h-44 w-44 object-contain mx-auto"
+                      />
+                    </div>
+                    
+                    <p className="text-xs text-slate-500 font-medium">
+                      Scan from GPay, PhonePe, Paytm, or BHIM apps
+                    </p>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-4 space-y-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Official Shop UPI ID</span>
+                      <p className="text-sm font-mono font-bold text-slate-800 select-all">8999351543@ybl</p>
+                    </div>
+
+                    <div>
+                      <label className="lbl block">UPI Transaction UTR / Ref Number (12 Digits)</label>
+                      <input
+                        type="text"
+                        maxLength={12}
+                        placeholder="Enter the 12-digit number from your payment confirmation screen"
+                        value={utr}
+                        onChange={(e) => setUtr(e.target.value.replace(/\D/g, ""))}
+                        className="field w-full mt-1 font-mono font-bold text-sm tracking-widest"
+                      />
+                      {utrError && <p className="mt-1 text-xs text-rose-600 font-bold">{utrError}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
                 {items.map((i) => (

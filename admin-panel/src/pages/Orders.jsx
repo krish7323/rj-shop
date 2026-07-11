@@ -100,15 +100,24 @@ export default function Orders() {
                       {o.user?.name || "—"}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="flex items-center gap-1.5 text-slate-600">
-                        {o.paymentMethod === "Razorpay" ? (
-                          <CreditCard className="h-4 w-4 text-brand-600" />
-                        ) : (
-                          <Wallet className="h-4 w-4 text-emerald-600" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+                          {o.paymentMethod === "Razorpay" ? (
+                            <CreditCard className="h-3.5 w-3.5 text-brand-500" />
+                          ) : o.paymentMethod === "UPI" ? (
+                            <span className="text-[12px]">⚡</span>
+                          ) : (
+                            <Wallet className="h-3.5 w-3.5 text-emerald-500" />
+                          )}
+                          {o.paymentMethod}
+                          <StatusPill status={o.paymentStatus} />
+                        </span>
+                        {o.paymentMethod === "UPI" && o.upiTransactionId && (
+                          <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 self-start select-all" title="Click to copy Transaction UTR">
+                            UTR: {o.upiTransactionId}
+                          </span>
                         )}
-                        {o.paymentMethod}
-                        <StatusPill status={o.paymentStatus} />
-                      </span>
+                      </div>
                     </td>
                      <td className="px-5 py-3.5">
                       <select

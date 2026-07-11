@@ -104,12 +104,12 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Payment method: COD or Razorpay only.
+    // Payment method: COD, Razorpay, or UPI.
     paymentMethod: {
       type: String,
       enum: {
-        values: ["COD", "Razorpay"],
-        message: "Payment method must be COD or Razorpay",
+        values: ["COD", "Razorpay", "UPI"],
+        message: "Payment method must be COD, Razorpay, or UPI",
       },
       required: [true, "Payment method is required"],
     },
@@ -123,6 +123,9 @@ const orderSchema = new mongoose.Schema(
       },
       default: "Pending",
     },
+
+    // UPI Transaction Ref / UTR
+    upiTransactionId: { type: String, default: "" },
 
     // Razorpay gateway references (populated after a successful transaction).
     razorpayOrderId: { type: String, default: "" },

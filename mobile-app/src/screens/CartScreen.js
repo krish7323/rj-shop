@@ -53,6 +53,7 @@ export default function CartScreen({ navigation }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [addr, setAddr] = useState(EMPTY_ADDR);
   const [payment, setPayment] = useState("COD");
+  const [utr, setUtr] = useState("");
   const [placing, setPlacing] = useState(false);
 
   const onAddr = (key, val) => setAddr((a) => ({ ...a, [key]: val }));
@@ -83,6 +84,18 @@ export default function CartScreen({ navigation }) {
       return;
     }
 
+    if (payment === "UPI") {
+      const trimmedUtr = utr.trim();
+      if (!trimmedUtr) {
+        Alert.alert("Enter Reference ID", "Please enter the 12-digit UPI Transaction UTR number.");
+        return;
+      }
+      if (!/^[0-9]{12}$/.test(trimmedUtr)) {
+        Alert.alert("Invalid Reference ID", "UPI Transaction UTR number must be exactly 12 digits.");
+        return;
+      }
+    }
+
     setPlacing(true);
     const payload = {
       items: items.map((i) => ({ product: i._id, quantity: i.qty })),
@@ -90,6 +103,7 @@ export default function CartScreen({ navigation }) {
       paymentMethod: payment,
       shippingPrice: shipping,
       taxPrice: 0,
+      upiTransactionId: payment === "UPI" ? utr.trim() : "",
     };
 
     try {
@@ -259,32 +273,63 @@ export default function CartScreen({ navigation }) {
             <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="847239" keyboardType="number-pad" />
 
             <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Payment Method</Text>
-            <View style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              backgroundColor: "#f8fafc",
-              padding: 16,
-              borderRadius: radius.lg,
-              borderWidth: 1,
-              borderColor: "#e2e8f0",
-              marginTop: 8,
-            }}>
-              <View style={{
-                height: 38,
-                width: 38,
-                borderRadius: 19,
-                backgroundColor: colors.accent,
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                <Ionicons name="cash" size={20} color={colors.navy} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: "800", color: colors.text, fontSize: 13 }}>Cash on Delivery (COD)</Text>
-                <Text style={{ fontSize: 11, color: colors.sub, marginTop: 2 }}>Pay in cash when your order arrives at your doorstep.</Text>
-              </View>
+            <View style={{ gap: 10, marginTop: 8 }}>
+              <PayOption
+                active={payment === "COD"}
+                onPress={() => setPayment("COD")}
+                icon="cash-outline"
+                title="Cash on Delivery (COD)"
+                desc="Pay cash at your doorstep when device/kit arrives."
+              />
+
+              <PayOption
+                active={payment === "UPI"}
+                onPress={() => setPayment("UPI")}
+                icon="card-outline"
+                title="Direct UPI Transfer (0% Fee)"
+                desc="Pay directly using GPay, PhonePe, or Paytm."
+                badge="Free"
+              />
             </View>
+
+            {payment === "UPI" && (
+              <View style={styles.upiDetailsCard}>
+                <Text style={styles.upiInstructionTitle}>Transfer Details</Text>
+                <Text style={styles.upiInstructionText}>
+                  Please transfer exactly <Text style={{ fontWeight: "bold", color: colors.text }}>{inr(grandTotal)}</Text> to our official shop UPI ID:
+                </Text>
+                
+                <View style={styles.upiIdContainer}>
+                  <Text style={styles.upiIdText}>8999351543@ybl</Text>
+                </View>
+                
+                <TouchableOpacity
+                  style={styles.upiAppBtn}
+                  onPress={() => {
+                    const url = `upi://pay?pa=8999351543@ybl&pn=RJ%20Mobile%25Store&am=${grandTotal}&cu=INR`;
+                    Linking.openURL(url).catch(() => {
+                      Alert.alert("Could not open UPI app", "Please copy the UPI ID and pay from your banking app.");
+                    });
+                  }}
+                >
+                  <Ionicons name="flash-outline" size={16} color={colors.navy} />
+                  <Text style={styles.upiAppBtnText}>Pay via installed UPI Apps</Text>
+                </TouchableOpacity>
+
+                <View style={{ marginTop: 12 }}>
+                  <Text style={styles.fieldLabel}>UPI Transaction UTR / Ref Number (12 Digits)</Text>
+                  <TextInput
+                    style={[styles.input, { fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", fontWeight: "bold", letterSpacing: 1.5 }]}
+                    placeholder="12-digit reference number"
+                    placeholderTextColor={colors.muted}
+                    value={utr}
+                    onChangeText={(val) => setUtr(val.replace(/\D/g, ""))}
+                    keyboardType="number-pad"
+                    maxLength={12}
+                  />
+                </View>
+              </View>
+            )}
 
             <View style={styles.modalSummary}>
               <SummaryRow label="Items" value={inr(subtotal)} />
@@ -507,4 +552,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   placeBtnText: { color: colors.navy, fontWeight: "900", fontSize: 16 },
+
+  // UPI instructions styles
+  upiDetailsCard: { backgroundColor: "#f8fafc", borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, marginTop: 4, marginBottom: 12 },
+  upiInstructionTitle: { fontSize: 13, fontWeight: "800", color: colors.text, marginBottom: 4 },
+  upiInstructionText: { fontSize: 12, color: colors.sub, lineHeight: 18 },
+  upiIdContainer: { backgroundColor: "#fff", borderStyle: "dashed", borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 10, alignItems: "center", marginVertical: 10 },
+  upiIdText: { fontSize: 16, fontWeight: "900", color: colors.text, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", letterSpacing: 1 },
+  upiAppBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: colors.accent, paddingVertical: 10, borderRadius: radius.pill, marginTop: 4 },
+  upiAppBtnText: { color: colors.navy, fontWeight: "800", fontSize: 13 },
 });
