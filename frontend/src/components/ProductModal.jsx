@@ -3,7 +3,7 @@
 // a quantity selector and an Add-to-Cart action.
 
 import { useState } from "react";
-import { X, Star, ShoppingCart, Check, Plus, Minus, ImageOff, ShieldCheck, Truck } from "lucide-react";
+import { X, Star, ShoppingCart, Check, Plus, Minus, ImageOff } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { inr, discountPct } from "../lib/format";
 
@@ -130,16 +130,6 @@ export default function ProductModal({ product, onClose }) {
               </svg>
               Inquire via WhatsApp
             </button>
-
-            {/* Trust badges */}
-            <div className="mt-6 grid grid-cols-2 gap-3 text-xs text-slate-500">
-              <span className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                <ShieldCheck className="h-4 w-4 text-accent-600" /> Secure Razorpay & COD
-              </span>
-              <span className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                <Truck className="h-4 w-4 text-accent-600" /> Shiprocket delivery
-              </span>
-            </div>
           </div>
         </div>
       </div>
