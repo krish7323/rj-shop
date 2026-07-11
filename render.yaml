@@ -39,7 +39,6 @@ services:
           name: rj-mobile-backend
           type: web
           property: host
-        value: https://${HOST}/api
 
   # 3. Admin Panel Static Site
   - type: web
@@ -54,4 +53,3 @@ services:
           name: rj-mobile-backend
           type: web
           property: host
-        value: https://${HOST}/api
