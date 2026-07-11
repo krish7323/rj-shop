@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { Bell, Search, Menu } from "lucide-react";
 import Sidebar from "./components/Sidebar";
+import logo from "./assets/logo.png";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import UsersList from "./pages/UsersList";
@@ -97,6 +98,16 @@ export default function App() {
             >
               <Menu className="h-5 w-5" />
             </button>
+
+            {/* Show Logo when sidebar is closed */}
+            {!sidebarOpen && (
+              <img
+                src={logo}
+                alt="RJ Mobile Store Logo"
+                className="h-10 w-10 rounded-xl border border-brand-500 object-cover"
+              />
+            )}
+
             <div>
               <h1 className="text-xl font-extrabold tracking-tight text-slate-900">{title}</h1>
               <p className="text-sm font-medium text-slate-400">{subtitle}</p>
