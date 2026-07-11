@@ -51,7 +51,7 @@ export default function CartScreen({ navigation }) {
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [addr, setAddr] = useState(EMPTY_ADDR);
-  const [payment, setPayment] = useState("Razorpay");
+  const [payment, setPayment] = useState("COD");
   const [placing, setPlacing] = useState(false);
 
   const onAddr = (key, val) => setAddr((a) => ({ ...a, [key]: val }));
@@ -249,22 +249,32 @@ export default function CartScreen({ navigation }) {
             <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="847239" keyboardType="number-pad" />
 
             <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Payment Method</Text>
-
-            <PayOption
-              active={payment === "Razorpay"}
-              onPress={() => setPayment("Razorpay")}
-              icon="card"
-              title="Razorpay Secure Gateway"
-              desc="UPI, cards, netbanking & wallets"
-              badge="Recommended"
-            />
-            <PayOption
-              active={payment === "COD"}
-              onPress={() => setPayment("COD")}
-              icon="cash"
-              title="Cash on Delivery"
-              desc="Pay in cash when it arrives"
-            />
+            <View style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              backgroundColor: "#f8fafc",
+              padding: 16,
+              borderRadius: radius.lg,
+              borderWidth: 1,
+              borderColor: "#e2e8f0",
+              marginTop: 8,
+            }}>
+              <View style={{
+                height: 38,
+                width: 38,
+                borderRadius: 19,
+                backgroundColor: colors.accent,
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <Ionicons name="cash" size={20} color={colors.navy} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: "800", color: colors.text, fontSize: 13 }}>Cash on Delivery (COD)</Text>
+                <Text style={{ fontSize: 11, color: colors.sub, marginTop: 2 }}>Pay in cash when your order arrives at your doorstep.</Text>
+              </View>
+            </View>
 
             <View style={styles.modalSummary}>
               <SummaryRow label="Items" value={inr(subtotal)} />

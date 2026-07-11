@@ -22,7 +22,7 @@ import { useCart } from "../context/CartContext";
 import { OrderAPI } from "../lib/api";
 import { inr } from "../lib/format";
 
-const STEPS = ["Address", "Payment", "Review"];
+const STEPS = ["Address", "Review"];
 
 const EMPTY_ADDR = {
   fullName: "",
@@ -76,7 +76,7 @@ export default function Checkout({ onClose }) {
   const { items, subtotal, shipping, grandTotal, savings, clearCart } = useCart();
   const [step, setStep] = useState(0);
   const [addr, setAddr] = useState(EMPTY_ADDR);
-  const [payment, setPayment] = useState("Razorpay");
+  const [payment, setPayment] = useState("COD");
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);
   const [placed, setPlaced] = useState(null); // { id, method }
@@ -265,36 +265,6 @@ export default function Checkout({ onClose }) {
           )}
 
           {step === 1 && (
-            <div className="animate-fade-up space-y-4">
-              <div className="flex items-center gap-2 text-slate-800">
-                <CreditCard className="h-5 w-5 text-accent-600" />
-                <h3 className="text-base font-bold">Payment Method</h3>
-              </div>
-
-              <PaymentOption
-                active={payment === "Razorpay"}
-                onClick={() => setPayment("Razorpay")}
-                icon={CreditCard}
-                title="Razorpay Secure Gateway"
-                desc="Pay with UPI, cards, netbanking & wallets. 256-bit encrypted."
-                badge="Recommended"
-              />
-              <PaymentOption
-                active={payment === "COD"}
-                onClick={() => setPayment("COD")}
-                icon={Wallet}
-                title="Cash on Delivery"
-                desc="Pay in cash when your order arrives at your doorstep."
-              />
-
-              <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                <ShieldCheck className="h-5 w-5" />
-                Your payment and personal details are fully protected.
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
             <div className="animate-fade-up space-y-4">
               <div className="flex items-center gap-2 text-slate-800">
                 <ShieldCheck className="h-5 w-5 text-accent-600" />
