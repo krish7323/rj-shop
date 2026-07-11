@@ -331,15 +331,6 @@ function Storefront() {
                   <MapPin className="h-4 w-4 text-accent-400 shrink-0" />
                   <span>Visit Physical Store</span>
                 </a>
-                <a
-                  href="https://wa.me/918999351543?text=Hi%20RJ%20Mobile%20Store%2C%20I%20have%20a%20query%20regarding%20devices"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition w-full"
-                >
-                  <MessageCircle className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>WhatsApp Live Assistance</span>
-                </a>
               </div>
             </div>
 
