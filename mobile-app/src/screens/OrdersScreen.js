@@ -409,12 +409,29 @@ export default function OrdersScreen({ navigation }) {
       keyExtractor={(o) => o._id}
       contentContainerStyle={{ padding: spacing.lg, paddingBottom: 24 }}
       ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={styles.title}>My Orders</Text>
-          <TouchableOpacity onPress={handleSignOut} style={styles.signoutBtn}>
-            <Ionicons name="log-out-outline" size={16} color={colors.danger} />
-            <Text style={styles.signoutText}>Sign Out</Text>
-          </TouchableOpacity>
+        <View style={{ marginBottom: spacing.md }}>
+          <View style={styles.header}>
+            <Text style={styles.title}>My Orders</Text>
+            <TouchableOpacity onPress={handleSignOut} style={styles.signoutBtn}>
+              <Ionicons name="log-out-outline" size={16} color={colors.danger} />
+              <Text style={styles.signoutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {orders.length > 0 && (
+            <View style={styles.statsCard}>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>TOTAL ORDERS</Text>
+                <Text style={styles.statVal}>{orders.length}</Text>
+              </View>
+              <View style={[styles.statBox, { borderLeftWidth: 1, borderLeftColor: colors.border }]}>
+                <Text style={styles.statLabel}>PENDING DELIVERY</Text>
+                <Text style={[styles.statVal, { color: colors.accentDark }]}>
+                  {orders.filter((o) => o.status !== "Delivered" && o.status !== "Cancelled").length}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       }
       renderItem={({ item }) => <OrderCard order={item} />}
@@ -524,4 +541,10 @@ const styles = StyleSheet.create({
   toggleText: { color: colors.accentDark, fontSize: 13, fontWeight: "700" },
   signoutBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: "#fff5f5" },
   signoutText: { color: colors.danger, fontSize: 12, fontWeight: "800" },
+
+  // Stats Card Styles
+  statsCard: { flexDirection: "row", backgroundColor: "#fff", borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingVertical: 12, marginTop: 8, elevation: 1 },
+  statBox: { flex: 1, alignItems: "center", justifyContent: "center" },
+  statLabel: { fontSize: 9, color: colors.muted, fontWeight: "700" },
+  statVal: { fontSize: 16, fontWeight: "900", color: colors.text, marginTop: 2 },
 });

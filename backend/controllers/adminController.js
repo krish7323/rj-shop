@@ -70,6 +70,15 @@ const topCustomers = async (req, res) => {
           _id: "$user",
           totalSpent: { $sum: "$totalPrice" },
           orderCount: { $sum: 1 },
+          pendingCount: {
+            $sum: {
+              $cond: [
+                { $in: ["$status", ["Delivered", "Cancelled"]] },
+                0,
+                1
+              ]
+            }
+          },
           lastOrderAt: { $max: "$createdAt" },
         },
       },
@@ -93,6 +102,7 @@ const topCustomers = async (req, res) => {
           isVerified: "$user.isVerified",
           totalSpent: { $round: ["$totalSpent", 2] },
           orderCount: 1,
+          pendingCount: 1,
           lastOrderAt: 1,
         },
       },

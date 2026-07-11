@@ -10,11 +10,11 @@ import { inr, dateShort } from "../lib/format";
 import { Loading, Empty } from "../components/ui";
 
 const DEMO_CUSTOMERS = [
-  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28", isVerified: true },
-  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02", isVerified: true },
-  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19", isVerified: false },
-  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05", isVerified: true },
-  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30", isVerified: false },
+  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28", isVerified: true, pendingCount: 2 },
+  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02", isVerified: true, pendingCount: 1 },
+  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19", isVerified: false, pendingCount: 4 },
+  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05", isVerified: true, pendingCount: 0 },
+  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30", isVerified: false, pendingCount: 1 },
 ];
 
 const initials = (name = "") =>
@@ -170,6 +170,9 @@ export default function UsersList() {
                               </span>
                             )}
                           </div>
+                          <span className="text-[11px] font-medium text-slate-400 mt-0.5">
+                            Orders: <strong className="text-slate-600">{c.orderCount || 0}</strong> | Pending: <strong className="text-brand-600">{c.pendingCount || 0}</strong>
+                          </span>
                         </div>
                       </div>
                     </td>

@@ -50,6 +50,21 @@ export default function OrdersModal({ onClose }) {
           </button>
         </div>
 
+        {!loading && !error && orders.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 border-b border-slate-200 px-6 py-3.5">
+            <div className="text-center border-r border-slate-200">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Total Orders</span>
+              <p className="text-xl font-extrabold text-slate-800">{orders.length}</p>
+            </div>
+            <div className="text-center">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Pending Delivery</span>
+              <p className="text-xl font-extrabold text-accent-600">
+                {orders.filter((o) => o.status?.toUpperCase() !== "DELIVERED" && o.status?.toUpperCase() !== "CANCELLED").length}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="max-h-[70vh] overflow-y-auto p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
