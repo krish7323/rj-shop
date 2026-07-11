@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { OrderAPI, AuthAPI } from "../lib/api";
+import { OrderAPI, AuthAPI, CatalogAPI } from "../lib/api";
 import { DEMO_ORDERS, inr, dateShort } from "../lib/format";
 import { colors, radius, spacing } from "../lib/theme";
 import { useCart } from "../context/CartContext";
@@ -77,10 +77,39 @@ function Tracker({ status }) {
   );
 }
 
-function OrderCard({ order }) {
+function OrderCard({ order, navigation }) {
   const itemCount = (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0);
   const firstItems = (order.items || []).slice(0, 2).map((i) => i.name).join(", ");
   const more = (order.items || []).length > 2 ? ` +${order.items.length - 2} more` : "";
+
+  const handleProductPress = async (productId, fallbackItem) => {
+    if (!productId) return;
+    try {
+      const res = await CatalogAPI.get(productId);
+      if (res.data && res.data.product) {
+        navigation.navigate("HomeTab", {
+          screen: "ProductDetails",
+          params: { product: res.data.product }
+        });
+      } else {
+        throw new Error();
+      }
+    } catch {
+      const mockProduct = {
+        _id: productId,
+        name: fallbackItem.name,
+        price: fallbackItem.price,
+        mrp: fallbackItem.price,
+        images: fallbackItem.image ? [fallbackItem.image] : [],
+        description: "This item was purchased in a past order. It may have been modified or removed from our current catalog.",
+        stock: 0,
+      };
+      navigation.navigate("HomeTab", {
+        screen: "ProductDetails",
+        params: { product: mockProduct }
+      });
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -97,7 +126,12 @@ function OrderCard({ order }) {
       {/* Detailed Products List */}
       <View style={{ backgroundColor: "#f8fafc", borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 6, marginTop: 10, borderWidth: 1, borderColor: "#e2e8f0" }}>
         {(order.items || []).map((item, idx) => (
-          <View key={idx} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: idx < order.items.length - 1 ? 1 : 0, borderBottomColor: "#e2e8f0" }}>
+          <TouchableOpacity
+            key={idx}
+            activeOpacity={0.7}
+            onPress={() => handleProductPress(item.product, item)}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: idx < order.items.length - 1 ? 1 : 0, borderBottomColor: "#e2e8f0" }}
+          >
             <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
               {item.image ? (
                 <Image source={{ uri: item.image }} style={{ width: 28, height: 28, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border }} />
@@ -118,7 +152,7 @@ function OrderCard({ order }) {
             <Text style={{ fontSize: 12, fontWeight: "800", color: colors.text, marginLeft: 8 }}>
               {inr(item.price * item.quantity)}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -496,7 +530,7 @@ export default function OrdersScreen({ navigation }) {
           )}
         </View>
       }
-      renderItem={({ item }) => <OrderCard order={item} />}
+      renderItem={({ item }) => <OrderCard order={item} navigation={navigation} />}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
