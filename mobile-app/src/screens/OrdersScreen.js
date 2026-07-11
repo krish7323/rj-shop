@@ -92,13 +92,33 @@ function OrderCard({ order }) {
         </View>
       </View>
 
-      <Text style={styles.itemsLine} numberOfLines={2}>
-        {firstItems}
-        {more}
-      </Text>
-      <Text style={styles.itemsMeta}>
-        {itemCount} item{itemCount === 1 ? "" : "s"} · {inr(order.totalPrice)}
-      </Text>
+      {/* Detailed Products List */}
+      <View style={{ backgroundColor: "#f8fafc", borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 6, marginTop: 10, borderWidth: 1, borderColor: "#e2e8f0" }}>
+        {(order.items || []).map((item, idx) => (
+          <View key={idx} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: idx < order.items.length - 1 ? 1 : 0, borderBottomColor: "#e2e8f0" }}>
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={{ width: 28, height: 28, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border }} />
+              ) : (
+                <View style={{ width: 28, height: 28, borderRadius: radius.sm, backgroundColor: "#e2e8f0", alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="cube-outline" size={14} color={colors.sub} />
+                </View>
+              )}
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.text }} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={{ fontSize: 10, color: colors.muted, marginTop: 1 }}>
+                  Qty: {item.quantity} · {inr(item.price)} each
+                </Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.text, marginLeft: 8 }}>
+              {inr(item.price * item.quantity)}
+            </Text>
+          </View>
+        ))}
+      </View>
 
       <View style={styles.divider} />
       <Tracker status={order.status} />

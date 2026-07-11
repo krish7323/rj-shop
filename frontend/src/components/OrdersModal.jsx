@@ -108,14 +108,21 @@ export default function OrdersModal({ onClose }) {
                   </div>
 
                   {/* Products */}
-                  <div className="space-y-3">
-                    {ord.orderItems?.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-4 text-sm">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-800 truncate">{item.product?.name || "Product Item"}</p>
-                          <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
+                  <div className="divide-y divide-slate-150 rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-2">
+                    {ord.items?.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3 text-xs py-1 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="h-8 w-8 object-cover rounded-md border border-slate-250 shrink-0" />
+                          ) : (
+                            <span className="grid h-8 w-8 place-items-center bg-slate-200 text-slate-505 rounded-md shrink-0">📦</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-slate-800 truncate">{item.name || "Product Item"}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Qty: {item.quantity} · {inr(item.price)} each</p>
+                          </div>
                         </div>
-                        <span className="font-bold text-slate-700">{inr(item.price * item.quantity)}</span>
+                        <span className="font-extrabold text-slate-700 shrink-0">{inr(item.price * item.quantity)}</span>
                       </div>
                     ))}
                   </div>
