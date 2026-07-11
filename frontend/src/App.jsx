@@ -19,6 +19,59 @@ function Storefront() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
+  const [splash, setSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplash(false);
+    }, 2450);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (splash) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030712] netflix-bg">
+        <style>{`
+          @keyframes netflixZoom {
+            0% {
+              transform: scale(0.4);
+              filter: blur(8px) brightness(0.5);
+              opacity: 0;
+            }
+            25% {
+              opacity: 1;
+              filter: blur(0px) brightness(1.2);
+            }
+            75% {
+              transform: scale(1.05);
+              filter: drop-shadow(0 0 25px rgba(0, 136, 255, 0.3));
+            }
+            100% {
+              transform: scale(1.12);
+              filter: drop-shadow(0 0 40px rgba(0, 136, 255, 0.5));
+              opacity: 0;
+            }
+          }
+          @keyframes netflixBg {
+            0% { background-color: #030712; }
+            85% { background-color: #030712; opacity: 1; }
+            100% { background-color: #030712; opacity: 0; }
+          }
+          .netflix-bg {
+            animation: netflixBg 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1);
+          }
+          .netflix-logo {
+            animation: netflixZoom 2.5s forwards cubic-bezier(0.77, 0, 0.175, 1);
+          }
+        `}</style>
+        <img
+          src={logo}
+          alt="RJ Mobile Store Logo"
+          className="w-72 h-72 md:w-96 md:h-96 object-contain netflix-logo"
+        />
+      </div>
+    );
+  }
 
   // UI state
   const [search, setSearch] = useState("");
