@@ -70,18 +70,7 @@ export default function Sidebar({ active, onNavigate }) {
         })}
       </nav>
 
-      {/* Upgrade / footer card */}
       <div className="px-4 pb-5">
-        <div className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-4 shadow-soft">
-          <div className="mb-2 flex items-center gap-2 text-white">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm font-bold">Premium Suite</span>
-          </div>
-          <p className="text-xs leading-relaxed text-brand-100">
-            Razorpay, COD & Shiprocket hooks are live on your storefront.
-          </p>
-        </div>
-
         <button
           onClick={() => {
             localStorage.removeItem("rj_admin_token");

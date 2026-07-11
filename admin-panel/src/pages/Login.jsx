@@ -108,12 +108,6 @@ export default function Login({ onLoginSuccess }) {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-
-        <div className="mt-2 border-t border-slate-900 pt-4 text-center">
-          <p className="text-xs text-slate-500">
-            Default credentials: <span className="font-semibold text-slate-400">admin@rjshop.com</span> / <span className="font-semibold text-slate-400">admin123</span>
-          </p>
-        </div>
       </div>
     </div>
   );
