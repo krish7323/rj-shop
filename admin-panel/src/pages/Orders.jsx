@@ -110,18 +110,60 @@ export default function Orders() {
                         <StatusPill status={o.paymentStatus} />
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <StatusPill status={o.status} />
+                     <td className="px-5 py-3.5">
+                      <select
+                        value={o.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          try {
+                            setOrders(prev => prev.map(item => item._id === o._id ? { ...item, status: newStatus } : item));
+                            await OrderAPI.updateStatus(o._id, { status: newStatus });
+                            load();
+                          } catch (err) {
+                            alert("Failed to update status. Please try again.");
+                          }
+                        }}
+                        className={`text-xs font-bold rounded-lg border px-2.5 py-1.5 cursor-pointer outline-none transition ${
+                          o.status === "Delivered"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : o.status === "Cancelled" || o.status === "Returned"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : o.status === "Shipped"
+                            ? "bg-sky-50 text-sky-700 border-sky-200"
+                            : o.status === "Processing"
+                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Returned">Returned</option>
+                      </select>
                     </td>
                     <td className="px-5 py-3.5">
-                      {o.shiprocketTrackingId ? (
-                        <span className="flex items-center gap-1.5 font-mono text-xs text-slate-600">
-                          <Truck className="h-3.5 w-3.5 text-violet-500" />
-                          {o.shiprocketTrackingId}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">Not shipped</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="No Tracking ID"
+                          defaultValue={o.shiprocketTrackingId || ""}
+                          onBlur={async (e) => {
+                            const newTracking = e.target.value.trim();
+                            if (newTracking === (o.shiprocketTrackingId || "")) return;
+                            try {
+                              await OrderAPI.updateStatus(o._id, { shiprocketTrackingId: newTracking });
+                              load();
+                            } catch (err) {
+                              alert("Failed to update tracking ID.");
+                            }
+                          }}
+                          className="input w-36 px-2 py-1 text-xs font-mono border border-slate-200 rounded-md focus:border-violet-400 outline-none"
+                        />
+                      </div>
                     </td>
                     <td className="px-5 py-3.5 text-slate-500">{dateShort(o.createdAt)}</td>
                     <td className="px-5 py-3.5 text-right font-extrabold text-slate-900">
