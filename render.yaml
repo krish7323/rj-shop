@@ -27,10 +27,8 @@ services:
         value: dummypassword
 
   # 2. Frontend Storefront Static Site
-  - type: web
+  - type: static
     name: rj-mobile-store
-    env: static
-    plan: free
     rootDir: frontend
     buildCommand: npm run build
     publishDir: dist
@@ -43,10 +41,8 @@ services:
         value: https://${HOST}/api
 
   # 3. Admin Panel Static Site
-  - type: web
+  - type: static
     name: rj-mobile-admin
-    env: static
-    plan: free
     rootDir: admin-panel
     buildCommand: npm run build
     publishDir: dist
