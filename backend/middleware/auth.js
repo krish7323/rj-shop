@@ -43,6 +43,13 @@ const protect = async (req, res, next) => {
         .json({ success: false, message: "Not authorized: user no longer exists" });
     }
 
+    // Customer accounts must be verified to access protected routes
+    if (user.role === "Customer" && !user.isVerified) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Forbidden: Please verify your account first" });
+    }
+
     req.user = user;
     return next();
   } catch (error) {
