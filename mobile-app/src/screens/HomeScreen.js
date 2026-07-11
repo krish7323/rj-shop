@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CatalogAPI, AuthAPI } from "../lib/api";
+import { CatalogAPI, AuthAPI, CategoryAPI } from "../lib/api";
 import { DEMO_CATALOG, inr, discountPct } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { colors, radius, spacing } from "../lib/theme";
@@ -119,6 +119,7 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [live, setLive] = useState(false);
   const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState([]);
 
   // Drawer & Profile states
   const [currentUser, setCurrentUser] = useState(null);
@@ -178,6 +179,19 @@ export default function HomeScreen({ navigation }) {
     });
   };
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await CategoryAPI.list();
+      setCategories(res.data.categories || []);
+    } catch {
+      setCategories([
+        { _id: "1", name: "Repair Kits", icon: "🛠️" },
+        { _id: "2", name: "Old Phones", icon: "📱" },
+        { _id: "3", name: "Cool Gadgets", icon: "⚡" },
+      ]);
+    }
+  }, []);
+
   const fetchProducts = useCallback(async () => {
     try {
       const res = await CatalogAPI.list({ limit: 60 });
@@ -193,16 +207,16 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await fetchProducts();
+      await Promise.all([fetchProducts(), fetchCategories()]);
       setLoading(false);
     })();
-  }, [fetchProducts]);
+  }, [fetchProducts, fetchCategories]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchProducts();
+    await Promise.all([fetchProducts(), fetchCategories()]);
     setRefreshing(false);
-  }, [fetchProducts]);
+  }, [fetchProducts, fetchCategories]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -216,9 +230,12 @@ export default function HomeScreen({ navigation }) {
     });
   }, [products, search]);
 
-  const repairKits = useMemo(() => filtered.filter((p) => p.category === "Repair Kits"), [filtered]);
-  const oldPhones = useMemo(() => filtered.filter((p) => p.category === "Old Phones"), [filtered]);
-  const coolGadgets = useMemo(() => filtered.filter((p) => p.category === "Cool Gadgets"), [filtered]);
+  const categorizedProducts = useMemo(() => {
+    return categories.map((cat) => ({
+      ...cat,
+      products: filtered.filter((p) => p.category === cat.name),
+    }));
+  }, [categories, filtered]);
 
   const openProduct = (item) => navigation.navigate("ProductDetails", { product: item });
 
@@ -315,56 +332,24 @@ export default function HomeScreen({ navigation }) {
           </View>
         ) : (
           <View style={styles.sectionsContainer}>
-            {/* Section 1: Mobile Repair Kits */}
-            {repairKits.length > 0 && (
-              <View style={styles.sectionWrap}>
-                <Text style={styles.sectionHeader}>🛠️ Mobile Repair Kits & Tools</Text>
-                <FlatList
-                  horizontal
-                  data={repairKits}
-                  keyExtractor={(item) => item._id}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalList}
-                  renderItem={({ item }) => (
-                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                  )}
-                />
-              </View>
-            )}
-
-            {/* Section 2: Old Phones */}
-            {oldPhones.length > 0 && (
-              <View style={styles.sectionWrap}>
-                <Text style={styles.sectionHeader}>📱 Pre-Owned & Old Phones</Text>
-                <FlatList
-                  horizontal
-                  data={oldPhones}
-                  keyExtractor={(item) => item._id}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalList}
-                  renderItem={({ item }) => (
-                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                  )}
-                />
-              </View>
-            )}
-
-            {/* Section 3: Cool Gadgets */}
-            {coolGadgets.length > 0 && (
-              <View style={styles.sectionWrap}>
-                <Text style={styles.sectionHeader}>⚡ Cool Gadgets & Accessories</Text>
-                <FlatList
-                  horizontal
-                  data={coolGadgets}
-                  keyExtractor={(item) => item._id}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.horizontalList}
-                  renderItem={({ item }) => (
-                    <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                  )}
-                />
-              </View>
-            )}
+            {categorizedProducts.map((group) => {
+              if (group.products.length === 0) return null;
+              return (
+                <View key={group._id || group.name} style={styles.sectionWrap}>
+                  <Text style={styles.sectionHeader}>{group.icon || "📁"} {group.name}</Text>
+                  <FlatList
+                    horizontal
+                    data={group.products}
+                    keyExtractor={(item) => item._id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalList}
+                    renderItem={({ item }) => (
+                      <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                    )}
+                  />
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -426,20 +411,12 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.menuItemText}>Top / Home</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(260)}>
-                <Ionicons name="build-outline" size={16} color={colors.accent} />
-                <Text style={styles.menuItemText}>Repair Kits & Tools</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(680)}>
-                <Ionicons name="phone-portrait-outline" size={16} color={colors.accent} />
-                <Text style={styles.menuItemText}>Pre-Owned Devices</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.menuItem} onPress={() => handleScrollToOffset(1100)}>
-                <Ionicons name="flash-outline" size={16} color={colors.accent} />
-                <Text style={styles.menuItemText}>Smart Gadgets</Text>
-              </TouchableOpacity>
+              {categories.map((cat, idx) => (
+                <TouchableOpacity key={cat._id || cat.name} style={styles.menuItem} onPress={() => handleScrollToOffset(260 + idx * 350)}>
+                  <Text style={{ fontSize: 16 }}>{cat.icon || "📁"}</Text>
+                  <Text style={styles.menuItemText}>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
 
               <View style={styles.drawerDivider} />
 

@@ -25,6 +25,18 @@ const connectDB = async () => {
     });
 
     console.log(`✅ MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);
+
+    // Seed default categories if empty
+    const Category = require("../models/Category");
+    const count = await Category.countDocuments();
+    if (count === 0) {
+      await Category.insertMany([
+        { name: "Repair Kits", icon: "🛠️" },
+        { name: "Old Phones", icon: "📱" },
+        { name: "Cool Gadgets", icon: "⚡" },
+      ]);
+      console.log("🌱 Seeded default categories (Repair Kits, Old Phones, Cool Gadgets).");
+    }
   } catch (error) {
     console.error(`❌ MongoDB connection error: ${error.message}`);
     process.exit(1);

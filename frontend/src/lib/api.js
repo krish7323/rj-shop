@@ -34,4 +34,8 @@ export const AuthAPI = {
   me: () => api.get("/auth/me"),
 };
 
+export const CategoryAPI = {
+  list: () => api.get("/categories"),
+};
+
 export default api;

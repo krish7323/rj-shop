@@ -9,12 +9,14 @@ import {
   Store,
   LogOut,
   Sparkles,
+  FolderOpen,
 } from "lucide-react";
 import logo from "../assets/logo.png";
 
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, hint: "Overview & analytics" },
   { key: "inventory", label: "Inventory Management", icon: Boxes, hint: "Catalog & stock" },
+  { key: "categories", label: "Category Management", icon: FolderOpen, hint: "Manage catalog folders" },
   { key: "customers", label: "Customer Insights", icon: Users, hint: "Top spenders" },
   { key: "orders", label: "Orders", icon: ShoppingBag, hint: "Fulfilment feed" },
 ];

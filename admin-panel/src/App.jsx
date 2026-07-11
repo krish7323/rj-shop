@@ -9,6 +9,7 @@ import Sidebar from "./components/Sidebar";
 import logo from "./assets/logo.png";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
+import Categories from "./pages/Categories";
 import UsersList from "./pages/UsersList";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
@@ -25,6 +26,11 @@ const VIEWS = {
     title: "Inventory Management",
     subtitle: "Manage your dynamic catalog",
     Component: Inventory,
+  },
+  categories: {
+    title: "Category Management",
+    subtitle: "Configure dynamic catalog filters",
+    Component: Categories,
   },
   customers: {
     title: "Customer Insights",

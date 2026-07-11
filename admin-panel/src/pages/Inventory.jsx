@@ -13,7 +13,7 @@ import {
   XCircle,
   Tag,
 } from "lucide-react";
-import { ProductAPI } from "../lib/api";
+import { ProductAPI, CategoryAPI } from "../lib/api";
 import { inr } from "../lib/format";
 import { Loading, ErrorNote, Empty } from "../components/ui";
 
@@ -43,6 +43,20 @@ export default function Inventory() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null); // {type, msg}
+  const [categories, setCategories] = useState([]);
+
+  const loadCategories = async () => {
+    try {
+      const res = await CategoryAPI.list();
+      setCategories(res.data.categories || []);
+    } catch {
+      setCategories([
+        { _id: "1", name: "Repair Kits" },
+        { _id: "2", name: "Old Phones" },
+        { _id: "3", name: "Cool Gadgets" },
+      ]);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -60,6 +74,7 @@ export default function Inventory() {
 
   useEffect(() => {
     load();
+    loadCategories();
   }, []);
 
   const filtered = useMemo(() => {
@@ -189,9 +204,11 @@ export default function Inventory() {
                 <label className="label">Category</label>
                 <select name="category" value={form.category} onChange={onChange} className="input">
                   <option value="">Select Category</option>
-                  <option value="Repair Kits">Repair Kits</option>
-                  <option value="Old Phones">Old Phones</option>
-                  <option value="Cool Gadgets">Cool Gadgets</option>
+                  {categories.map((c) => (
+                    <option key={c._id || c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -13,12 +13,13 @@ import CartDrawer from "./components/CartDrawer";
 import Checkout from "./components/Checkout";
 import AuthModal from "./components/AuthModal";
 import OrdersModal from "./components/OrdersModal";
-import { CatalogAPI, AuthAPI } from "./lib/api";
+import { CatalogAPI, AuthAPI, CategoryAPI } from "./lib/api";
 import { DEMO_CATALOG } from "./lib/format";
 import logo from "./assets/logo.png";
 
 function Storefront() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
   const [splash, setSplash] = useState(true);
@@ -30,6 +31,18 @@ function Storefront() {
     return () => clearTimeout(timer);
   }, []);
 
+  const fetchCategories = async () => {
+    try {
+      const res = await CategoryAPI.list();
+      setCategories(res.data.categories || []);
+    } catch {
+      setCategories([
+        { _id: "1", name: "Repair Kits", icon: "🛠️" },
+        { _id: "2", name: "Old Phones", icon: "📱" },
+        { _id: "3", name: "Cool Gadgets", icon: "⚡" },
+      ]);
+    }
+  };
 
   // UI state
   const [search, setSearch] = useState("");
@@ -62,6 +75,7 @@ function Storefront() {
 
   useEffect(() => {
     fetchProfile();
+    fetchCategories();
   }, []);
 
   // Fetch catalog once (falls back to demo data if backend is down).
@@ -103,9 +117,12 @@ function Storefront() {
     });
   }, [products, search]);
 
-  const repairKits = useMemo(() => filtered.filter((p) => p.category === "Repair Kits"), [filtered]);
-  const oldPhones = useMemo(() => filtered.filter((p) => p.category === "Old Phones"), [filtered]);
-  const coolGadgets = useMemo(() => filtered.filter((p) => p.category === "Cool Gadgets"), [filtered]);
+  const categorizedProducts = useMemo(() => {
+    return categories.map((cat) => ({
+      ...cat,
+      products: filtered.filter((p) => p.category === cat.name),
+    }));
+  }, [categories, filtered]);
 
   const openCheckout = () => {
     setCartOpen(false);
@@ -290,33 +307,18 @@ function Storefront() {
                   >
                     🔝 Top / Home
                   </button>
-                  <button
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      handleScrollToSection("Repair Kits");
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
-                  >
-                    🛠️ Repair Kits & Tools
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      handleScrollToSection("Old Phones");
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
-                  >
-                    📱 Pre-Owned Devices
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      handleScrollToSection("Cool Gadgets");
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
-                  >
-                    ⚡ Smart Gadgets
-                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat._id || cat.name}
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        handleScrollToSection(cat.name);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
+                    >
+                      <span>{cat.icon || "📁"}</span> {cat.name}
+                    </button>
+                  ))}
                 </nav>
               </div>
 
@@ -467,47 +469,22 @@ function Storefront() {
           </div>
         ) : (
           <div className="space-y-10">
-            {/* Section 1: Mobile Repair Kits */}
-            {repairKits.length > 0 && (
-              <section id="repair-kits" className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft">
-                <h3 className="mb-5 text-lg font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
-                  <span className="text-xl">🛠️</span> Mobile Repair Kits & Tools
-                </h3>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {repairKits.map((p) => (
-                    <ProductCard key={p._id} product={p} onOpen={setSelected} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Section 2: Old Phones */}
-            {oldPhones.length > 0 && (
-              <section id="old-phones" className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft">
-                <h3 className="mb-5 text-lg font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
-                  <span className="text-xl">📱</span> Pre-Owned & Old Phones
-                </h3>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {oldPhones.map((p) => (
-                    <ProductCard key={p._id} product={p} onOpen={setSelected} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Section 3: Cool Gadgets */}
-            {coolGadgets.length > 0 && (
-              <section id="cool-gadgets" className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft">
-                <h3 className="mb-5 text-lg font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
-                  <span className="text-xl">⚡</span> Cool Gadgets & Accessories
-                </h3>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {coolGadgets.map((p) => (
-                    <ProductCard key={p._id} product={p} onOpen={setSelected} />
-                  ))}
-                </div>
-              </section>
-            )}
+            {categorizedProducts.map((group) => {
+              if (group.products.length === 0) return null;
+              const elementId = group.name.toLowerCase().replace(/\s+/g, "-");
+              return (
+                <section key={group._id || group.name} id={elementId} className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft">
+                  <h3 className="mb-5 text-lg font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
+                    <span className="text-xl">{group.icon || "📁"}</span> {group.name}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    {group.products.map((p) => (
+                      <ProductCard key={p._id} product={p} onOpen={setSelected} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
 

@@ -55,4 +55,10 @@ export const AuthAPI = {
   login: (email, password) => api.post("/auth/login", { email, password }),
 };
 
+export const CategoryAPI = {
+  list: () => api.get("/categories"),
+  create: (payload) => api.post("/categories", payload),
+  remove: (id) => api.delete(`/categories/${id}`),
+};
+
 export default api;
