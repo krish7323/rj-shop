@@ -11,6 +11,8 @@ import ProductCard from "./components/ProductCard";
 import ProductModal from "./components/ProductModal";
 import CartDrawer from "./components/CartDrawer";
 import Checkout from "./components/Checkout";
+import AuthModal from "./components/AuthModal";
+import OrdersModal from "./components/OrdersModal";
 import { CatalogAPI, AuthAPI } from "./lib/api";
 import { DEMO_CATALOG } from "./lib/format";
 import logo from "./assets/logo.png";
@@ -80,23 +82,35 @@ function Storefront() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
+  // Auth states
+  const [user, setUser] = useState(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+
+  // Load user profile on startup if token exists
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("rj_token");
+    if (!token) {
+      setUser(null);
+      return;
+    }
+    try {
+      const res = await AuthAPI.me();
+      setUser(res.data.user);
+    } catch {
+      localStorage.removeItem("rj_token");
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
   // Fetch catalog once (falls back to demo data if backend is down).
   useEffect(() => {
     let mounted = true;
     (async () => {
-      // Silent auto-login for development if no token is found
-      if (!localStorage.getItem("rj_token")) {
-        try {
-          const loginRes = await AuthAPI.login("customer@rjshop.com", "customer123");
-          if (loginRes.data.success && loginRes.data.token) {
-            localStorage.setItem("rj_token", loginRes.data.token);
-            console.log("✅ Storefront auto-logged in as customer@rjshop.com");
-          }
-        } catch (err) {
-          console.warn("⚠️ Storefront auto-login failed:", err.message);
-        }
-      }
-
       try {
         const res = await CatalogAPI.list({ limit: 60 });
         if (!mounted) return;
@@ -112,6 +126,7 @@ function Storefront() {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
     };
@@ -137,7 +152,11 @@ function Storefront() {
 
   const openCheckout = () => {
     setCartOpen(false);
-    setCheckoutOpen(true);
+    if (!localStorage.getItem("rj_token")) {
+      setAuthOpen(true);
+    } else {
+      setCheckoutOpen(true);
+    }
   };
 
   const handleScrollToSection = (cat) => {
@@ -157,6 +176,13 @@ function Storefront() {
         category={category}
         onCategory={handleScrollToSection}
         onCartClick={() => setCartOpen(true)}
+        user={user}
+        onAuthClick={() => setAuthOpen(true)}
+        onOrdersClick={() => setOrdersOpen(true)}
+        onLogout={() => {
+          localStorage.removeItem("rj_token");
+          setUser(null);
+        }}
       />
 
       {/* Hero banner */}
@@ -312,6 +338,10 @@ function Storefront() {
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} onCheckout={openCheckout} />
 
       {checkoutOpen && <Checkout onClose={() => setCheckoutOpen(false)} />}
+
+      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onSuccess={fetchProfile} />}
+
+      {ordersOpen && <OrdersModal onClose={() => setOrdersOpen(false)} />}
     </div>
   );
 }

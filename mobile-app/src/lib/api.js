@@ -51,4 +51,10 @@ export const OrderAPI = {
   verifyPayment: (id, payload) => api.post(`/orders/${id}/verify-payment`, payload),
 };
 
+export const AuthAPI = {
+  login: (email, password) => api.post("/auth/login", { email, password }),
+  register: (name, email, password) => api.post("/auth/register", { name, email, password }),
+  me: () => api.get("/auth/me"),
+};
+
 export default api;

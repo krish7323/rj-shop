@@ -11,9 +11,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
+  Alert,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { OrderAPI } from "../lib/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { OrderAPI, AuthAPI } from "../lib/api";
 import { DEMO_ORDERS, inr, dateShort } from "../lib/format";
 import { colors, radius, spacing } from "../lib/theme";
 
@@ -135,26 +139,44 @@ export default function OrdersScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [live, setLive] = useState(false);
 
+  // Auth states
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
   const fetchOrders = useCallback(async () => {
+    const token = await AsyncStorage.getItem("rj_token");
+    if (!token) {
+      setOrders([]);
+      setIsLoggedIn(false);
+      setLive(false);
+      return;
+    }
+    setIsLoggedIn(true);
     try {
       const res = await OrderAPI.mine();
       const list = res.data.orders || [];
       setOrders(list);
       setLive(true);
     } catch {
-      // Not logged in / backend down → show demo tracking so the screen is useful.
-      setOrders(DEMO_ORDERS);
+      setOrders([]);
       setLive(false);
     }
   }, []);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await fetchOrders();
-      setLoading(false);
-    })();
-  }, [fetchOrders]);
+    const unsubscribe = navigation.addListener("focus", () => {
+      (async () => {
+        setLoading(true);
+        await fetchOrders();
+        setLoading(false);
+      })();
+    });
+    return unsubscribe;
+  }, [navigation, fetchOrders]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -162,11 +184,121 @@ export default function OrdersScreen({ navigation }) {
     setRefreshing(false);
   }, [fetchOrders]);
 
+  const handleAuth = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Check your details", "Please fill in all fields.");
+      return;
+    }
+    if (isRegister && !name.trim()) {
+      Alert.alert("Check your details", "Please enter your name.");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      let res;
+      if (isRegister) {
+        res = await AuthAPI.register(name, email, password);
+      } else {
+        res = await AuthAPI.login(email, password);
+      }
+
+      if (res.data.token) {
+        await AsyncStorage.setItem("rj_token", res.data.token);
+        setName("");
+        setEmail("");
+        setPassword("");
+        setIsLoggedIn(true);
+        
+        // Fetch fresh orders
+        setLoading(true);
+        await fetchOrders();
+        setLoading(false);
+      }
+    } catch (err) {
+      Alert.alert(
+        "Authentication failed",
+        err?.response?.data?.message || "Invalid credentials. Please try again."
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("rj_token");
+          setIsLoggedIn(false);
+          setOrders([]);
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.loadingText}>Loading your orders…</Text>
+      </View>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <View style={styles.authContainer}>
+        <View style={styles.authCard}>
+          <Text style={styles.authTitle}>{isRegister ? "Create Account" : "Sign In"}</Text>
+          <Text style={styles.authSub}>Access your account to place and track orders.</Text>
+
+          {isRegister && (
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#94a3b8"
+              value={name}
+              onChangeText={setName}
+            />
+          )}
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            placeholderTextColor="#94a3b8"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#94a3b8"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <TouchableOpacity style={styles.authBtn} onPress={handleAuth} disabled={authLoading}>
+            {authLoading ? (
+              <ActivityIndicator color={colors.navy} />
+            ) : (
+              <Text style={styles.authBtnText}>{isRegister ? "Register & Sign In" : "Sign In"}</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.toggleBtn} onPress={() => setIsRegister(!isRegister)}>
+            <Text style={styles.toggleText}>
+              {isRegister ? "Already have an account? Sign In" : "New to RJ Shop? Create Account"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -180,7 +312,10 @@ export default function OrdersScreen({ navigation }) {
       ListHeaderComponent={
         <View style={styles.header}>
           <Text style={styles.title}>My Orders</Text>
-          {!live && <Text style={styles.demoTag}>Demo tracking</Text>}
+          <TouchableOpacity onPress={handleSignOut} style={styles.signoutBtn}>
+            <Ionicons name="log-out-outline" size={16} color={colors.danger} />
+            <Text style={styles.signoutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       }
       renderItem={({ item }) => <OrderCard order={item} />}
@@ -227,7 +362,7 @@ const styles = StyleSheet.create({
     borderColor: "#f1f5f9",
     elevation: 1,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyStyle: "space-between" },
   orderId: { fontSize: 15, fontWeight: "900", color: colors.text },
   orderDate: { fontSize: 12, color: colors.muted, marginTop: 2 },
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
@@ -277,4 +412,17 @@ const styles = StyleSheet.create({
 
   shopBtn: { backgroundColor: colors.accent, paddingHorizontal: 20, paddingVertical: 11, borderRadius: radius.pill, marginTop: 12 },
   shopBtnText: { color: colors.navy, fontWeight: "800" },
+
+  // Auth Styles
+  authContainer: { flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", padding: spacing.lg },
+  authCard: { width: "100%", backgroundColor: "#fff", padding: 24, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
+  authTitle: { fontSize: 20, fontWeight: "900", color: colors.text, textAlign: "center" },
+  authSub: { fontSize: 13, color: colors.sub, textAlign: "center", marginTop: 4, marginBottom: 20 },
+  input: { width: "100%", height: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 16, fontSize: 14, color: colors.text, marginBottom: 12, backgroundColor: "#f8fafc" },
+  authBtn: { width: "100%", height: 48, backgroundColor: colors.accent, borderRadius: radius.pill, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  authBtnText: { color: colors.navy, fontSize: 15, fontWeight: "800" },
+  toggleBtn: { marginTop: 16, alignItems: "center" },
+  toggleText: { color: colors.accentDark, fontSize: 13, fontWeight: "700" },
+  signoutBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: "#fff5f5" },
+  signoutText: { color: colors.danger, fontSize: 12, fontWeight: "800" },
 });

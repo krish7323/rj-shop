@@ -3,13 +3,13 @@
 // dynamic floating cart counter that animates as items are added.
 
 import { useEffect, useState } from "react";
-import { Search, ShoppingCart, Menu } from "lucide-react";
+import { Search, ShoppingCart, User, LogOut, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import logo from "../assets/logo.png";
 
 const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
-export default function Navbar({ search, onSearch, category, onCategory, onCartClick }) {
+export default function Navbar({ search, onSearch, category, onCategory, onCartClick, user, onAuthClick, onOrdersClick, onLogout }) {
   const { count } = useCart();
   const [bump, setBump] = useState(false);
 
@@ -68,6 +68,40 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
             </div>
             <span className="hidden text-sm font-semibold sm:block">Cart</span>
           </button>
+
+          {/* User Profile / Login Actions */}
+          {user ? (
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={onOrdersClick}
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-navy-700 text-slate-200"
+                title="My Orders"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                <span className="hidden text-sm font-semibold sm:block">My Orders</span>
+              </button>
+              
+              <div className="flex items-center gap-1 border-l border-navy-700 pl-2.5">
+                <span className="hidden text-xs font-semibold text-slate-300 md:block max-w-[100px] truncate">
+                  Hi, {user.name.split(" ")[0]}
+                </span>
+                <button
+                  onClick={onLogout}
+                  className="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-navy-700 hover:text-white transition"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-4.5 w-4.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={onAuthClick}
+              className="btn-accent shrink-0 rounded-full px-4.5 py-2 text-xs font-extrabold"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 

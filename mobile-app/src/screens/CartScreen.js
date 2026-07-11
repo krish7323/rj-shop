@@ -21,6 +21,7 @@ import {
   Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCart } from "../context/CartContext";
 import { OrderAPI } from "../lib/api";
 import { inr } from "../lib/format";
@@ -67,6 +68,15 @@ export default function CartScreen({ navigation }) {
   };
 
   const placeOrder = async () => {
+    const token = await AsyncStorage.getItem("rj_token");
+    if (!token) {
+      Alert.alert("Sign In Required", "Please go to the Orders tab and sign in to place your order.", [
+        { text: "Go to Orders", onPress: () => navigation.navigate("OrdersTab") },
+        { text: "Cancel", style: "cancel" }
+      ]);
+      return;
+    }
+
     const err = validate();
     if (err) {
       Alert.alert("Check your details", err);
