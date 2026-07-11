@@ -32,6 +32,7 @@ const startSeed = async () => {
       email: "customer@rjshop.com",
       password: "customer123", // Hashes in pre-save hook
       role: "Customer",
+      isVerified: true,
       addresses: [
         {
           label: "Home",
