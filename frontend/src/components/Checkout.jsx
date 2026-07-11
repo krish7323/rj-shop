@@ -233,19 +233,19 @@ export default function Checkout({ onClose }) {
 
               <div>
                 <label className="lbl">Street / House</label>
-                <input name="street" value={addr.street} onChange={onAddr} className="field" placeholder="12, MG Road, Near City Mall" />
+                <input name="street" value={addr.street} onChange={onAddr} className="field" placeholder="Nehra Bazar, Near Post Office" />
                 {errors.street && <p className="mt-1 text-xs text-rose-600">{errors.street}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="lbl">City</label>
-                  <input name="city" value={addr.city} onChange={onAddr} className="field" placeholder="Bengaluru" />
+                  <input name="city" value={addr.city} onChange={onAddr} className="field" placeholder="Darbhanga" />
                   {errors.city && <p className="mt-1 text-xs text-rose-600">{errors.city}</p>}
                 </div>
                 <div>
                   <label className="lbl">State</label>
-                  <input name="state" value={addr.state} onChange={onAddr} className="field" placeholder="Karnataka" />
+                  <input name="state" value={addr.state} onChange={onAddr} className="field" placeholder="Bihar" />
                   {errors.state && <p className="mt-1 text-xs text-rose-600">{errors.state}</p>}
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function Checkout({ onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="lbl">PIN Code</label>
-                  <input name="postalCode" value={addr.postalCode} onChange={onAddr} className="field" placeholder="560001" inputMode="numeric" />
+                  <input name="postalCode" value={addr.postalCode} onChange={onAddr} className="field" placeholder="847239" inputMode="numeric" />
                   {errors.postalCode && <p className="mt-1 text-xs text-rose-600">{errors.postalCode}</p>}
                 </div>
                 <div>

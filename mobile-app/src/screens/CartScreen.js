@@ -237,16 +237,16 @@ export default function CartScreen({ navigation }) {
 
             <Field label="Full Name" value={addr.fullName} onChange={(v) => onAddr("fullName", v)} placeholder="Aarav Gupta" />
             <Field label="Phone" value={addr.phone} onChange={(v) => onAddr("phone", v)} placeholder="9876543210" keyboardType="number-pad" />
-            <Field label="Street / House" value={addr.street} onChange={(v) => onAddr("street", v)} placeholder="12, MG Road" />
+            <Field label="Street / House" value={addr.street} onChange={(v) => onAddr("street", v)} placeholder="Nehra Bazar, Near Post Office" />
             <View style={styles.fieldRow}>
               <View style={{ flex: 1 }}>
-                <Field label="City" value={addr.city} onChange={(v) => onAddr("city", v)} placeholder="Bengaluru" />
+                <Field label="City" value={addr.city} onChange={(v) => onAddr("city", v)} placeholder="Darbhanga" />
               </View>
               <View style={{ flex: 1 }}>
-                <Field label="State" value={addr.state} onChange={(v) => onAddr("state", v)} placeholder="Karnataka" />
+                <Field label="State" value={addr.state} onChange={(v) => onAddr("state", v)} placeholder="Bihar" />
               </View>
             </View>
-            <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="560001" keyboardType="number-pad" />
+            <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="847239" keyboardType="number-pad" />
 
             <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Payment Method</Text>
 

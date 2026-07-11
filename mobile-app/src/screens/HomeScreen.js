@@ -335,7 +335,7 @@ function MobileTestimonials() {
 function MobileFAQ() {
   const faqs = [
     { q: "Do you offer warranty on Old phones?", a: "Yes! 6-month warranty on manufacturing defects, plus 7-day easy replacement." },
-    { q: "Can I collect in-store today?", a: "Absolutely! Just place the order and collect it at our MG Road store." },
+    { q: "Can I collect in-store today?", a: "Absolutely! Just place the order and collect it at our Nehra, Darbhanga store." },
     { q: "Are the repair kits beginner-friendly?", a: "Yes! Curated for beginners. We also offer guidance via WhatsApp." }
   ];
 
