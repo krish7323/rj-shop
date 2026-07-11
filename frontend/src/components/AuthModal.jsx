@@ -14,6 +14,8 @@ export default function AuthModal({ onClose, onSuccess }) {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState(null);
   const [infoMessage, setInfoMessage] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +28,8 @@ export default function AuthModal({ onClose, onSuccess }) {
         if (!name.trim()) throw new Error("Name is required");
         if (!phone.trim()) throw new Error("Phone number is required");
         if (!/^[0-9]{10}$/.test(phone.trim())) throw new Error("Phone number must be a 10-digit number");
+        if (password !== confirmPassword) throw new Error("Passwords do not match");
+        if (!agreeTerms) throw new Error("You must agree to the Terms of Service and Privacy Policy.");
         const res = await AuthAPI.register(name.trim(), email.trim(), password, phone.trim(), currentDevice.trim());
         setInfoMessage(res.data.message || "OTP code sent to your email!");
         setMode("verify");
@@ -174,6 +178,36 @@ export default function AuthModal({ onClose, onSuccess }) {
                   required
                 />
               </div>
+
+              {mode === "register" && (
+                <>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="password"
+                      placeholder="Confirm Password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="input w-full pl-10"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-2.5 px-1 py-1">
+                    <input
+                      id="agree-terms"
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={(e) => setAgreeTerms(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-accent-600 focus:ring-accent-500 mt-0.5 cursor-pointer"
+                      required
+                    />
+                    <label htmlFor="agree-terms" className="text-xs font-semibold text-slate-600 cursor-pointer select-none">
+                      I agree to the <span className="text-accent-600 underline">Terms of Service</span> and <span className="text-accent-600 underline">Privacy Policy</span>.
+                    </label>
+                  </div>
+                </>
+              )}
             </>
           )}
 

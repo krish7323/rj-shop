@@ -15,6 +15,7 @@ import {
   ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import { AuthAPI } from "../lib/api";
 import { colors, radius, spacing } from "../lib/theme";
 import logo from "../assets/logo.png";
@@ -26,6 +27,8 @@ export default function AuthScreen({ onAuthSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [phone, setPhone] = useState("");
   const [currentDevice, setCurrentDevice] = useState("");
   
@@ -49,6 +52,14 @@ export default function AuthScreen({ onAuthSuccess }) {
       }
       if (!/^[0-9]{10}$/.test(phone.trim())) {
         Alert.alert("Check your details", "Phone number must be a 10-digit number.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        Alert.alert("Check your details", "Passwords do not match.");
+        return;
+      }
+      if (!agreeTerms) {
+        Alert.alert("Check your details", "You must agree to the Terms of Service & Privacy Policy.");
         return;
       }
     }
@@ -226,6 +237,32 @@ export default function AuthScreen({ onAuthSuccess }) {
               secureTextEntry
             />
 
+            {isRegister && (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#94a3b8"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                />
+
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setAgreeTerms(!agreeTerms)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.checkbox, agreeTerms && styles.checkboxChecked]}>
+                    {agreeTerms && <Ionicons name="checkmark" size={12} color="#fff" />}
+                  </View>
+                  <Text style={styles.checkboxText}>
+                    I agree to the <Text style={styles.checkboxLink}>Terms of Service</Text> & <Text style={styles.checkboxLink}>Privacy Policy</Text>.
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
             <TouchableOpacity style={styles.btn} onPress={handleAuth} disabled={authLoading}>
               {authLoading ? (
                 <ActivityIndicator color={colors.navy} />
@@ -271,4 +308,9 @@ const styles = StyleSheet.create({
   btnText: { color: colors.navy, fontSize: 14, fontWeight: "900" },
   toggle: { marginTop: 16, alignItems: "center" },
   toggleText: { color: colors.accentDark, fontSize: 12, fontWeight: "800" },
+  checkboxContainer: { flexDirection: "row", alignItems: "center", width: "100%", marginVertical: 8, paddingHorizontal: 4 },
+  checkbox: { width: 18, height: 18, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xs, alignItems: "center", justifyContent: "center", marginRight: 8, backgroundColor: "#f8fafc" },
+  checkboxChecked: { backgroundColor: colors.accent, borderColor: colors.accent },
+  checkboxText: { fontSize: 11, color: colors.sub, flex: 1, fontWeight: "600" },
+  checkboxLink: { color: colors.accentDark, textDecorationLine: "underline" },
 });

@@ -28,10 +28,14 @@
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": "http://localhost:5000/api"
+      "apiUrl": "http://localhost:5000/api",
+      "eas": {
+        "projectId": "8efe2136-6881-4e80-8645-51e87ae2054a"
+      }
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "owner": "rjstore9097"
   }
 }
