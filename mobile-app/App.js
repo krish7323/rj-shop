@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
-import { View, Animated, StyleSheet, Dimensions } from "react-native";
+import { View, Animated, StyleSheet, Dimensions, Platform } from "react-native";
 
 import { CartProvider } from "./src/context/CartContext";
 import AppNavigator from "./src/navigation/AppNavigator";
@@ -20,25 +20,27 @@ export default function App() {
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const bgOpacity = useRef(new Animated.Value(1)).current;
 
+  const isWeb = Platform.OS === "web";
+
   useEffect(() => {
     // Zoom and fade in the logo
     Animated.parallel([
       Animated.timing(logoScale, {
         toValue: 1.05,
         duration: 2000,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }),
       Animated.timing(logoOpacity, {
         toValue: 1,
         duration: 1500,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }),
     ]).start(() => {
       // Fade out the splash page
       Animated.timing(bgOpacity, {
         toValue: 0,
         duration: 450,
-        useNativeDriver: true,
+        useNativeDriver: !isWeb,
       }).start(() => {
         setSplashActive(false);
       });
