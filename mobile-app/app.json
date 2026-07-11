@@ -4,6 +4,7 @@
     "slug": "rj-shop-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./src/assets/logo.png",
     "userInterfaceStyle": "light",
     "scheme": "rjshop",
     "splash": {
