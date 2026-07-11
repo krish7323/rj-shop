@@ -71,6 +71,14 @@ const createOrder = async (req, res) => {
   const decremented = [];
 
   try {
+    // --- Verify that the requester user is verified ---
+    if (req.user && req.user.role === "Customer" && !req.user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is not verified. Please verify your account first to place orders.",
+      });
+    }
+
     const {
       items,
       shippingAddress,
