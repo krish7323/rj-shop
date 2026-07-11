@@ -142,10 +142,13 @@ export default function OrdersScreen({ navigation }) {
   // Auth states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     const token = await AsyncStorage.getItem("rj_token");
@@ -199,21 +202,32 @@ export default function OrdersScreen({ navigation }) {
       let res;
       if (isRegister) {
         res = await AuthAPI.register(name, email, password);
+        Alert.alert("Verification Sent", res.data.message || "OTP code sent to your email!");
+        setIsVerifying(true);
       } else {
-        res = await AuthAPI.login(email, password);
-      }
-
-      if (res.data.token) {
-        await AsyncStorage.setItem("rj_token", res.data.token);
-        setName("");
-        setEmail("");
-        setPassword("");
-        setIsLoggedIn(true);
-        
-        // Fetch fresh orders
-        setLoading(true);
-        await fetchOrders();
-        setLoading(false);
+        try {
+          res = await AuthAPI.login(email, password);
+          if (res.data.token) {
+            await AsyncStorage.setItem("rj_token", res.data.token);
+            setName("");
+            setEmail("");
+            setPassword("");
+            setIsLoggedIn(true);
+            
+            // Fetch fresh orders
+            setLoading(true);
+            await fetchOrders();
+            setLoading(false);
+          }
+        } catch (ex) {
+          if (ex?.response?.status === 403 && ex?.response?.data?.email) {
+            setEmail(ex.response.data.email);
+            Alert.alert("Verification Required", ex.response.data.message || "Please verify your email address to log in.");
+            setIsVerifying(true);
+          } else {
+            throw ex;
+          }
+        }
       }
     } catch (err) {
       Alert.alert(
@@ -222,6 +236,51 @@ export default function OrdersScreen({ navigation }) {
       );
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!otp.trim()) {
+      Alert.alert("Check OTP", "Please enter the 6-digit OTP code.");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const res = await AuthAPI.verifyOTP(email, otp);
+      if (res.data.token) {
+        await AsyncStorage.setItem("rj_token", res.data.token);
+        setName("");
+        setEmail("");
+        setPassword("");
+        setOtp("");
+        setIsVerifying(false);
+        setIsLoggedIn(true);
+
+        // Fetch fresh orders
+        setLoading(true);
+        await fetchOrders();
+        setLoading(false);
+      }
+    } catch (err) {
+      Alert.alert(
+        "Verification failed",
+        err?.response?.data?.message || "Invalid verification code. Please try again."
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setResending(true);
+    try {
+      const res = await AuthAPI.resendOTP(email);
+      Alert.alert("Code Sent", res.data.message || "New verification code sent to your email.");
+    } catch (err) {
+      Alert.alert("Failed", err?.response?.data?.message || "Could not resend code.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -252,53 +311,93 @@ export default function OrdersScreen({ navigation }) {
   if (!isLoggedIn) {
     return (
       <View style={styles.authContainer}>
-        <View style={styles.authCard}>
-          <Text style={styles.authTitle}>{isRegister ? "Create Account" : "Sign In"}</Text>
-          <Text style={styles.authSub}>Access your account to place and track orders.</Text>
+        {isVerifying ? (
+          <View style={styles.authCard}>
+            <Text style={styles.authTitle}>Verify Your Email</Text>
+            <Text style={styles.authSub}>Enter the 6-digit OTP code sent to {email}.</Text>
 
-          {isRegister && (
+            <TextInput
+              style={[styles.input, { letterSpacing: 4, textAlign: "center", fontSize: 18, fontWeight: "bold" }]}
+              placeholder="6-Digit OTP"
+              placeholderTextColor="#94a3b8"
+              value={otp}
+              onChangeText={setOtp}
+              keyboardType="number-pad"
+              maxLength={6}
+            />
+
+            <TouchableOpacity style={styles.authBtn} onPress={handleVerify} disabled={authLoading}>
+              {authLoading ? (
+                <ActivityIndicator color={colors.navy} />
+              ) : (
+                <Text style={styles.authBtnText}>Verify & Log In</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.toggleBtn} onPress={handleResendOTP} disabled={resending}>
+              <Text style={styles.toggleText}>
+                {resending ? "Resending..." : "Resend Verification Code"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toggleBtn, { marginTop: 12 }]}
+              onPress={() => {
+                setIsVerifying(false);
+              }}
+            >
+              <Text style={[styles.toggleText, { color: colors.muted }]}>Back to Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.authCard}>
+            <Text style={styles.authTitle}>{isRegister ? "Create Account" : "Sign In"}</Text>
+            <Text style={styles.authSub}>Access your account to place and track orders.</Text>
+
+            {isRegister && (
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#94a3b8"
+                value={name}
+                onChangeText={setName}
+              />
+            )}
+
             <TextInput
               style={styles.input}
-              placeholder="Full Name"
+              placeholder="Email Address"
               placeholderTextColor="#94a3b8"
-              value={name}
-              onChangeText={setName}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
-          )}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            placeholderTextColor="#94a3b8"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#94a3b8"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#94a3b8"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+            <TouchableOpacity style={styles.authBtn} onPress={handleAuth} disabled={authLoading}>
+              {authLoading ? (
+                <ActivityIndicator color={colors.navy} />
+              ) : (
+                <Text style={styles.authBtnText}>{isRegister ? "Register & Send OTP" : "Sign In"}</Text>
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.authBtn} onPress={handleAuth} disabled={authLoading}>
-            {authLoading ? (
-              <ActivityIndicator color={colors.navy} />
-            ) : (
-              <Text style={styles.authBtnText}>{isRegister ? "Register & Sign In" : "Sign In"}</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.toggleBtn} onPress={() => setIsRegister(!isRegister)}>
-            <Text style={styles.toggleText}>
-              {isRegister ? "Already have an account? Sign In" : "New to RJ Shop? Create Account"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.toggleBtn} onPress={() => setIsRegister(!isRegister)}>
+              <Text style={styles.toggleText}>
+                {isRegister ? "Already have an account? Sign In" : "New to RJ Shop? Create Account"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   }

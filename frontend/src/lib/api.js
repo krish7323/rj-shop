@@ -29,6 +29,8 @@ export const OrderAPI = {
 export const AuthAPI = {
   login: (email, password) => api.post("/auth/login", { email, password }),
   register: (name, email, password) => api.post("/auth/register", { name, email, password }),
+  verifyOTP: (email, otp) => api.post("/auth/verify-otp", { email, otp }),
+  resendOTP: (email) => api.post("/auth/resend-otp", { email }),
   me: () => api.get("/auth/me"),
 };
 
