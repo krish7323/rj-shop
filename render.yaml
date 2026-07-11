@@ -1,0 +1,59 @@
+services:
+  # 1. Backend Web Service
+  - type: web
+    name: rj-mobile-backend
+    env: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        value: mongodb+srv://rjmobilleinfo_db_user:RjMobileStore123%21@cluster0.mire6qc.mongodb.net/rj_shop?appName=Cluster0
+      - key: JWT_SECRET
+        value: supersecretkeyforrjshopdev12345
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8999351543:AAGiPFAdH99ywxk9ny_oWUy65IAZBXnLE9k
+      - key: TELEGRAM_CHAT_ID
+        value: 8492706857
+      - key: SHIPROCKET_EMAIL
+        value: dummy@shiprocket.com
+      - key: SHIPROCKET_PASSWORD
+        value: dummypassword
+
+  # 2. Frontend Storefront Static Site
+  - type: web
+    name: rj-mobile-store
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: rj-mobile-backend
+          type: web
+          property: host
+        value: https://${HOST}/api
+
+  # 3. Admin Panel Static Site
+  - type: web
+    name: rj-mobile-admin
+    env: static
+    plan: free
+    rootDir: admin-panel
+    buildCommand: npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: rj-mobile-backend
+          type: web
+          property: host
+        value: https://${HOST}/api
