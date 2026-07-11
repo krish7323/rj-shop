@@ -131,7 +131,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <View style={styles.trustRow}>
             <View style={styles.trustItem}>
               <Ionicons name="shield-checkmark" size={18} color={colors.accentDark} />
-              <Text style={styles.trustText}>Razorpay & COD</Text>
+              <Text style={styles.trustText}>UPI & COD</Text>
             </View>
             <View style={styles.trustItem}>
               <Ionicons name="rocket-outline" size={18} color={colors.accentDark} />

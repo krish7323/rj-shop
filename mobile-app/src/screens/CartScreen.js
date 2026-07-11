@@ -137,7 +137,7 @@ export default function CartScreen({ navigation }) {
     Alert.alert(
       "Order Confirmed 🎉",
       `Order #${String(id).slice(-8).toUpperCase()} placed via ${
-        method === "COD" ? "Cash on Delivery" : "Razorpay"
+        method === "COD" ? "Cash on Delivery" : "Direct UPI Transfer"
       }.${demo ? "\n\n(Demo mode — connect the backend to persist.)" : ""}\n\nTrack it in the Orders tab.`,
       [{ text: "View Orders", onPress: () => navigation.navigate("OrdersTab") }, { text: "OK" }]
     );

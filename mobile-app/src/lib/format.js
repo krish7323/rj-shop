@@ -286,7 +286,7 @@ export const DEMO_CATALOG = [
 
 // Demo order history shown when the backend is unreachable / not logged in.
 export const DEMO_ORDERS = [
-  { _id: "64f0aa11bb22cc33dd44ee01", totalPrice: 34999, paymentMethod: "Razorpay", paymentStatus: "Paid", status: "Shipped", shiprocketTrackingId: "SR123456789", createdAt: "2026-07-05", items: [{ name: "Pre-Owned iPhone 12 Pro (128GB)", quantity: 1, price: 34999 }] },
+  { _id: "64f0aa11bb22cc33dd44ee01", totalPrice: 34999, paymentMethod: "UPI", paymentStatus: "Paid", status: "Shipped", shiprocketTrackingId: "SR123456789", createdAt: "2026-07-05", items: [{ name: "Pre-Owned iPhone 12 Pro (128GB)", quantity: 1, price: 34999 }] },
   { _id: "64f0aa11bb22cc33dd44ee02", totalPrice: 499, paymentMethod: "COD", paymentStatus: "Pending", status: "Confirmed", shiprocketTrackingId: "", createdAt: "2026-07-08", items: [{ name: "Professional 24-in-1 Screwdriver Set", quantity: 1, price: 499 }] },
-  { _id: "64f0aa11bb22cc33dd44ee03", totalPrice: 3297, paymentMethod: "Razorpay", paymentStatus: "Paid", status: "Delivered", shiprocketTrackingId: "SR987654321", createdAt: "2026-07-01", items: [{ name: "Magnetic 10000mAh Power Bank", quantity: 2, price: 1499 }, { name: "B-7000 Glue Frame Adhesive (50ml)", quantity: 1, price: 199 }] },
+  { _id: "64f0aa11bb22cc33dd44ee03", totalPrice: 3297, paymentMethod: "UPI", paymentStatus: "Paid", status: "Delivered", shiprocketTrackingId: "SR987654321", createdAt: "2026-07-01", items: [{ name: "Magnetic 10000mAh Power Bank", quantity: 2, price: 1499 }, { name: "B-7000 Glue Frame Adhesive (50ml)", quantity: 1, price: 199 }] },
 ];
