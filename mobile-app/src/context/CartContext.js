@@ -85,7 +85,10 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const didHydrate = useRef(false);
 
-  // Load persisted cart on mount.
+  const [token, setToken] = React.useState(null);
+  const [tokenLoading, setTokenLoading] = React.useState(true);
+
+  // Load persisted cart and token on mount.
   useEffect(() => {
     (async () => {
       try {
@@ -95,6 +98,15 @@ export function CartProvider({ children }) {
         dispatch({ type: "HYDRATE", items: [] });
       } finally {
         didHydrate.current = true;
+      }
+
+      try {
+        const val = await AsyncStorage.getItem("rj_token");
+        setToken(val);
+      } catch {
+        setToken(null);
+      } finally {
+        setTokenLoading(false);
       }
     })();
   }, []);
@@ -124,6 +136,9 @@ export function CartProvider({ children }) {
     () => ({
       items: state.items,
       hydrated: state.hydrated,
+      token,
+      setToken,
+      tokenLoading,
       ...totals,
       addToCart,
       setQty,
@@ -132,7 +147,7 @@ export function CartProvider({ children }) {
       removeItem,
       clearCart,
     }),
-    [state.items, state.hydrated, totals, addToCart, setQty, removeItem, clearCart]
+    [state.items, state.hydrated, token, tokenLoading, totals, addToCart, setQty, removeItem, clearCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

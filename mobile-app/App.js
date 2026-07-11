@@ -12,7 +12,31 @@ import { CartProvider } from "./src/context/CartContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import logo from "./src/assets/logo.png";
 
+import AuthScreen from "./src/screens/AuthScreen";
+import { useCart } from "./src/context/CartContext";
+import { colors } from "./src/lib/theme";
+import { ActivityIndicator } from "react-native";
+
 const { width } = Dimensions.get("window");
+
+function AppContent() {
+  const { token, tokenLoading, setToken } = useCart();
+
+  if (tokenLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0d131b", alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="light" />
+      {token ? <AppNavigator /> : <AuthScreen onAuthSuccess={(t) => setToken(t)} />}
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   const [splashActive, setSplashActive] = useState(true);
@@ -51,10 +75,7 @@ export default function App() {
     <SafeAreaProvider>
       <CartProvider>
         <View style={{ flex: 1, backgroundColor: "#0d131b" }}>
-          <NavigationContainer>
-            <StatusBar style="light" />
-            <AppNavigator />
-          </NavigationContainer>
+          <AppContent />
 
           {splashActive && (
             <Animated.View style={[StyleSheet.absoluteFill, styles.splashContainer, { opacity: bgOpacity }]}>

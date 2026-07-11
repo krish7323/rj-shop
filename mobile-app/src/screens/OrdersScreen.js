@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OrderAPI, AuthAPI } from "../lib/api";
 import { DEMO_ORDERS, inr, dateShort } from "../lib/format";
 import { colors, radius, spacing } from "../lib/theme";
+import { useCart } from "../context/CartContext";
 
 // Ordered lifecycle for the progress tracker.
 const FLOW = ["Confirmed", "Processing", "Shipped", "Delivered"];
@@ -154,6 +155,7 @@ function OrderCard({ order }) {
 }
 
 export default function OrdersScreen({ navigation }) {
+  const { setToken } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -338,6 +340,7 @@ export default function OrdersScreen({ navigation }) {
           await AsyncStorage.removeItem("rj_token");
           setIsLoggedIn(false);
           setOrders([]);
+          setToken(null);
         },
       },
     ]);
