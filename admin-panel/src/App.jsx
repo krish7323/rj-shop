@@ -43,6 +43,9 @@ export default function App() {
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   const [lastOrderId, setLastOrderId] = useState(null);
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("rj_admin_token"));
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Polling hook to look for new orders
   useEffect(() => {
@@ -51,8 +54,10 @@ export default function App() {
 
     const checkNewOrders = async () => {
       try {
-        const res = await OrderAPI.all({ limit: 1 });
+        const res = await OrderAPI.all({ limit: 5 });
         const latest = res.data.orders?.[0];
+        setRecentOrders(res.data.orders || []);
+        setTotalOrdersCount(res.data.total || 0);
         if (latest) {
           if (lastOrderId && latest._id !== lastOrderId) {
             setNewOrderAlert(latest);
@@ -124,20 +129,78 @@ export default function App() {
               />
             </div>
 
-            <button
-              onClick={() => {
-                if (newOrderAlert) {
-                  setView("orders");
-                  setNewOrderAlert(null);
-                }
-              }}
-              className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-            >
-              <Bell className="h-5 w-5" />
-              {newOrderAlert && (
-                <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setNewOrderAlert(null); // Clear unread dot on open
+                }}
+                className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 active:scale-[.97]"
+              >
+                <Bell className="h-5 w-5" />
+                {newOrderAlert && (
+                  <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl z-50 animate-fade-up">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="text-sm font-bold text-slate-800">Notifications</span>
+                    <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+                      Total: {totalOrdersCount} Orders
+                    </span>
+                  </div>
+
+                  <div className="mt-3 max-h-64 overflow-y-auto space-y-2.5 divide-y divide-slate-100">
+                    {recentOrders.length === 0 ? (
+                      <p className="py-4 text-center text-xs font-medium text-slate-400">No orders found.</p>
+                    ) : (
+                      recentOrders.map((ord) => (
+                        <div
+                          key={ord._id}
+                          onClick={() => {
+                            setView("orders");
+                            setShowNotifications(false);
+                          }}
+                          className="group cursor-pointer pt-2.5 first:pt-0 hover:opacity-80 transition"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition">
+                                New Order #{ord._id.slice(-6).toUpperCase()}
+                              </p>
+                              <p className="text-[10px] font-medium text-slate-400">
+                                By {ord.user?.name || "Guest Customer"}
+                              </p>
+                            </div>
+                            <span className="text-xs font-extrabold text-slate-800">
+                              ₹{ord.totalPrice}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center justify-between text-[10px] font-semibold text-slate-400">
+                            <span>{ord.paymentMethod} · {ord.status}</span>
+                            <span>{new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="mt-3 border-t border-slate-100 pt-2.5 text-center">
+                    <button
+                      onClick={() => {
+                        setView("orders");
+                        setShowNotifications(false);
+                      }}
+                      className="text-xs font-bold text-brand-600 hover:text-brand-500 transition"
+                    >
+                      View all orders
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 py-1.5 pl-1.5 pr-3">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">
