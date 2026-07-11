@@ -27,11 +27,12 @@ services:
         value: dummypassword
 
   # 2. Frontend Storefront Static Site
-  - type: static
+  - type: web
     name: rj-mobile-store
+    runtime: static
     rootDir: frontend
     buildCommand: npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
@@ -41,11 +42,12 @@ services:
         value: https://${HOST}/api
 
   # 3. Admin Panel Static Site
-  - type: static
+  - type: web
     name: rj-mobile-admin
+    runtime: static
     rootDir: admin-panel
     buildCommand: npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
