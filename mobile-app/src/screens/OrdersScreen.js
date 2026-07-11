@@ -477,44 +477,7 @@ export default function OrdersScreen({ navigation }) {
         <View style={{ marginBottom: spacing.md }}>
           <View style={styles.header}>
             <Text style={styles.title}>My Orders</Text>
-            <TouchableOpacity onPress={handleSignOut} style={styles.signoutBtn}>
-              <Ionicons name="log-out-outline" size={16} color={colors.danger} />
-              <Text style={styles.signoutText}>Sign Out</Text>
-            </TouchableOpacity>
           </View>
-          
-          {currentUser && (
-            <View style={styles.profileCard}>
-              <View style={styles.profileRow}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {currentUser.name
-                      ? currentUser.name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
-                      : "U"}
-                  </Text>
-                </View>
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{currentUser.name}</Text>
-                  <Text style={styles.profileEmail}>{currentUser.email}</Text>
-                  
-                  {(currentUser.phone || currentUser.currentDevice) && (
-                    <View style={styles.badgeRow}>
-                      {currentUser.phone ? (
-                        <View style={styles.profileBadge}>
-                          <Text style={styles.profileBadgeText}>💬 +91 {currentUser.phone}</Text>
-                        </View>
-                      ) : null}
-                      {currentUser.currentDevice ? (
-                        <View style={[styles.profileBadge, { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1" }]}>
-                          <Text style={[styles.profileBadgeText, { color: "#475569" }]}>📱 {currentUser.currentDevice}</Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-          )}
           
           {orders.length > 0 && (
             <View style={styles.statsCard}>

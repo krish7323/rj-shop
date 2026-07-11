@@ -15,6 +15,7 @@ import HomeScreen from "../screens/HomeScreen";
 import ProductDetailsScreen from "../screens/ProductDetailsScreen";
 import CartScreen from "../screens/CartScreen";
 import OrdersScreen from "../screens/OrdersScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import { useCart } from "../context/CartContext";
 import { colors } from "../lib/theme";
 
@@ -94,6 +95,16 @@ export default function AppNavigator() {
           tabBarLabel: "Orders",
           tabBarIcon: ({ color, size }) => (
             <TabIcon name="receipt" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon name="person" color={color} size={size} />
           ),
         }}
       />
