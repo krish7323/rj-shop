@@ -21,18 +21,20 @@ const publicUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  phone: user.phone || "",
+  currentDevice: user.currentDevice || "",
   addresses: user.addresses || [],
   createdAt: user.createdAt,
 });
 
 /**
  * POST /api/auth/register
- * Body: { name, email, password, role? }
+ * Body: { name, email, password, role?, phone, currentDevice }
  * Creates an unverified user and sends an OTP email.
  */
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, currentDevice } = req.body;
 
     // Strict validation.
     if (!name || !email || !password) {
@@ -73,6 +75,8 @@ const register = async (req, res) => {
       isVerified: safeRole === "Admin", // Admins are auto-verified
       otpCode: otp,
       otpExpires,
+      phone: phone ? String(phone).trim() : "",
+      currentDevice: currentDevice ? String(currentDevice).trim() : "",
     });
 
     // Send OTP email (only for customers)

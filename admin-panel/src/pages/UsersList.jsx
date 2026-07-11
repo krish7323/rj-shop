@@ -10,11 +10,11 @@ import { inr, dateShort } from "../lib/format";
 import { Loading, Empty } from "../components/ui";
 
 const DEMO_CUSTOMERS = [
-  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28", isVerified: true, pendingCount: 2 },
-  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02", isVerified: true, pendingCount: 1 },
-  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19", isVerified: false, pendingCount: 4 },
-  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05", isVerified: true, pendingCount: 0 },
-  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30", isVerified: false, pendingCount: 1 },
+  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28", isVerified: true, pendingCount: 2, phone: "9876543210", currentDevice: "iPhone 13 Pro" },
+  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02", isVerified: true, pendingCount: 1, phone: "9812345678", currentDevice: "OnePlus 9 5G" },
+  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19", isVerified: false, pendingCount: 4, phone: "9765432109", currentDevice: "Nokia 3310" },
+  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05", isVerified: true, pendingCount: 0, phone: "9988776655", currentDevice: "Samsung S22 Ultra" },
+  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30", isVerified: false, pendingCount: 1, phone: "9654321098", currentDevice: "iPhone 11" },
 ];
 
 const initials = (name = "") =>
@@ -170,16 +170,30 @@ export default function UsersList() {
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] font-medium text-slate-400 mt-0.5">
-                            Orders: <strong className="text-slate-600">{c.orderCount || 0}</strong> | Pending: <strong className="text-brand-600">{c.pendingCount || 0}</strong>
-                          </span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                            <span className="text-[11px] font-medium text-slate-400">
+                              Orders: <strong className="text-slate-650">{c.orderCount || 0}</strong> | Pending: <strong className="text-brand-600">{c.pendingCount || 0}</strong>
+                            </span>
+                            {c.currentDevice && (
+                              <span className="inline-flex items-center text-[9px] font-extrabold text-slate-500 bg-slate-100 border border-slate-200 px-1 rounded uppercase tracking-wide">
+                                📱 {c.currentDevice}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="flex items-center gap-1.5 text-slate-500">
-                        <Mail className="h-3.5 w-3.5" /> {c.email}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                          <Mail className="h-3.5 w-3.5 text-slate-400" /> {c.email}
+                        </span>
+                        {c.phone && (
+                          <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                            <span className="text-emerald-500 text-[10px]">💬</span> +91 {c.phone}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="badge bg-brand-50 text-brand-600">{c.orderCount} orders</span>

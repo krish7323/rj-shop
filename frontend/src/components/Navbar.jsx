@@ -9,7 +9,7 @@ import logo from "../assets/logo.png";
 
 const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
-export default function Navbar({ search, onSearch, category, onCategory, onCartClick, user, onAuthClick, onOrdersClick, onLogout }) {
+export default function Navbar({ search, onSearch, category, onCategory, onCartClick, user, onAuthClick, onOrdersClick, onLogout, onMenuClick }) {
   const { count } = useCart();
   const [bump, setBump] = useState(false);
 
@@ -109,7 +109,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
       <div className="bg-navy-800 text-slate-200">
         <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2">
           <span className="mr-1 flex items-center gap-2 text-xs font-semibold text-slate-400">
-            <Menu className="h-5 w-5 cursor-pointer text-slate-300 hover:text-white transition" />
+            <Menu onClick={onMenuClick} className="h-5 w-5 cursor-pointer text-slate-300 hover:text-white transition" />
             <img src={logo} alt="" className="h-[18px] w-[18px] rounded-md object-cover border border-accent-400/30" />
             <span>Shop Sections</span>
           </span>

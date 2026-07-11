@@ -146,6 +146,8 @@ export default function OrdersScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [currentDevice, setCurrentDevice] = useState("");
   const [otp, setOtp] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -192,16 +194,26 @@ export default function OrdersScreen({ navigation }) {
       Alert.alert("Check your details", "Please fill in all fields.");
       return;
     }
-    if (isRegister && !name.trim()) {
-      Alert.alert("Check your details", "Please enter your name.");
-      return;
+    if (isRegister) {
+      if (!name.trim()) {
+        Alert.alert("Check your details", "Please enter your name.");
+        return;
+      }
+      if (!phone.trim()) {
+        Alert.alert("Check your details", "Please enter your WhatsApp phone number.");
+        return;
+      }
+      if (!/^[0-9]{10}$/.test(phone.trim())) {
+        Alert.alert("Check your details", "Phone number must be a 10-digit number.");
+        return;
+      }
     }
 
     setAuthLoading(true);
     try {
       let res;
       if (isRegister) {
-        res = await AuthAPI.register(name, email, password);
+        res = await AuthAPI.register(name.trim(), email.trim(), password, phone.trim(), currentDevice.trim());
         Alert.alert("Verification Sent", res.data.message || "OTP code sent to your email!");
         setIsVerifying(true);
       } else {
@@ -355,13 +367,31 @@ export default function OrdersScreen({ navigation }) {
             <Text style={styles.authSub}>Access your account to place and track orders.</Text>
 
             {isRegister && (
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#94a3b8"
-                value={name}
-                onChangeText={setName}
-              />
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  placeholderTextColor="#94a3b8"
+                  value={name}
+                  onChangeText={setName}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="WhatsApp Number (10 Digits)"
+                  placeholderTextColor="#94a3b8"
+                  value={phone}
+                  onChangeText={(val) => setPhone(val.replace(/\D/g, ""))}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Current Phone (e.g. iPhone 11)"
+                  placeholderTextColor="#94a3b8"
+                  value={currentDevice}
+                  onChangeText={setCurrentDevice}
+                />
+              </>
             )}
 
             <TextInput

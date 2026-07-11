@@ -4,7 +4,7 @@
 // product-detail modal overlay, the slide-over cart, and the checkout flow.
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, PackageSearch, Sparkles, Star } from "lucide-react";
+import { Loader2, PackageSearch, Sparkles, Star, X, MapPin, MessageCircle } from "lucide-react";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
@@ -42,6 +42,7 @@ function Storefront() {
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [ordersOpen, setOrdersOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Load user profile on startup if token exists
   const fetchProfile = async () => {
@@ -184,7 +185,171 @@ function Storefront() {
           localStorage.removeItem("rj_token");
           setUser(null);
         }}
+        onMenuClick={() => setDrawerOpen(true)}
       />
+
+      {/* Sliding Sidebar Drawer */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Overlay backdrop */}
+          <div
+            onClick={() => setDrawerOpen(false)}
+            className="fixed inset-0 bg-navy-900/60 backdrop-blur-sm transition-opacity"
+          />
+
+          {/* Drawer content box */}
+          <div className="relative flex w-80 max-w-xs flex-col bg-navy-900 text-slate-105 shadow-hover animate-slide-right h-full border-r border-navy-800">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-navy-800 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="Logo" className="h-7 w-7 rounded border border-accent-400/20 object-cover" />
+                <span className="text-sm font-extrabold tracking-wide uppercase text-white">RJ Store Menu</span>
+              </div>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-navy-800 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Scrollable list */}
+            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+              {/* User Account / Profile Section */}
+              <div className="bg-navy-800 rounded-2xl p-4 border border-navy-700">
+                {user ? (
+                  <div className="space-y-3.5">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Logged In As</span>
+                      <p className="text-sm font-extrabold text-white mt-0.5">{user.name}</p>
+                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    </div>
+
+                    {user.phone && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">WhatsApp Mobile</span>
+                        <p className="text-xs font-semibold text-slate-200 mt-0.5">💬 +91 {user.phone}</p>
+                      </div>
+                    )}
+
+                    {user.currentDevice && (
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Current Phone</span>
+                        <p className="text-xs font-semibold text-slate-200 mt-0.5">📱 {user.currentDevice}</p>
+                      </div>
+                    )}
+
+                    <div className="pt-2 border-t border-navy-700 flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          setDrawerOpen(false);
+                          setOrdersOpen(true);
+                        }}
+                        className="btn-accent py-2 text-xs font-bold w-full rounded-xl text-center"
+                      >
+                        📦 View My Orders
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDrawerOpen(false);
+                          localStorage.removeItem("rj_token");
+                          setUser(null);
+                        }}
+                        className="w-full py-2 text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl transition text-center"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-3">
+                    <p className="text-xs text-slate-400">Sign in to place orders, verify OTP, and track your purchase history.</p>
+                    <button
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        setAuthOpen(true);
+                      }}
+                      className="btn-accent py-2 text-xs font-extrabold w-full rounded-xl text-center"
+                    >
+                      Sign In / Register
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Menu */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 block mb-2">Shop Catalog</span>
+                <nav className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      handleScrollToSection("All");
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
+                  >
+                    🔝 Top / Home
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      handleScrollToSection("Repair Kits");
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
+                  >
+                    🛠️ Repair Kits & Tools
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      handleScrollToSection("Old Phones");
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
+                  >
+                    📱 Pre-Owned Devices
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      handleScrollToSection("Cool Gadgets");
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition text-left w-full"
+                  >
+                    ⚡ Smart Gadgets
+                  </button>
+                </nav>
+              </div>
+
+              {/* Store contact info */}
+              <div className="space-y-3 pt-4 border-t border-navy-850">
+                <a
+                  href="https://maps.google.com/?q=MG+Road+Mobile+Store"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition w-full"
+                >
+                  <MapPin className="h-4 w-4 text-accent-400 shrink-0" />
+                  <span>Visit Physical Store</span>
+                </a>
+                <a
+                  href="https://wa.me/918999351543?text=Hi%20RJ%20Mobile%20Store%2C%20I%20have%20a%20query%20regarding%20devices"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-300 hover:bg-navy-800 hover:text-white transition w-full"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>WhatsApp Live Assistance</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Footer brand stamp */}
+            <div className="border-t border-navy-800 p-4 text-center">
+              <p className="text-[10px] text-slate-500 font-medium">© 2026 RJ Mobile Store.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero banner */}
       <section className="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 text-white">

@@ -7,6 +7,8 @@ export default function AuthModal({ onClose, onSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [currentDevice, setCurrentDevice] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -22,7 +24,9 @@ export default function AuthModal({ onClose, onSuccess }) {
     try {
       if (mode === "register") {
         if (!name.trim()) throw new Error("Name is required");
-        const res = await AuthAPI.register(name, email, password);
+        if (!phone.trim()) throw new Error("Phone number is required");
+        if (!/^[0-9]{10}$/.test(phone.trim())) throw new Error("Phone number must be a 10-digit number");
+        const res = await AuthAPI.register(name.trim(), email.trim(), password, phone.trim(), currentDevice.trim());
         setInfoMessage(res.data.message || "OTP code sent to your email!");
         setMode("verify");
       } else if (mode === "login") {
@@ -106,17 +110,43 @@ export default function AuthModal({ onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {mode === "register" && (
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input w-full pl-10"
-                required
-              />
-            </div>
+            <>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="input w-full pl-10"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pr-2 border-r border-slate-200">+91</span>
+                <input
+                  type="tel"
+                  placeholder="WhatsApp Mobile Number"
+                  maxLength={10}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                  className="input w-full pl-14"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">📱</span>
+                <input
+                  type="text"
+                  placeholder="Current Phone (e.g., iPhone 12, OnePlus 9)"
+                  value={currentDevice}
+                  onChange={(e) => setCurrentDevice(e.target.value)}
+                  className="input w-full pl-10"
+                />
+              </div>
+            </>
           )}
 
           {mode !== "verify" && (

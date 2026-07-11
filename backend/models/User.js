@@ -101,6 +101,16 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    currentDevice: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     addresses: {
       type: [addressSchema],
       default: [],

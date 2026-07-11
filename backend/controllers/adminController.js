@@ -99,6 +99,8 @@ const topCustomers = async (req, res) => {
           userId: "$_id",
           name: "$user.name",
           email: "$user.email",
+          phone: "$user.phone",
+          currentDevice: "$user.currentDevice",
           isVerified: "$user.isVerified",
           totalSpent: { $round: ["$totalSpent", 2] },
           orderCount: 1,
