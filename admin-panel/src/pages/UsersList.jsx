@@ -4,17 +4,17 @@
 // email, order count and total expenditure.
 
 import { useEffect, useMemo, useState } from "react";
-import { Users, Crown, Mail, Search, RefreshCw, Trophy } from "lucide-react";
+import { Users, Crown, Mail, Search, RefreshCw, Trophy, CheckCircle2, AlertCircle } from "lucide-react";
 import { AdminAPI } from "../lib/api";
 import { inr, dateShort } from "../lib/format";
 import { Loading, Empty } from "../components/ui";
 
 const DEMO_CUSTOMERS = [
-  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28" },
-  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02" },
-  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19" },
-  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05" },
-  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30" },
+  { userId: "u1", name: "Ananya Sharma", email: "ananya@example.com", totalSpent: 18420, orderCount: 12, lastOrderAt: "2026-06-28", isVerified: true },
+  { userId: "u2", name: "Rohit Verma", email: "rohit.v@example.com", totalSpent: 14260, orderCount: 9, lastOrderAt: "2026-07-02", isVerified: true },
+  { userId: "u3", name: "Priya Nair", email: "priya.nair@example.com", totalSpent: 11890, orderCount: 8, lastOrderAt: "2026-06-19", isVerified: false },
+  { userId: "u4", name: "Karan Mehta", email: "karan.m@example.com", totalSpent: 9650, orderCount: 6, lastOrderAt: "2026-07-05", isVerified: true },
+  { userId: "u5", name: "Sneha Iyer", email: "sneha.iyer@example.com", totalSpent: 7240, orderCount: 5, lastOrderAt: "2026-06-30", isVerified: false },
 ];
 
 const initials = (name = "") =>
@@ -157,7 +157,20 @@ export default function UsersList() {
                         <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">
                           {initials(c.name)}
                         </span>
-                        <span className="font-semibold text-slate-800">{c.name || "Unknown"}</span>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-800">{c.name || "Unknown"}</span>
+                            {c.isVerified ? (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 uppercase tracking-wide" title="Verified Account">
+                                <CheckCircle2 className="h-2.5 w-2.5" /> Verified
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-slate-400 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 uppercase tracking-wide" title="Pending Verification">
+                                <AlertCircle className="h-2.5 w-2.5" /> Pending
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
