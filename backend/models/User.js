@@ -115,6 +115,10 @@ const userSchema = new mongoose.Schema(
       type: [addressSchema],
       default: [],
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

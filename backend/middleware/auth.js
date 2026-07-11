@@ -50,6 +50,12 @@ const protect = async (req, res, next) => {
         .json({ success: false, message: "Forbidden: Please verify your account first" });
     }
 
+    if (user.isBlocked) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Your account has been suspended / blocked. Please contact support." });
+    }
+
     req.user = user;
     return next();
   } catch (error) {

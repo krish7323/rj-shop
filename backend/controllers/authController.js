@@ -225,6 +225,13 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended / blocked. Please contact support.",
+      });
+    }
+
     // Customer accounts must be verified
     if (user.role === "Customer" && !user.isVerified) {
       return res.status(403).json({

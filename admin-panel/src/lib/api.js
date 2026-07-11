@@ -37,6 +37,9 @@ export const AdminAPI = {
   topCustomers: (limit = 10) => api.get(`/admin/metrics/top-customers?limit=${limit}`),
   lowStock: (threshold = 5) => api.get(`/admin/metrics/low-stock?threshold=${threshold}`),
   revenueBreakdown: () => api.get("/admin/metrics/revenue-breakdown"),
+  usersList: () => api.get("/admin/users"),
+  toggleBlock: (id) => api.put(`/admin/users/${id}/block`),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
 };
 
 export const ProductAPI = {

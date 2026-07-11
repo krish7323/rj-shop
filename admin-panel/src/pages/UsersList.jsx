@@ -37,13 +37,15 @@ export default function UsersList() {
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
   const [q, setQ] = useState("");
+  const [feedback, setFeedback] = useState(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await AdminAPI.topCustomers(25);
-      setRows(res.data.topCustomers || []);
+      const res = await AdminAPI.usersList();
+      setRows(res.data.users || []);
       setLive(true);
+      setErrorState(null);
     } catch {
       setRows(DEMO_CUSTOMERS);
       setLive(false);
@@ -52,9 +54,37 @@ export default function UsersList() {
     }
   };
 
+  const handleToggleBlock = async (id, name, isBlocked) => {
+    if (!window.confirm(`Are you sure you want to ${isBlocked ? "unblock" : "block"} user "${name}"?`)) {
+      return;
+    }
+    try {
+      await AdminAPI.toggleBlock(id);
+      setFeedback({ type: "success", msg: `User "${name}" status updated successfully!` });
+      load();
+    } catch (err) {
+      setFeedback({ type: "error", msg: err?.response?.data?.message || "Failed to update user status" });
+    }
+  };
+
+  const handleDeleteUser = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${name}"? This will delete their profile.`)) {
+      return;
+    }
+    try {
+      await AdminAPI.deleteUser(id);
+      setFeedback({ type: "success", msg: `User "${name}" deleted successfully!` });
+      load();
+    } catch (err) {
+      setFeedback({ type: "error", msg: err?.response?.data?.message || "Failed to delete user account" });
+    }
+  };
+
   useEffect(() => {
     load();
   }, []);
+
+  const [errorState, setErrorState] = useState(null);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -69,6 +99,21 @@ export default function UsersList() {
 
   return (
     <div className="space-y-6">
+      {feedback && (
+        <div
+          className={[
+            "rounded-xl border p-4 text-sm font-semibold flex items-center justify-between",
+            feedback.type === "success"
+              ? "border-emerald-100 bg-emerald-50 text-emerald-600"
+              : "border-rose-100 bg-rose-50 text-rose-600",
+          ].join(" ")}
+        >
+          <span>{feedback.msg}</span>
+          <button onClick={() => setFeedback(null)} className="text-xs hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
       {/* Header stat strip */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="card flex items-center gap-4 p-5">
@@ -136,8 +181,9 @@ export default function UsersList() {
                   <th className="px-5 py-3 font-semibold">Customer</th>
                   <th className="px-5 py-3 font-semibold">Email</th>
                   <th className="px-5 py-3 font-semibold">Orders</th>
-                  <th className="px-5 py-3 font-semibold">Last Order</th>
+                  <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3 text-right font-semibold">Total Spent</th>
+                  <th className="px-5 py-3 text-center font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -172,7 +218,7 @@ export default function UsersList() {
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
                             <span className="text-[11px] font-medium text-slate-400">
-                              Orders: <strong className="text-slate-650">{c.orderCount || 0}</strong> | Pending: <strong className="text-brand-600">{c.pendingCount || 0}</strong>
+                              Orders: <strong className="text-slate-650">{c.orderCount || 0}</strong>
                             </span>
                             {c.currentDevice && (
                               <span className="inline-flex items-center text-[9px] font-extrabold text-slate-500 bg-slate-100 border border-slate-200 px-1 rounded uppercase tracking-wide">
@@ -198,9 +244,41 @@ export default function UsersList() {
                     <td className="px-5 py-3.5">
                       <span className="badge bg-brand-50 text-brand-600">{c.orderCount} orders</span>
                     </td>
-                    <td className="px-5 py-3.5 text-slate-500">{dateShort(c.lastOrderAt)}</td>
+                    <td className="px-5 py-3.5">
+                      {c.isBlocked ? (
+                        <span className="inline-flex items-center text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-full px-2.5 py-0.5 uppercase tracking-wide">
+                          Suspended
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-2.5 py-0.5 uppercase tracking-wide">
+                          Active
+                        </span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 text-right text-base font-extrabold text-slate-900">
                       {inr(c.totalSpent)}
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => handleToggleBlock(c.userId, c.name, c.isBlocked)}
+                          className={[
+                            "px-2.5 py-1 text-xs font-bold rounded-lg border transition",
+                            c.isBlocked
+                              ? "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
+                              : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100",
+                          ].join(" ")}
+                        >
+                          {c.isBlocked ? "Unblock" : "Block"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(c.userId, c.name)}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 transition"
+                          title="Delete User"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

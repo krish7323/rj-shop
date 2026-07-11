@@ -10,6 +10,9 @@ const {
   lowStockAlerts,
   revenueBreakdown,
   dashboardOverview,
+  getAllUsers,
+  toggleUserBlock,
+  deleteUser,
 } = require("../controllers/adminController");
 const { protect, adminCheck } = require("../middleware/auth");
 
@@ -21,5 +24,10 @@ router.get("/metrics/total-spending", totalActiveUserSpending);
 router.get("/metrics/top-customers", topCustomers);
 router.get("/metrics/low-stock", lowStockAlerts);
 router.get("/metrics/revenue-breakdown", revenueBreakdown);
+
+// User Management routes
+router.get("/users", getAllUsers);
+router.put("/users/:id/block", toggleUserBlock);
+router.delete("/users/:id", deleteUser);
 
 module.exports = router;

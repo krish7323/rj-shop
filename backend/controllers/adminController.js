@@ -278,10 +278,100 @@ const dashboardOverview = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/admin/users
+ * Returns list of all customer users with order counts and spent totals.
+ */
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: "Customer" }).sort({ createdAt: -1 });
+
+    const usersData = await Promise.all(
+      users.map(async (u) => {
+        const orders = await Order.find({ user: u._id });
+        const totalSpent = orders
+          .filter((o) => o.paymentStatus === "Paid" || (o.paymentMethod === "COD" && o.status === "Delivered"))
+          .reduce((s, o) => s + o.totalPrice, 0);
+
+        return {
+          userId: u._id,
+          name: u.name,
+          email: u.email,
+          phone: u.phone,
+          currentDevice: u.currentDevice,
+          isVerified: u.isVerified,
+          isBlocked: u.isBlocked || false,
+          orderCount: orders.length,
+          totalSpent,
+          createdAt: u.createdAt,
+        };
+      })
+    );
+
+    return res.status(200).json({ success: true, users: usersData });
+  } catch (error) {
+    console.error(`getAllUsers error: ${error.message}`);
+    return res.status(500).json({ success: false, message: "Failed to fetch users directory" });
+  }
+};
+
+/**
+ * PUT /api/admin/users/:id/block
+ * Toggles dynamic block status of a customer user.
+ */
+const toggleUserBlock = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.role === "Admin") {
+      return res.status(400).json({ success: false, message: "Cannot block admin accounts" });
+    }
+
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${user.name} is now ${user.isBlocked ? "blocked" : "unblocked"}`,
+      isBlocked: user.isBlocked,
+    });
+  } catch (error) {
+    console.error(`toggleUserBlock error: ${error.message}`);
+    return res.status(500).json({ success: false, message: "Failed to toggle block status" });
+  }
+};
+
+/**
+ * DELETE /api/admin/users/:id
+ * Deletes a customer user account from the shop directory.
+ */
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.role === "Admin") {
+      return res.status(400).json({ success: false, message: "Cannot delete admin accounts" });
+    }
+
+    await user.deleteOne();
+    return res.status(200).json({ success: true, message: "User account deleted successfully" });
+  } catch (error) {
+    console.error(`deleteUser error: ${error.message}`);
+    return res.status(500).json({ success: false, message: "Failed to delete user account" });
+  }
+};
+
 module.exports = {
   totalActiveUserSpending,
   topCustomers,
   lowStockAlerts,
   revenueBreakdown,
   dashboardOverview,
+  getAllUsers,
+  toggleUserBlock,
+  deleteUser,
 };
