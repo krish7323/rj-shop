@@ -102,29 +102,15 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
               Sign In
             </button>
           )}
-        </div>
-      </div>
 
-      {/* Category shortcuts */}
-      <div className="bg-navy-800 text-slate-200">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2">
-          <span className="mr-1 flex items-center gap-2 text-xs font-semibold text-slate-400">
-            <Menu onClick={onMenuClick} className="h-5 w-5 cursor-pointer text-slate-300 hover:text-white transition" />
-            <img src={logo} alt="" className="h-[18px] w-[18px] rounded-md object-cover border border-accent-400/30" />
-            <span>Shop Sections</span>
-          </span>
-          {CATEGORIES.map((c) => {
-            const active = category === c;
-            return (
-              <button
-                key={c}
-                onClick={() => onCategory(c)}
-                className={`chip whitespace-nowrap text-slate-300 hover:bg-navy-700 hover:text-white`}
-              >
-                {c === "All" ? "🔝 Top" : c}
-              </button>
-            );
-          })}
+          {/* Hamburger Menu Trigger */}
+          <button
+            onClick={onMenuClick}
+            className="grid h-9 w-9 place-items-center rounded-full text-slate-300 hover:bg-navy-700 hover:text-white transition ml-1"
+            title="Open Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </header>
