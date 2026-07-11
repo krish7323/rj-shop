@@ -151,16 +151,28 @@ export default function OrdersScreen({ navigation }) {
   const [otp, setOtp] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await AuthAPI.me();
+      setCurrentUser(res.data.user);
+    } catch {
+      setCurrentUser(null);
+    }
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     const token = await AsyncStorage.getItem("rj_token");
     if (!token) {
       setOrders([]);
       setIsLoggedIn(false);
+      setCurrentUser(null);
       setLive(false);
       return;
     }
     setIsLoggedIn(true);
+    fetchProfile();
     try {
       const res = await OrderAPI.mine();
       const list = res.data.orders || [];
@@ -170,7 +182,7 @@ export default function OrdersScreen({ navigation }) {
       setOrders([]);
       setLive(false);
     }
-  }, []);
+  }, [fetchProfile]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -448,6 +460,39 @@ export default function OrdersScreen({ navigation }) {
             </TouchableOpacity>
           </View>
           
+          {currentUser && (
+            <View style={styles.profileCard}>
+              <View style={styles.profileRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {currentUser.name
+                      ? currentUser.name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+                      : "U"}
+                  </Text>
+                </View>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{currentUser.name}</Text>
+                  <Text style={styles.profileEmail}>{currentUser.email}</Text>
+                  
+                  {(currentUser.phone || currentUser.currentDevice) && (
+                    <View style={styles.badgeRow}>
+                      {currentUser.phone ? (
+                        <View style={styles.profileBadge}>
+                          <Text style={styles.profileBadgeText}>💬 +91 {currentUser.phone}</Text>
+                        </View>
+                      ) : null}
+                      {currentUser.currentDevice ? (
+                        <View style={[styles.profileBadge, { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1" }]}>
+                          <Text style={[styles.profileBadgeText, { color: "#475569" }]}>📱 {currentUser.currentDevice}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          )}
+          
           {orders.length > 0 && (
             <View style={styles.statsCard}>
               <View style={styles.statBox}>
@@ -577,4 +622,16 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, alignItems: "center", justifyContent: "center" },
   statLabel: { fontSize: 9, color: colors.muted, fontWeight: "700" },
   statVal: { fontSize: 16, fontWeight: "900", color: colors.text, marginTop: 2 },
+
+  // Profile Card Styles
+  profileCard: { backgroundColor: "#fff", borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginTop: 12, elevation: 1 },
+  profileRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: colors.navy, fontSize: 16, fontWeight: "900" },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 15, fontWeight: "800", color: colors.text },
+  profileEmail: { fontSize: 12, color: colors.sub, marginTop: 1 },
+  badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  profileBadge: { backgroundColor: "#ecfdf5", borderWidth: 1, borderColor: "#a7f3d0", borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 2 },
+  profileBadgeText: { fontSize: 10, fontWeight: "800", color: "#065f46" },
 });
