@@ -4,7 +4,7 @@
 // premium layout with a persistent Sidebar and a contextual Topbar.
 
 import { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
@@ -75,6 +75,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [lastOrderId]);
 
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { title, subtitle, Component } = VIEWS[view];
 
   if (!loggedIn) {
@@ -83,14 +84,23 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative">
-      <Sidebar active={view} onNavigate={setView} />
+      <Sidebar active={view} onNavigate={setView} isOpen={sidebarOpen} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur">
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-slate-900">{title}</h1>
-            <p className="text-sm font-medium text-slate-400">{subtitle}</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 active:scale-[.97]"
+              title="Toggle Sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight text-slate-900">{title}</h1>
+              <p className="text-sm font-medium text-slate-400">{subtitle}</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">

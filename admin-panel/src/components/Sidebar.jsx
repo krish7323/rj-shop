@@ -19,9 +19,9 @@ const NAV = [
   { key: "orders", label: "Orders", icon: ShoppingBag, hint: "Fulfilment feed" },
 ];
 
-export default function Sidebar({ active, onNavigate }) {
+export default function Sidebar({ active, onNavigate, isOpen }) {
   return (
-    <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-ink-900 text-slate-300">
+    <aside className={["sticky top-0 flex h-screen shrink-0 flex-col bg-ink-900 text-slate-300 transition-all duration-300", isOpen ? "w-72" : "w-0 overflow-hidden"].join(" ")}>
       {/* Brand */}
       <div className="flex items-center gap-3 px-6 py-6">
         <img src={logo} alt="RJ Mobile Store Logo" className="h-11 w-11 rounded-xl border border-brand-500 object-cover" />
