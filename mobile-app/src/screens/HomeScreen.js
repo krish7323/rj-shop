@@ -100,79 +100,154 @@ function ProductTile({ item, onOpen, onAdd }) {
   const low = item.stock !== undefined && item.stock > 0 && item.stock <= 5;
   const img = item.images && item.images.length ? item.images[0] : null;
 
+  // ── Cart-fly animation refs ──
+  const cardScaleAnim = useRef(new Animated.Value(1)).current;
+  const flyBallY = useRef(new Animated.Value(0)).current;
+  const flyBallOpacity = useRef(new Animated.Value(0)).current;
+  const flyBallScale = useRef(new Animated.Value(1)).current;
+  const checkScaleAnim = useRef(new Animated.Value(0)).current;
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    if (out) return;
+
+    // Press shrink on card
+    Animated.sequence([
+      Animated.timing(cardScaleAnim, { toValue: 0.95, duration: 80, useNativeDriver: Platform.OS !== "web" }),
+      Animated.spring(cardScaleAnim, { toValue: 1, friction: 4, tension: 180, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+
+    // Flying ball: appear, fly up, fade out
+    flyBallY.setValue(0);
+    flyBallOpacity.setValue(1);
+    flyBallScale.setValue(1);
+    Animated.parallel([
+      Animated.timing(flyBallY, { toValue: -80, duration: 550, useNativeDriver: Platform.OS !== "web" }),
+      Animated.timing(flyBallOpacity, { toValue: 0, duration: 500, delay: 150, useNativeDriver: Platform.OS !== "web" }),
+      Animated.sequence([
+        Animated.timing(flyBallScale, { toValue: 1.4, duration: 180, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(flyBallScale, { toValue: 0.5, duration: 370, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+    ]).start();
+
+    // Check pop animation
+    checkScaleAnim.setValue(0);
+    Animated.spring(checkScaleAnim, { toValue: 1, friction: 4, delay: 300, useNativeDriver: Platform.OS !== "web" }).start();
+
+    setAdded(true);
+    onAdd(item);
+    setTimeout(() => {
+      setAdded(false);
+      checkScaleAnim.setValue(0);
+    }, 1600);
+  };
+
   return (
-    <TouchableOpacity style={styles.tile} activeOpacity={0.85} onPress={() => onOpen(item)}>
-      <View style={styles.imageWrap}>
-        {img ? (
-          <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
-        ) : (
-          <View style={[styles.image, styles.imageFallback]}>
-            <Ionicons name="image-outline" size={28} color={colors.muted} />
-          </View>
-        )}
-        {pct > 0 && (
-          <View style={styles.discountTag}>
-            <Text style={styles.discountText}>-{pct}%</Text>
-          </View>
-        )}
-        {out ? (
-          <View style={[styles.stockTag, { backgroundColor: colors.navy }]}>
-            <Text style={styles.stockTagText}>Out of stock</Text>
-          </View>
-        ) : low ? (
-          <View style={[styles.stockTag, { backgroundColor: colors.accent }]}>
-            <Text style={[styles.stockTagText, { color: colors.navy }]}>Only {item.stock} left</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.tileBody}>
-        <Text style={styles.brand}>{item.brand || item.category}</Text>
-        <Text style={styles.name} numberOfLines={2}>
-          {item.name}
-        </Text>
-
-        {item.rating > 0 && (
-          <View style={styles.ratingRow}>
-            <View style={styles.ratingBadge}>
-              <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
-              <Ionicons name="star" size={10} color="#fff" />
+    <Animated.View style={[styles.tile, { transform: [{ scale: cardScaleAnim }] }]}>
+      <TouchableOpacity activeOpacity={0.9} onPress={() => onOpen(item)} style={{ flex: 1 }}>
+        {/* Product image */}
+        <View style={styles.imageWrap}>
+          {img ? (
+            <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
+          ) : (
+            <View style={[styles.image, styles.imageFallback]}>
+              <Ionicons name="hardware-chip-outline" size={34} color={colors.accentLight} />
             </View>
-            <Text style={styles.reviews}>({item.numReviews || 0})</Text>
-          </View>
-        )}
+          )}
 
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{inr(item.price)}</Text>
-          {pct > 0 && <Text style={styles.mrp}>{inr(item.mrp)}</Text>}
-        </View>
+          {/* Discount badge */}
+          {pct > 0 && (
+            <View style={styles.discountTag}>
+              <Text style={styles.discountText}>-{pct}%</Text>
+            </View>
+          )}
 
-        <View style={styles.tileActionsRow}>
-          <TouchableOpacity
-            style={[styles.addBtn, { flex: 1, marginTop: 0 }, out && styles.addBtnDisabled]}
-            disabled={out}
-            onPress={() => onAdd(item)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="cart" size={14} color={colors.navy} />
-            <Text style={styles.addBtnText}>{out ? "Sold out" : "Add"}</Text>
-          </TouchableOpacity>
+          {/* Stock label */}
+          {out ? (
+            <View style={[styles.stockTag, { backgroundColor: "#f43f5e22", borderColor: colors.danger }]}>
+              <Text style={[styles.stockTagText, { color: colors.danger }]}>Sold out</Text>
+            </View>
+          ) : low ? (
+            <View style={[styles.stockTag, { backgroundColor: "#f59e0b22", borderColor: "#f59e0b" }]}>
+              <Text style={[styles.stockTagText, { color: "#f59e0b" }]}>Only {item.stock} left</Text>
+            </View>
+          ) : null}
 
-          <TouchableOpacity
-            style={styles.inquireTileBtn}
-            onPress={() => {
-              const message = `Hi RJ Mobile Store! I am interested in inquiring about the product "${item.name}" (Price: ${inr(item.price)}). Can you please share more details or availability?`;
-              const encoded = encodeURIComponent(message);
-              const phone = "919097377388";
-              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+          {/* Fly-ball particle */}
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              bottom: 12,
+              alignSelf: "center",
+              width: 14,
+              height: 14,
+              borderRadius: 7,
+              backgroundColor: colors.accentLight,
+              shadowColor: colors.accent,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.9,
+              shadowRadius: 6,
+              elevation: 8,
+              opacity: flyBallOpacity,
+              transform: [{ translateY: flyBallY }, { scale: flyBallScale }],
             }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="logo-whatsapp" size={15} color="#15803d" />
-          </TouchableOpacity>
+          />
         </View>
+
+        {/* Content body */}
+        <View style={styles.tileBody}>
+          <Text style={styles.brand}>{item.brand || item.category}</Text>
+          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+
+          {item.rating > 0 && (
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={10} color={colors.star} />
+              <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+              <Text style={styles.reviews}> ({item.numReviews || 0})</Text>
+            </View>
+          )}
+
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>{inr(item.price)}</Text>
+            {pct > 0 && <Text style={styles.mrp}>{inr(item.mrp)}</Text>}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {/* Action row outside press area */}
+      <View style={styles.tileActionsRow}>
+        <TouchableOpacity
+          style={[styles.addBtn, { flex: 1 }, out && styles.addBtnDisabled, added && styles.addBtnAdded]}
+          disabled={out}
+          onPress={handleAddToCart}
+          activeOpacity={0.85}
+        >
+          {added ? (
+            <Animated.View style={{ transform: [{ scale: checkScaleAnim }] }}>
+              <Ionicons name="checkmark-circle" size={15} color="#fff" />
+            </Animated.View>
+          ) : (
+            <Ionicons name={out ? "close-circle-outline" : "cart-outline"} size={14} color={out ? colors.muted : "#fff"} />
+          )}
+          <Text style={[styles.addBtnText, added && { color: "#fff" }, out && { color: colors.muted }]}>
+            {added ? "Added!" : out ? "Sold out" : "Add to Cart"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.inquireTileBtn}
+          onPress={() => {
+            const message = `Hi RJ Mobile Store! I want to know more about "${item.name}" (Price: ${inr(item.price)}). Please share availability.`;
+            const encoded = encodeURIComponent(message);
+            Linking.openURL(`https://wa.me/919097377388?text=${encoded}`);
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="logo-whatsapp" size={16} color="#22c55e" />
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </Animated.View>
   );
 }
 
@@ -605,143 +680,152 @@ function MobileFAQ() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1, backgroundColor: "#080d16" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 10 },
-  loadingText: { color: colors.sub, fontWeight: "600" },
+  loadingText: { color: "#94a3b8", fontWeight: "600" },
   listContent: { paddingBottom: 32 },
 
   hero: {
-    backgroundColor: colors.navy,
+    backgroundColor: "#080d16",
     paddingHorizontal: spacing.lg,
     paddingTop: 54,
     paddingBottom: spacing.xl,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
   },
   heroRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  heroLogo: { width: 56, height: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent },
+  heroLogo: { width: 56, height: 56, borderRadius: radius.md, borderWidth: 2, borderColor: "#7c3aed" },
   heroTextCol: { flex: 1 },
-  heroSmall: { color: colors.muted, fontSize: 12 },
-  heroTitle: { color: "#fff", fontSize: 22, fontWeight: "950", marginTop: 1 },
-  heroSub: { color: "#cbd5e1", fontSize: 11, marginTop: 2 },
+  heroSmall: { color: "#94a3b8", fontSize: 12 },
+  heroTitle: { color: "#f1f5f9", fontSize: 22, fontWeight: "950", marginTop: 1 },
+  heroSub: { color: "#7c3aed", fontSize: 11, marginTop: 2, fontWeight: "700" },
   directionsBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: colors.accent,
+    backgroundColor: "#7c3aed",
     borderRadius: radius.pill,
     paddingVertical: 8,
     marginTop: spacing.md,
     alignSelf: "flex-start",
     paddingHorizontal: spacing.md,
   },
-  directionsText: { color: colors.navy, fontWeight: "800", fontSize: 11 },
+  directionsText: { color: "#fff", fontWeight: "800", fontSize: 11 },
 
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#0f1724",
     marginHorizontal: spacing.lg,
-    marginTop: -20,
+    marginTop: spacing.md,
     paddingHorizontal: spacing.md,
-    height: 44,
+    height: 46,
     borderRadius: radius.pill,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    elevation: 4,
+    shadowColor: "#7c3aed",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
   },
-  searchInput: { flex: 1, fontSize: 14, color: colors.text },
+  searchInput: { flex: 1, fontSize: 14, color: "#f1f5f9" },
 
   demoBanner: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: "#7c3aed22",
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: "#fef3c7",
+    borderColor: "#7c3aed44",
     alignItems: "center",
   },
-  demoBannerText: { color: colors.accentDark, fontSize: 11, fontWeight: "700" },
+  demoBannerText: { color: "#a855f7", fontSize: 11, fontWeight: "700" },
 
   sectionsContainer: { marginTop: spacing.lg, gap: spacing.lg },
-  sectionWrap: { backgroundColor: "#fff", paddingVertical: spacing.md, borderRadius: radius.xl, marginHorizontal: spacing.sm, borderWidth: 1, borderColor: "#f1f5f9" },
-  sectionHeader: { fontSize: 15, fontWeight: "900", color: colors.text, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  sectionWrap: { backgroundColor: "#0f1724", paddingVertical: spacing.md, borderRadius: radius.xl, marginHorizontal: spacing.sm, borderWidth: 1, borderColor: "#1e293b" },
+  sectionHeader: { fontSize: 15, fontWeight: "900", color: "#f1f5f9", paddingHorizontal: spacing.md, marginBottom: spacing.sm },
   horizontalList: { paddingHorizontal: spacing.md },
 
   tile: {
-    width: 165,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    marginRight: spacing.sm,
-    marginBottom: spacing.xs,
-    overflow: "hidden",
+    width: 172,
+    backgroundColor: "#0f1724",
+    borderRadius: radius.xl,
+    marginRight: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    elevation: 1.5,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    borderColor: "#1e293b",
+    elevation: 8,
+    shadowColor: "#7c3aed",
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    overflow: "visible",
   },
-  imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: "#f8fafc" },
+  imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: "#080d16", borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: "hidden" },
   image: { width: "100%", height: "100%" },
-  imageFallback: { alignItems: "center", justifyContent: "center" },
+  imageFallback: { alignItems: "center", justifyContent: "center", backgroundColor: "#0f172a" },
   discountTag: {
     position: "absolute",
-    top: 6,
-    left: 6,
-    backgroundColor: colors.danger,
+    top: 8,
+    left: 8,
+    backgroundColor: "#f43f5e",
     borderRadius: radius.pill,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  discountText: { color: "#fff", fontWeight: "850", fontSize: 10 },
+  discountText: { color: "#fff", fontWeight: "800", fontSize: 10, letterSpacing: 0.3 },
   stockTag: {
     position: "absolute",
-    top: 6,
-    right: 6,
+    top: 8,
+    right: 8,
     borderRadius: radius.pill,
     paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingVertical: 3,
+    borderWidth: 1,
   },
-  stockTagText: { color: "#fff", fontWeight: "750", fontSize: 9 },
+  stockTagText: { fontWeight: "700", fontSize: 9 },
 
-  tileBody: { padding: spacing.sm },
-  brand: { color: colors.accentDark, fontSize: 9, fontWeight: "850", textTransform: "uppercase" },
-  name: { color: colors.text, fontSize: 12, fontWeight: "700", marginTop: 2, minHeight: 32 },
-  ratingRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  tileBody: { padding: spacing.sm, paddingBottom: 2 },
+  brand: { color: "#a855f7", fontSize: 9, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
+  name: { color: "#f1f5f9", fontSize: 12, fontWeight: "700", marginTop: 3, minHeight: 32, lineHeight: 16 },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
   ratingBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-    backgroundColor: colors.star,
+    backgroundColor: "#f59e0b22",
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
   },
-  ratingText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  reviews: { color: colors.muted, fontSize: 10 },
-  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 5, marginTop: 5 },
-  price: { fontSize: 15, fontWeight: "900", color: colors.text },
-  mrp: { fontSize: 11, color: colors.muted, textDecorationLine: "line-through", marginBottom: 1 },
+  ratingText: { color: "#f59e0b", fontSize: 10, fontWeight: "700" },
+  reviews: { color: "#475569", fontSize: 9 },
+  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 5, marginTop: 5, marginBottom: 2 },
+  price: { fontSize: 15, fontWeight: "900", color: "#f1f5f9" },
+  mrp: { fontSize: 11, color: "#475569", textDecorationLine: "line-through", marginBottom: 1 },
 
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    backgroundColor: colors.accent,
+    gap: 5,
+    backgroundColor: "#7c3aed",
     borderRadius: radius.pill,
-    paddingVertical: 7,
-    marginTop: 8,
+    paddingVertical: 8,
+    elevation: 4,
+    shadowColor: "#7c3aed",
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
-  addBtnDisabled: { opacity: 0.5 },
-  addBtnText: { color: colors.navy, fontWeight: "850", fontSize: 12 },
+  addBtnAdded: {
+    backgroundColor: "#10b981",
+    shadowColor: "#10b981",
+  },
+  addBtnDisabled: { backgroundColor: "#1e293b", shadowOpacity: 0 },
+  addBtnText: { color: "#fff", fontWeight: "800", fontSize: 12 },
 
   featuresRow: {
     flexDirection: "row",
@@ -752,50 +836,50 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#0f1724",
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
+    borderColor: "#1e293b",
+    elevation: 4,
+    shadowColor: "#7c3aed",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   featureIcon: { fontSize: 18, marginBottom: 2 },
-  featureTitle: { fontSize: 9, fontWeight: "800", color: colors.text },
+  featureTitle: { fontSize: 9, fontWeight: "800", color: "#94a3b8" },
 
   nativeSection: {
     marginTop: spacing.lg,
-    backgroundColor: "#fff",
+    backgroundColor: "#0f1724",
     paddingVertical: spacing.md,
     borderRadius: radius.xl,
     marginHorizontal: spacing.sm,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
   },
   nativeSectionHeader: {
     fontSize: 14,
     fontWeight: "900",
-    color: colors.text,
+    color: "#f1f5f9",
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
   },
   testimonialCard: {
     width: 200,
-    backgroundColor: colors.bg,
+    backgroundColor: "#080d16",
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
   },
-  testimonialText: { fontSize: 11, color: colors.sub, fontStyle: "italic", lineHeight: 15 },
+  testimonialText: { fontSize: 11, color: "#94a3b8", fontStyle: "italic", lineHeight: 15 },
 
   faqCard: {
     borderBottomWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
     paddingVertical: spacing.sm,
   },
   faqHeader: {
@@ -803,22 +887,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  faqQuestion: { fontSize: 12, fontWeight: "750", color: colors.text, flex: 1, marginRight: 8 },
-  faqAnswer: { fontSize: 11, color: colors.sub, marginTop: 6, lineHeight: 15, paddingHorizontal: 4 },
+  faqQuestion: { fontSize: 12, fontWeight: "750", color: "#f1f5f9", flex: 1, marginRight: 8 },
+  faqAnswer: { fontSize: 11, color: "#94a3b8", marginTop: 6, lineHeight: 15, paddingHorizontal: 4 },
 
   tileActionsRow: {
     flexDirection: "row",
     gap: 6,
-    marginTop: 8,
+    marginTop: 0,
+    marginBottom: 10,
+    paddingHorizontal: spacing.sm,
     alignItems: "center",
   },
   inquireTileBtn: {
-    height: 30,
-    width: 32,
+    height: 34,
+    width: 34,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: "#16a34a",
-    backgroundColor: "#f0fdf4",
+    borderColor: "#16a34a44",
+    backgroundColor: "#052e16",
     alignItems: "center",
     justifyContent: "center",
   },
