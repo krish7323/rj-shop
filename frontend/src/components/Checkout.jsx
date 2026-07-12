@@ -296,68 +296,20 @@ export default function Checkout({ onClose }) {
               </div>
 
               <div className="space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Select Payment Method</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Payment Method</p>
                 
-                <PaymentOption
-                  active={payment === "COD"}
-                  onClick={() => setPayment("COD")}
-                  icon={Wallet}
-                  title="Cash on Delivery (COD)"
-                  desc="Pay cash at your doorstep when device/kit arrives."
-                />
-
-                <PaymentOption
-                  active={payment === "UPI"}
-                  onClick={() => setPayment("UPI")}
-                  icon={CreditCard}
-                  title="Direct UPI Transfer (0% Fee)"
-                  desc="Scan QR Code or pay directly to UPI ID. Fast & Free."
-                  badge="Recommended"
-                />
-              </div>
-
-              {payment === "UPI" && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4 animate-fade-up">
-                  <div className="flex flex-col items-center text-center space-y-2">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Scan to Pay {inr(grandTotal)}</p>
-                    
-                    {/* Dynamic QR Code */}
-                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                          `upi://pay?pa=8999351543@ybl&pn=RJ%20Mobile%25Store&am=${grandTotal}&cu=INR`
-                        )}`}
-                        alt="UPI Payment QR Code"
-                        className="h-44 w-44 object-contain mx-auto"
-                      />
-                    </div>
-                    
-                    <p className="text-xs text-slate-500 font-medium">
-                      Scan from GPay, PhonePe, Paytm, or BHIM apps
+                <div className="flex items-start gap-3.5 rounded-2xl border border-accent-500 bg-sky-50/20 p-4 anim-transition">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-500 text-navy-900 mt-0.5">
+                    <Wallet className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">Cash on Delivery (COD)</h4>
+                    <p className="mt-0.5 text-xs text-slate-500 font-semibold leading-relaxed">
+                      Pay cash at your doorstep when device/kit arrives. Alternatively, you can pay via local UPI directly to the delivery person.
                     </p>
                   </div>
-
-                  <div className="border-t border-slate-200 pt-4 space-y-3">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Official Shop UPI ID</span>
-                      <p className="text-sm font-mono font-bold text-slate-800 select-all">8999351543@ybl</p>
-                    </div>
-
-                    <div>
-                      <label className="lbl block">UPI Transaction UTR / Ref Number (12 Digits)</label>
-                      <input
-                        type="text"
-                        maxLength={12}
-                        placeholder="Enter the 12-digit number from your payment confirmation screen"
-                        value={utr}
-                        onChange={(e) => setUtr(e.target.value.replace(/\D/g, ""))}
-                        className="field w-full mt-1 font-mono font-bold text-sm tracking-widest"
-                      />
-                      {utrError && <p className="mt-1 text-xs text-rose-600 font-bold">{utrError}</p>}
-                    </div>
-                  </div>
                 </div>
-              )}
+              </div>
 
               <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
                 {items.map((i) => (

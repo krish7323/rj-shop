@@ -273,63 +273,17 @@ export default function CartScreen({ navigation }) {
             <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="847239" keyboardType="number-pad" />
 
             <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Payment Method</Text>
-            <View style={{ gap: 10, marginTop: 8 }}>
-              <PayOption
-                active={payment === "COD"}
-                onPress={() => setPayment("COD")}
-                icon="cash-outline"
-                title="Cash on Delivery (COD)"
-                desc="Pay cash at your doorstep when device/kit arrives."
-              />
-
-              <PayOption
-                active={payment === "UPI"}
-                onPress={() => setPayment("UPI")}
-                icon="card-outline"
-                title="Direct UPI Transfer (0% Fee)"
-                desc="Pay directly using GPay, PhonePe, or Paytm."
-                badge="Free"
-              />
-            </View>
-
-            {payment === "UPI" && (
-              <View style={styles.upiDetailsCard}>
-                <Text style={styles.upiInstructionTitle}>Transfer Details</Text>
-                <Text style={styles.upiInstructionText}>
-                  Please transfer exactly <Text style={{ fontWeight: "bold", color: colors.text }}>{inr(grandTotal)}</Text> to our official shop UPI ID:
-                </Text>
-                
-                <View style={styles.upiIdContainer}>
-                  <Text style={styles.upiIdText}>8999351543@ybl</Text>
-                </View>
-                
-                <TouchableOpacity
-                  style={styles.upiAppBtn}
-                  onPress={() => {
-                    const url = `upi://pay?pa=8999351543@ybl&pn=RJ%20Mobile%25Store&am=${grandTotal}&cu=INR`;
-                    Linking.openURL(url).catch(() => {
-                      Alert.alert("Could not open UPI app", "Please copy the UPI ID and pay from your banking app.");
-                    });
-                  }}
-                >
-                  <Ionicons name="flash-outline" size={16} color={colors.navy} />
-                  <Text style={styles.upiAppBtnText}>Pay via installed UPI Apps</Text>
-                </TouchableOpacity>
-
-                <View style={{ marginTop: 12 }}>
-                  <Text style={styles.fieldLabel}>UPI Transaction UTR / Ref Number (12 Digits)</Text>
-                  <TextInput
-                    style={[styles.input, { fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", fontWeight: "bold", letterSpacing: 1.5 }]}
-                    placeholder="12-digit reference number"
-                    placeholderTextColor={colors.muted}
-                    value={utr}
-                    onChangeText={(val) => setUtr(val.replace(/\D/g, ""))}
-                    keyboardType="number-pad"
-                    maxLength={12}
-                  />
-                </View>
+            <View style={{ flexDirection: "row", alignItems: "flex-start", backgroundColor: "#fff", borderWidth: 1, borderColor: colors.accent, borderRadius: radius.lg, padding: 14, marginTop: 8, gap: 12 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "#f0f9ff", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="cash-outline" size={20} color={colors.accentDark} />
               </View>
-            )}
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: "900", color: colors.text }}>Cash on Delivery (COD)</Text>
+                <Text style={{ fontSize: 11, color: colors.sub, marginTop: 3, lineHeight: 16, fontWeight: "600" }}>
+                  Pay cash at your doorstep when device/kit arrives. Alternatively, you can pay via local UPI directly to the delivery person.
+                </Text>
+              </View>
+            </View>
 
             <View style={styles.modalSummary}>
               <SummaryRow label="Items" value={inr(subtotal)} />
