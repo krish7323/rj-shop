@@ -457,9 +457,22 @@ function Storefront() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center gap-3 py-24 text-slate-500">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="font-medium">Loading products…</span>
+          <div className="space-y-10 animate-fade-in">
+            {[1, 2].map((groupIndex) => (
+              <div key={groupIndex} className="bg-white p-5 rounded-3xl shadow-soft">
+                <div className="mb-6 h-6 w-48 rounded-lg shimmer-placeholder" />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {[1, 2, 3, 4, 5].map((itemIndex) => (
+                    <div key={itemIndex} className="flex flex-col gap-3 rounded-2xl bg-white p-4 border border-slate-100">
+                      <div className="aspect-square w-full rounded-xl shimmer-placeholder" />
+                      <div className="h-4.5 w-3/4 rounded-md shimmer-placeholder mt-2" />
+                      <div className="h-3.5 w-1/2 rounded-md shimmer-placeholder" />
+                      <div className="h-5 w-1/3 rounded-full mt-4 shimmer-placeholder" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-24 text-slate-400">
@@ -473,7 +486,7 @@ function Storefront() {
               if (group.products.length === 0) return null;
               const elementId = group.name.toLowerCase().replace(/\s+/g, "-");
               return (
-                <section key={group._id || group.name} id={elementId} className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft">
+                <section key={group._id || group.name} id={elementId} className="scroll-mt-24 bg-white p-5 rounded-3xl shadow-soft animate-fade-up">
                   <h3 className="mb-5 text-lg font-extrabold text-slate-800 flex items-center gap-2 border-b pb-3">
                     <span className="text-xl">{group.icon || "📁"}</span> {group.name}
                   </h3>

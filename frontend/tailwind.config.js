@@ -32,15 +32,39 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
         pop: {
           "0%": { transform: "scale(.8)", opacity: "0" },
-          "60%": { transform: "scale(1.15)" },
+          "60%": { transform: "scale(1.12)" },
           "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
+        "cart-bounce": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.28) rotate(-8deg)" },
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.025)" },
         },
       },
       animation: {
-        "fade-up": "fade-up .35s ease-out both",
-        pop: "pop .3s ease-out both",
+        "fade-up": "fade-up .4s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "fade-in": "fade-in .3s ease-out both",
+        pop: "pop .35s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        shimmer: "shimmer 1.5s infinite",
+        "cart-bounce": "cart-bounce .45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
+        "slide-in-right": "slide-in-right .4s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
       },
     },
   },

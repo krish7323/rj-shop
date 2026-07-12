@@ -3,7 +3,7 @@
 // description, enforces stock safeguards on the quantity selector, and adds the
 // item to the cart with responsive feedback.
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   StyleSheet,
   Dimensions,
   Linking,
+  Animated,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
@@ -26,6 +28,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const { addToCart, count } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   if (!product) {
     return (
@@ -46,6 +49,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const handleAdd = () => {
     if (out) return;
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.94,
+        duration: 90,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+    ]).start();
     addToCart(product, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
@@ -158,16 +173,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[styles.addBtn, added && { backgroundColor: colors.success }]}
-              onPress={handleAdd}
-              activeOpacity={0.85}
-            >
-              <Ionicons name={added ? "checkmark" : "cart"} size={18} color={added ? "#fff" : colors.navy} />
-              <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
-                {added ? "Added" : `Add · ${inr(product.price * qty)}`}
-              </Text>
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
+              <TouchableOpacity
+                style={[styles.addBtn, { width: "100%" }, added && { backgroundColor: colors.success }]}
+                onPress={handleAdd}
+                activeOpacity={0.85}
+              >
+                <Ionicons name={added ? "checkmark" : "cart"} size={18} color={added ? "#fff" : colors.navy} />
+                <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
+                  {added ? "Added" : `Add · ${inr(product.price * qty)}`}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
 
             <TouchableOpacity
               style={styles.detailsInquireBtn}

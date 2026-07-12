@@ -99,7 +99,7 @@ export default function ProductCard({ product, onOpen }) {
             onClick={handleAdd}
             disabled={outOfStock}
             className={`btn-accent flex-1 text-xs py-2 px-3 ${
-              added ? "!bg-emerald-500 !text-white" : ""
+              added ? "!bg-emerald-500 !text-white animate-cart-bounce" : ""
             } ${outOfStock ? "opacity-60" : ""}`}
           >
             {outOfStock ? (

@@ -30,6 +30,70 @@ import logo from "../assets/logo.png";
 
 const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
+const FadeInView = (props) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 450,
+        delay: props.index * 60,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 450,
+        delay: props.index * 60,
+        useNativeDriver: Platform.OS !== "web",
+      })
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        ...props.style,
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
+    >
+      {props.children}
+    </Animated.View>
+  );
+};
+
+const SkeletonTile = () => {
+  const pulseAnim = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.75,
+          duration: 750,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 750,
+          useNativeDriver: Platform.OS !== "web",
+        })
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.skeletonTile, { opacity: pulseAnim }]}>
+      <View style={styles.skeletonImage} />
+      <View style={styles.skeletonLineShort} />
+      <View style={styles.skeletonLineLong} />
+      <View style={styles.skeletonLineButton} />
+    </Animated.View>
+  );
+};
+
 function ProductTile({ item, onOpen, onAdd }) {
   const pct = discountPct(item.price, item.mrp);
   const out = item.stock !== undefined && item.stock <= 0;
@@ -241,9 +305,37 @@ export default function HomeScreen({ navigation }) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={styles.loadingText}>Loading products…</Text>
+      <View style={{ flex: 1, backgroundColor: "#0d131b" }}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.listContent}>
+          <View style={styles.hero}>
+            <View style={styles.heroRow}>
+              <Image source={logo} style={styles.heroLogo} />
+              <View style={styles.heroTextCol}>
+                <Text style={styles.heroSmall}>Welcome to</Text>
+                <Text style={styles.heroTitle}>
+                  RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
+                </Text>
+                <Text style={styles.heroSub}>Smart choice · Better life</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.searchWrap}>
+            <Ionicons name="search" size={18} color={colors.muted} style={{ opacity: 0.5 }} />
+            <TextInput placeholder="Search kits, phones & gadgets…" placeholderTextColor={colors.muted} style={styles.searchInput} editable={false} />
+          </View>
+          <View style={styles.sectionsContainer}>
+            {[1, 2].map((groupIndex) => (
+              <View key={groupIndex} style={styles.sectionWrap}>
+                <View style={[styles.skeletonHeader, { width: 140, height: 18, marginBottom: 12, backgroundColor: "#1e293b", borderRadius: radius.sm }]} />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                  {[1, 2, 3].map((itemIndex) => (
+                    <SkeletonTile key={itemIndex} />
+                  ))}
+                </ScrollView>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -343,8 +435,10 @@ export default function HomeScreen({ navigation }) {
                     keyExtractor={(item) => item._id}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.horizontalList}
-                    renderItem={({ item }) => (
-                      <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                    renderItem={({ item, index }) => (
+                      <FadeInView index={index}>
+                        <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                      </FadeInView>
                     )}
                   />
                 </View>
@@ -851,5 +945,41 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: "#1e293b",
+  },
+  skeletonTile: {
+    width: 150,
+    backgroundColor: "#1e293b",
+    borderRadius: radius.md,
+    padding: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  skeletonImage: {
+    width: "100%",
+    height: 100,
+    backgroundColor: "#334155",
+    borderRadius: radius.sm,
+    marginBottom: 8,
+  },
+  skeletonLineShort: {
+    width: "40%",
+    height: 10,
+    backgroundColor: "#334155",
+    borderRadius: radius.xs,
+    marginBottom: 6,
+  },
+  skeletonLineLong: {
+    width: "80%",
+    height: 12,
+    backgroundColor: "#334155",
+    borderRadius: radius.xs,
+    marginBottom: 12,
+  },
+  skeletonLineButton: {
+    width: "100%",
+    height: 28,
+    backgroundColor: "#334155",
+    borderRadius: radius.md,
   },
 });

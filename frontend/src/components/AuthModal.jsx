@@ -83,8 +83,8 @@ export default function AuthModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md animate-fade-up overflow-hidden rounded-3xl bg-white p-6 shadow-hover border border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/60 p-4 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md animate-pop overflow-hidden rounded-3xl bg-white p-6 shadow-hover border border-slate-100">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-lg font-extrabold text-slate-900">
             {mode === "login" && "Welcome Back"}

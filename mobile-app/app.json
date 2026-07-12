@@ -28,7 +28,7 @@
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": "http://localhost:5000/api",
+      "apiUrl": "https://rj-mobile-backend.onrender.com/api",
       "eas": {
         "projectId": "8efe2136-6881-4e80-8645-51e87ae2054a"
       }
