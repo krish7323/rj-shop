@@ -40,7 +40,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
               value={search}
               onChange={(e) => onSearch(e.target.value)}
               placeholder="Search RJ Mobile Store for kits, phones and gadgets…"
-              className="w-full rounded-full border border-transparent bg-white px-5 py-2.5 pr-12 text-sm text-slate-900 outline-none focus:ring-4 focus:ring-accent-400/40"
+              className="w-full rounded-full border border-transparent bg-white px-5 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all duration-300 ease-in-out focus:ring-4 focus:ring-accent-400/40 focus:scale-[1.01] hover:bg-slate-50 focus:bg-white"
               aria-label="Search products"
             />
             <span className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-accent-500">

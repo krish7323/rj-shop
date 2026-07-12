@@ -3,7 +3,7 @@
 // description, enforces stock safeguards on the quantity selector, and adds the
 // item to the cart with responsive feedback.
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -29,6 +29,24 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.035,
+          duration: 900,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+      ])
+    ).start();
+  }, []);
 
   if (!product) {
     return (
@@ -148,19 +166,21 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Sticky bottom actions bar */}
       <View style={styles.bottomBar}>
         {out ? (
-          <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: "#16a34a" }]}
-            onPress={() => {
-              const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
-              const encoded = encodeURIComponent(message);
-              const phone = "919097377388";
-              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-            }}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-            <Text style={[styles.addBtnText, { color: "#fff" }]}>Inquire via WhatsApp</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: pulseAnim }], flex: 1 }}>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: "#16a34a", width: "100%" }]}
+              onPress={() => {
+                const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
+                const encoded = encodeURIComponent(message);
+                const phone = "919097377388";
+                Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+              <Text style={[styles.addBtnText, { color: "#fff" }]}>Inquire via WhatsApp</Text>
+            </TouchableOpacity>
+          </Animated.View>
         ) : (
           <View style={{ flex: 1, flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
             <View style={styles.qtyBox}>
@@ -186,18 +206,20 @@ export default function ProductDetailsScreen({ route, navigation }) {
               </TouchableOpacity>
             </Animated.View>
 
-            <TouchableOpacity
-              style={styles.detailsInquireBtn}
-              onPress={() => {
-                const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
-                const encoded = encodeURIComponent(message);
-                const phone = "919097377388";
-                Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="logo-whatsapp" size={20} color="#15803d" />
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <TouchableOpacity
+                style={styles.detailsInquireBtn}
+                onPress={() => {
+                  const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
+                  const encoded = encodeURIComponent(message);
+                  const phone = "919097377388";
+                  Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="logo-whatsapp" size={20} color="#15803d" />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         )}
       </View>

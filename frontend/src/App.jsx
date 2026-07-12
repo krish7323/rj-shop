@@ -383,7 +383,7 @@ function Storefront() {
       )}
 
       {/* Hero banner */}
-      <section className="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 text-white">
+      <section className="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 text-white animate-gradient-shift">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-10 sm:py-14 sm:flex-row sm:items-center sm:gap-6">
           <img src={logo} alt="RJ Mobile Store Logo" className="h-20 w-20 rounded-2xl border-2 border-accent-400 shadow-lg shrink-0" />
           <div className="flex flex-col gap-2">
