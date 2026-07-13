@@ -522,6 +522,20 @@ function Storefront() {
 
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} onCheckout={openCheckout} />
 
+      {/* Floating 3D/Pulse/Bounce WhatsApp Live Chat Support */}
+      <a
+        href="https://wa.me/919097377388?text=Hi%20RJ%20Mobile%20Store!%20I%20have%20a%20query%20about%20your%20products."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 card-3d flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition duration-300 hover:scale-110 active:scale-95 animate-bounce"
+        title="Chat on WhatsApp"
+      >
+        <span className="absolute -inset-1 rounded-full bg-[#25D366] opacity-35 animate-ping" />
+        <svg className="h-7 w-7 fill-white relative z-10" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.75-4.22c1.62.962 3.41 1.47 5.247 1.472 5.47 0 9.919-4.448 9.922-9.922.002-2.652-1.03-5.144-2.905-7.022a9.785 9.785 0 0 0-7.036-2.906c-5.467 0-9.913 4.45-9.916 9.923-.001 1.93.504 3.816 1.464 5.485l-.961 3.513 3.606-.945zm11.367-7.793c-.3-.15-1.77-.875-2.046-.975-.276-.1-.477-.15-.677.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-.3-.15-1.265-.467-2.41-1.485-.89-.794-1.49-1.775-1.665-2.075-.175-.3-.018-.462.13-.61.137-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.677-1.628-.926-2.228-.242-.584-.488-.506-.676-.516-.175-.008-.375-.01-.576-.01-.2 0-.527.075-.802.375-.276.3-1.052 1.025-1.052 2.5s1.077 2.9 1.227 3.1c.15.2 2.118 3.235 5.132 4.537.717.31 1.277.495 1.713.634.72.228 1.375.196 1.892.119.577-.087 1.77-.725 2.02-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35z"/>
+        </svg>
+      </a>
+
       {checkoutOpen && <Checkout onClose={() => setCheckoutOpen(false)} />}
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onSuccess={fetchProfile} />}

@@ -51,7 +51,9 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
           {/* Cart */}
           <button
             onClick={onCartClick}
-            className="relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2 transition hover:bg-navy-700"
+            className={`relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2 transition hover:bg-navy-700 ${
+              count > 0 ? "animate-pulse" : ""
+            }`}
             aria-label="Open cart"
           >
             <div className="relative">

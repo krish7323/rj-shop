@@ -107,3 +107,17 @@ body {
   background-size: 200% 200%;
   animation: gradientShift 15s ease infinite;
 }
+
+/* Premium 3D Perspective Hover Effect */
+.card-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+}
+.card-3d:hover {
+  transform: translateY(-6px) rotateX(3deg) rotateY(-1.5deg) scale(1.015);
+  box-shadow: 
+    0 20px 30px -10px rgba(13, 19, 27, 0.08), 
+    0 10px 20px -10px rgba(0, 136, 255, 0.1);
+}
+

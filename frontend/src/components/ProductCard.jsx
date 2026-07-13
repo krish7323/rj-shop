@@ -28,7 +28,7 @@ export default function ProductCard({ product, onOpen }) {
   return (
     <div
       onClick={() => onOpen?.(product)}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-hover"
+      className="card-3d group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card"
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-slate-50">
