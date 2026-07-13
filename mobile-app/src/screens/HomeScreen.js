@@ -27,6 +27,7 @@ import { DEMO_CATALOG, inr, discountPct } from "../lib/format";
 import { useCart } from "../context/CartContext";
 import { colors, radius, spacing } from "../lib/theme";
 import logo from "../assets/logo.png";
+import AnimatedButton from "../components/AnimatedButton";
 
 const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
@@ -210,37 +211,38 @@ function ProductTile({ item, onOpen, onAdd }) {
         </View>
 
         <View style={styles.tileActionsRow}>
-          <Animated.View style={{ flex: 1, transform: [{ scale: scaleAnim }] }}>
-            <TouchableOpacity
+          <AnimatedButton
+            disabled={out}
+            onPress={handleAddPress}
+            style={{ flex: 1 }}
+          >
+            <View
               style={[
                 styles.addBtn,
                 { flex: 1, marginTop: 0 },
                 out && styles.addBtnDisabled,
                 added && { backgroundColor: colors.success },
               ]}
-              disabled={out}
-              onPress={handleAddPress}
-              activeOpacity={0.8}
             >
               <Ionicons name={added ? "checkmark" : "cart"} size={14} color={added ? "#fff" : colors.navy} />
               <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
                 {out ? "Sold out" : added ? "Added" : "Add"}
               </Text>
-            </TouchableOpacity>
-          </Animated.View>
+            </View>
+          </AnimatedButton>
 
-          <TouchableOpacity
-            style={styles.inquireTileBtn}
+          <AnimatedButton
             onPress={() => {
               const message = `Hi RJ Mobile Store! I am interested in inquiring about the product "${item.name}" (Price: ${inr(item.price)}). Can you please share more details or availability?`;
               const encoded = encodeURIComponent(message);
               const phone = "919097377388";
               Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
             }}
-            activeOpacity={0.7}
           >
-            <Ionicons name="logo-whatsapp" size={15} color="#15803d" />
-          </TouchableOpacity>
+            <View style={styles.inquireTileBtn}>
+              <Ionicons name="logo-whatsapp" size={15} color="#15803d" />
+            </View>
+          </AnimatedButton>
         </View>
       </View>
     </TouchableOpacity>

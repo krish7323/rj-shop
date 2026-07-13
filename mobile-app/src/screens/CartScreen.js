@@ -26,6 +26,7 @@ import { useCart } from "../context/CartContext";
 import { OrderAPI } from "../lib/api";
 import { inr } from "../lib/format";
 import { colors, radius, spacing } from "../lib/theme";
+import AnimatedButton from "../components/AnimatedButton";
 
 const EMPTY_ADDR = {
   fullName: "",
@@ -150,10 +151,12 @@ export default function CartScreen({ navigation }) {
         <Ionicons name="cart-outline" size={64} color={colors.muted} />
         <Text style={styles.emptyTitle}>Your cart is empty</Text>
         <Text style={styles.emptySub}>Browse the catalog and add something you love.</Text>
-        <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate("HomeTab")}>
-          <Ionicons name="storefront-outline" size={18} color={colors.navy} />
-          <Text style={styles.shopBtnText}>Start Shopping</Text>
-        </TouchableOpacity>
+        <AnimatedButton onPress={() => navigation.navigate("HomeTab")}>
+          <View style={styles.shopBtn}>
+            <Ionicons name="storefront-outline" size={18} color={colors.navy} />
+            <Text style={styles.shopBtnText}>Start Shopping</Text>
+          </View>
+        </AnimatedButton>
       </View>
     );
   }
@@ -178,26 +181,31 @@ export default function CartScreen({ navigation }) {
 
         <View style={styles.rowFooter}>
           <View style={styles.stepper}>
-            <TouchableOpacity style={styles.stepBtn} onPress={() => decrementItem(item._id, item.qty)}>
-              <Ionicons name="remove" size={16} color={colors.text} />
-            </TouchableOpacity>
+            <AnimatedButton onPress={() => decrementItem(item._id, item.qty)}>
+              <View style={styles.stepBtn}>
+                <Ionicons name="remove" size={16} color={colors.text} />
+              </View>
+            </AnimatedButton>
             <Text style={styles.stepVal}>{item.qty}</Text>
-            <TouchableOpacity
-              style={[styles.stepBtn, item.stock !== undefined && item.qty >= item.stock && styles.stepDisabled]}
+            <AnimatedButton
               onPress={() => incrementItem(item._id, item.qty)}
               disabled={item.stock !== undefined && item.qty >= item.stock}
             >
-              <Ionicons name="add" size={16} color={colors.text} />
-            </TouchableOpacity>
+              <View style={[styles.stepBtn, item.stock !== undefined && item.qty >= item.stock && styles.stepDisabled]}>
+                <Ionicons name="add" size={16} color={colors.text} />
+              </View>
+            </AnimatedButton>
           </View>
 
           <Text style={styles.lineTotal}>{inr(item.price * item.qty)}</Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.removeBtn} onPress={() => removeItem(item._id)}>
-        <Ionicons name="trash-outline" size={18} color={colors.danger} />
-      </TouchableOpacity>
+      <AnimatedButton onPress={() => removeItem(item._id)}>
+        <View style={styles.removeBtn}>
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+        </View>
+      </AnimatedButton>
     </View>
   );
 
@@ -222,13 +230,14 @@ export default function CartScreen({ navigation }) {
           <Text style={styles.totalValue}>{inr(grandTotal)}</Text>
         </View>
 
-        <TouchableOpacity style={styles.checkoutBtn} onPress={() => setCheckoutOpen(true)}>
-          <Text style={styles.checkoutText}>Proceed to Checkout</Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.navy} />
-        </TouchableOpacity>
+        <AnimatedButton onPress={() => setCheckoutOpen(true)}>
+          <View style={styles.checkoutBtn}>
+            <Text style={styles.checkoutText}>Proceed to Checkout</Text>
+            <Ionicons name="arrow-forward" size={18} color={colors.navy} />
+          </View>
+        </AnimatedButton>
 
-        <TouchableOpacity
-          style={[styles.checkoutBtn, styles.whatsappBtn]}
+        <AnimatedButton
           onPress={() => {
             const message = `Hi RJ Mobile Store! I want to buy:\n${items
               .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
@@ -238,9 +247,11 @@ export default function CartScreen({ navigation }) {
             Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
           }}
         >
-          <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-          <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
-        </TouchableOpacity>
+          <View style={[styles.checkoutBtn, styles.whatsappBtn]}>
+            <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+            <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
+          </View>
+        </AnimatedButton>
       </View>
 
       {/* Checkout modal */}
@@ -251,9 +262,11 @@ export default function CartScreen({ navigation }) {
         >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Secure Checkout</Text>
-            <TouchableOpacity onPress={() => setCheckoutOpen(false)}>
-              <Ionicons name="close" size={26} color={colors.text} />
-            </TouchableOpacity>
+            <AnimatedButton onPress={() => setCheckoutOpen(false)}>
+              <View style={{ padding: 4 }}>
+                <Ionicons name="close" size={26} color={colors.text} />
+              </View>
+            </AnimatedButton>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }}>
@@ -297,22 +310,24 @@ export default function CartScreen({ navigation }) {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[styles.placeBtn, placing && { opacity: 0.7 }]}
+            <AnimatedButton
               onPress={placeOrder}
               disabled={placing}
+              style={{ width: "100%" }}
             >
-              {placing ? (
-                <ActivityIndicator color={colors.navy} />
-              ) : (
-                <>
-                  <Ionicons name="shield-checkmark" size={18} color={colors.navy} />
-                  <Text style={styles.placeBtnText}>
-                    {payment === "COD" ? "Place COD Order" : `Pay ${inr(grandTotal)}`}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+              <View style={[styles.placeBtn, placing && { opacity: 0.7 }]}>
+                {placing ? (
+                  <ActivityIndicator color={colors.navy} />
+                ) : (
+                  <>
+                    <Ionicons name="shield-checkmark" size={18} color={colors.navy} />
+                    <Text style={styles.placeBtnText}>
+                      {payment === "COD" ? "Place COD Order" : `Pay ${inr(grandTotal)}`}
+                    </Text>
+                  </>
+                )}
+              </View>
+            </AnimatedButton>
           </View>
         </KeyboardAvoidingView>
       </Modal>

@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
 import { inr, discountPct } from "../lib/format";
 import { colors, radius, spacing } from "../lib/theme";
+import AnimatedButton from "../components/AnimatedButton";
 
 const { width } = Dimensions.get("window");
 
@@ -166,60 +167,61 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Sticky bottom actions bar */}
       <View style={styles.bottomBar}>
         {out ? (
-          <Animated.View style={{ transform: [{ scale: pulseAnim }], flex: 1 }}>
-            <TouchableOpacity
-              style={[styles.addBtn, { backgroundColor: "#16a34a", width: "100%" }]}
-              onPress={() => {
-                const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
-                const encoded = encodeURIComponent(message);
-                const phone = "919097377388";
-                Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-              }}
-              activeOpacity={0.85}
-            >
+          <AnimatedButton
+            onPress={() => {
+              const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
+              const encoded = encodeURIComponent(message);
+              const phone = "919097377388";
+              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+            }}
+            style={{ flex: 1 }}
+          >
+            <View style={[styles.addBtn, { backgroundColor: "#16a34a", width: "100%" }]}>
               <Ionicons name="logo-whatsapp" size={18} color="#fff" />
               <Text style={[styles.addBtnText, { color: "#fff" }]}>Inquire via WhatsApp</Text>
-            </TouchableOpacity>
-          </Animated.View>
+            </View>
+          </AnimatedButton>
         ) : (
           <View style={{ flex: 1, flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
             <View style={styles.qtyBox}>
-              <TouchableOpacity style={styles.qtyBtn} onPress={dec}>
-                <Ionicons name="remove" size={18} color={colors.text} />
-              </TouchableOpacity>
+              <AnimatedButton onPress={dec}>
+                <View style={styles.qtyBtn}>
+                  <Ionicons name="remove" size={18} color={colors.text} />
+                </View>
+              </AnimatedButton>
               <Text style={styles.qtyValue}>{qty}</Text>
-              <TouchableOpacity style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]} onPress={inc} disabled={qty >= cap}>
-                <Ionicons name="add" size={18} color={colors.text} />
-              </TouchableOpacity>
+              <AnimatedButton onPress={inc} disabled={qty >= cap}>
+                <View style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]}>
+                  <Ionicons name="add" size={18} color={colors.text} />
+                </View>
+              </AnimatedButton>
             </View>
 
-            <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
-              <TouchableOpacity
-                style={[styles.addBtn, { width: "100%" }, added && { backgroundColor: colors.success }]}
-                onPress={handleAdd}
-                activeOpacity={0.85}
-              >
+            <AnimatedButton
+              disabled={out}
+              onPress={handleAdd}
+              style={{ flex: 1 }}
+            >
+              <View style={[styles.addBtn, { width: "100%" }, added && { backgroundColor: colors.success }]}>
                 <Ionicons name={added ? "checkmark" : "cart"} size={18} color={added ? "#fff" : colors.navy} />
                 <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
                   {added ? "Added" : `Add · ${inr(product.price * qty)}`}
                 </Text>
-              </TouchableOpacity>
-            </Animated.View>
+              </View>
+            </AnimatedButton>
 
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <TouchableOpacity
-                style={styles.detailsInquireBtn}
-                onPress={() => {
-                  const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
-                  const encoded = encodeURIComponent(message);
-                  const phone = "919097377388";
-                  Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-                }}
-                activeOpacity={0.7}
-              >
+            <AnimatedButton
+              onPress={() => {
+                const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
+                const encoded = encodeURIComponent(message);
+                const phone = "919097377388";
+                Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+              }}
+            >
+              <View style={styles.detailsInquireBtn}>
                 <Ionicons name="logo-whatsapp" size={20} color="#15803d" />
-              </TouchableOpacity>
-            </Animated.View>
+              </View>
+            </AnimatedButton>
           </View>
         )}
       </View>
