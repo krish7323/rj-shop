@@ -15,33 +15,35 @@ import { colors } from "../lib/theme";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Interactive 3D spring-bounce Tab button
+// Interactive 3D spring-bounce Tab button with perspective flip
 function TabButton(props) {
   const { onPress, accessibilityState } = props;
   const focused = accessibilityState.selected;
 
   const scaleValue = useRef(new Animated.Value(1)).current;
-  const rotateValue = useRef(new Animated.Value(0)).current;
+  const rotateYValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (focused) {
+      rotateYValue.setValue(0);
       Animated.parallel([
         Animated.sequence([
-          Animated.timing(scaleValue, { toValue: 0.82, duration: 80, useNativeDriver: true }),
-          Animated.spring(scaleValue, { toValue: 1.18, friction: 3, tension: 150, useNativeDriver: true }),
+          Animated.timing(scaleValue, { toValue: 0.8, duration: 80, useNativeDriver: true }),
+          Animated.spring(scaleValue, { toValue: 1.15, friction: 3, tension: 160, useNativeDriver: true }),
           Animated.spring(scaleValue, { toValue: 1.0, friction: 4, useNativeDriver: true }),
         ]),
-        Animated.sequence([
-          Animated.timing(rotateValue, { toValue: 1, duration: 120, useNativeDriver: true }),
-          Animated.spring(rotateValue, { toValue: 0, friction: 3, useNativeDriver: true }),
-        ])
+        Animated.timing(rotateYValue, {
+          toValue: 1,
+          duration: 450,
+          useNativeDriver: true,
+        })
       ]).start();
     }
   }, [focused]);
 
-  const rotation = rotateValue.interpolate({
+  const rotateY = rotateYValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "12deg"],
+    outputRange: ["0deg", "360deg"],
   });
 
   return (
@@ -51,7 +53,11 @@ function TabButton(props) {
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          transform: [{ scale: scaleValue }, { rotate: rotation }],
+          transform: [
+            { perspective: 400 },
+            { scale: scaleValue },
+            { rotateY: rotateY },
+          ],
         }}
       >
         {props.children}
