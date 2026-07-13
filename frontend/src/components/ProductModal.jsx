@@ -101,7 +101,7 @@ export default function ProductModal({ product, onClose }) {
                   </button>
                 </div>
 
-                <button onClick={handleAdd} className={`btn-accent flex-1 ${added ? "!bg-emerald-500 !text-white" : ""}`}>
+                <button onClick={handleAdd} className={`btn-accent flex-1 ${added ? "!bg-emerald-500 !text-white animate-bounce" : ""}`}>
                   {added ? (
                     <>
                       <Check className="h-4 w-4" /> Added to Cart
