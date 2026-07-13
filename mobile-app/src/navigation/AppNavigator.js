@@ -1,12 +1,5 @@
-// src/navigation/AppNavigator.js
-// Full navigation system:
-//   Tab.Navigator
-//     ├─ HomeTab   → Stack (Home → ProductDetails as a modal overlay)
-//     ├─ CartTab   → CartScreen (tab icon shows a live cart-count badge)
-//     └─ OrdersTab → OrdersScreen (profile order history + tracking)
-
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +14,51 @@ import { colors } from "../lib/theme";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Interactive 3D spring-bounce Tab button
+function TabButton(props) {
+  const { onPress, accessibilityState } = props;
+  const focused = accessibilityState.selected;
+
+  const scaleValue = useRef(new Animated.Value(1)).current;
+  const rotateValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (focused) {
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scaleValue, { toValue: 0.82, duration: 80, useNativeDriver: true }),
+          Animated.spring(scaleValue, { toValue: 1.18, friction: 3, tension: 150, useNativeDriver: true }),
+          Animated.spring(scaleValue, { toValue: 1.0, friction: 4, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(rotateValue, { toValue: 1, duration: 120, useNativeDriver: true }),
+          Animated.spring(rotateValue, { toValue: 0, friction: 3, useNativeDriver: true }),
+        ])
+      ]).start();
+    }
+  }, [focused]);
+
+  const rotation = rotateValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "12deg"],
+  });
+
+  return (
+    <TouchableWithoutFeedback onPress={onPress}>
+      <Animated.View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          transform: [{ scale: scaleValue }, { rotate: rotation }],
+        }}
+      >
+        {props.children}
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  );
+}
 
 // Home stack: catalog + the product detail modal overlay.
 function HomeStack() {
@@ -66,6 +104,7 @@ export default function AppNavigator() {
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
         tabBarItemStyle: { paddingVertical: 4 },
+        tabBarButton: (props) => <TabButton {...props} />,
       }}
     >
       <Tab.Screen
