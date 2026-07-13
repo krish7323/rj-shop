@@ -100,6 +100,52 @@ function ProductTile({ item, onOpen, onAdd }) {
   const low = item.stock !== undefined && item.stock > 0 && item.stock <= 5;
   const img = item.images && item.images.length ? item.images[0] : null;
 
+  const [added, setAdded] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const flyAnimY = useRef(new Animated.Value(0)).current;
+  const flyAnimOpacity = useRef(new Animated.Value(0)).current;
+
+  const handleAddPress = () => {
+    if (out) return;
+
+    // Trigger spring bounce
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.88,
+        duration: 90,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 180,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+    ]).start();
+
+    // Trigger flying particle
+    flyAnimY.setValue(0);
+    flyAnimOpacity.setValue(1);
+    Animated.parallel([
+      Animated.timing(flyAnimY, {
+        toValue: -70,
+        duration: 450,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.timing(flyAnimOpacity, {
+        toValue: 0,
+        duration: 450,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+    ]).start();
+
+    setAdded(true);
+    onAdd(item);
+    setTimeout(() => {
+      setAdded(false);
+    }, 1200);
+  };
+
   return (
     <TouchableOpacity style={styles.tile} activeOpacity={0.85} onPress={() => onOpen(item)}>
       <View style={styles.imageWrap}>
@@ -124,6 +170,22 @@ function ProductTile({ item, onOpen, onAdd }) {
             <Text style={[styles.stockTagText, { color: colors.navy }]}>Only {item.stock} left</Text>
           </View>
         ) : null}
+
+        {/* Flying Micro-interaction Particle */}
+        <Animated.View
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 25,
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: colors.success,
+            opacity: flyAnimOpacity,
+            transform: [{ translateY: flyAnimY }],
+          }}
+          pointerEvents="none"
+        />
       </View>
 
       <View style={styles.tileBody}>
@@ -148,15 +210,24 @@ function ProductTile({ item, onOpen, onAdd }) {
         </View>
 
         <View style={styles.tileActionsRow}>
-          <TouchableOpacity
-            style={[styles.addBtn, { flex: 1, marginTop: 0 }, out && styles.addBtnDisabled]}
-            disabled={out}
-            onPress={() => onAdd(item)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="cart" size={14} color={colors.navy} />
-            <Text style={styles.addBtnText}>{out ? "Sold out" : "Add"}</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ flex: 1, transform: [{ scale: scaleAnim }] }}>
+            <TouchableOpacity
+              style={[
+                styles.addBtn,
+                { flex: 1, marginTop: 0 },
+                out && styles.addBtnDisabled,
+                added && { backgroundColor: colors.success },
+              ]}
+              disabled={out}
+              onPress={handleAddPress}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={added ? "checkmark" : "cart"} size={14} color={added ? "#fff" : colors.navy} />
+              <Text style={[styles.addBtnText, added && { color: "#fff" }]}>
+                {out ? "Sold out" : added ? "Added" : "Add"}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           <TouchableOpacity
             style={styles.inquireTileBtn}
