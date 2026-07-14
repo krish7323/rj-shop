@@ -688,9 +688,6 @@ export default function HomeScreen({ navigation }) {
           }
         }} />
 
-        {/* Offer Marquee Banner */}
-        <OfferMarquee />
-
         {/* Banner Slider */}
         <BannerSlider />
 
@@ -970,35 +967,6 @@ const gridStyles = StyleSheet.create({
 });
 
 // ── Offer Marquee Loop Banner ────────────────────────────────────────────────
-function OfferMarquee() {
-  const animVal = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(animVal, {
-        toValue: -340,
-        duration: 12000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-
-  return (
-    <View style={mqStyles.container}>
-      <Animated.View style={[mqStyles.track, { transform: [{ translateX: animVal }] }]}>
-        <Text style={mqStyles.text}>⚡ Get FREE shipping on orders above ₹999 • Valid once on all SBI Credit Cards. Use SBI30 • 20% discount on refurbished gadgets! ⚡</Text>
-      </Animated.View>
-    </View>
-  );
-}
-
-const mqStyles = StyleSheet.create({
-  container: { backgroundColor: "#f0fdf4", marginHorizontal: spacing.md, marginTop: 12, borderRadius: radius.md, overflow: "hidden", paddingVertical: 8, borderWidth: 1, borderColor: "#bbf7d0" },
-  track: { flexDirection: "row", width: 900 },
-  text: { fontSize: 11, fontWeight: "800", color: "#166534" },
-});
-
 // ── Segmented Tabs selector ──────────────────────────────────────────────
 function SegmentedTabs({ activeTab, onTabChange }) {
   const tabs = ["Order again", "Best prices", "Offers for you"];
@@ -1102,38 +1070,70 @@ const badgeStyles = StyleSheet.create({
   text: { fontSize: 9, fontWeight: "950", color: "#1a2e05", textAlign: "center", textTransform: "uppercase" },
 });
 
-// ── Animated Hero (Zepto/Blinkit Delivery Header Format) ────────────────────
+// ── Animated Welcome Hero Restored ──────────────────────────────────────────
 function AnimatedHero({ onMenuOpen }) {
+  const logoScale  = useRef(new Animated.Value(0.7)).current;
+  const logoOpacity= useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(-30)).current;
+  const titleOpacity=useRef(new Animated.Value(0)).current;
+  const btnScale   = useRef(new Animated.Value(0.8)).current;
+  const pulseAnim  = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.stagger(120, [
+      Animated.parallel([
+        Animated.spring(logoScale,   { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.parallel([
+        Animated.timing(titleSlide,   { toValue: 0, duration: 400, easing: Easing.out(Easing.back(1.5)), useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.spring(btnScale, { toValue: 1, friction: 4, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.12, duration: 700, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(pulseAnim, { toValue: 1,    duration: 700, useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+  }, []);
+
   return (
-    <View style={heroStyles.headerRow}>
-      <View style={heroStyles.deliveryPill}>
-        <Text style={heroStyles.deliveryIcon}>⚡</Text>
-        <Text style={heroStyles.deliveryTime}>11 mins</Text>
+    <View style={styles.hero}>
+      {/* background glow orbs */}
+      <View style={{ position: "absolute", top: -20, right: -20, width: 140, height: 140, borderRadius: 70, backgroundColor: "rgba(245,158,11,0.07)" }} />
+      <View style={{ position: "absolute", bottom: 10, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(59,130,246,0.07)" }} />
+
+      <View style={styles.heroRow}>
+        <Animated.View style={{ transform: [{ scale: Animated.multiply(logoScale, pulseAnim) }], opacity: logoOpacity }}>
+          <Image source={logo} style={styles.heroLogo} />
+        </Animated.View>
+        <Animated.View style={[styles.heroTextCol, { opacity: titleOpacity, transform: [{ translateX: titleSlide }] }]}>
+          <Text style={styles.heroSmall}>Welcome to</Text>
+          <Text style={styles.heroTitle}>
+            RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
+          </Text>
+          <Text style={styles.heroSub}>Smart choice · Better life</Text>
+        </Animated.View>
+        <TouchableOpacity onPress={onMenuOpen} style={styles.menuBtn}>
+          <Ionicons name="menu-outline" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity onPress={onMenuOpen} style={heroStyles.addressWrap} activeOpacity={0.8}>
-        <Text style={heroStyles.addressLabel}>🏡 Home</Text>
-        <Text style={heroStyles.addressText} numberOfLines={1}>house no 178, Phase 9, Punjab - 16...</Text>
-        <Ionicons name="chevron-down" size={14} color={colors.sub} />
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={onMenuOpen} style={heroStyles.profileBtn} activeOpacity={0.8}>
-        <Ionicons name="person-circle-outline" size={32} color="#475569" />
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+        <TouchableOpacity
+          style={styles.directionsBtn}
+          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="location" size={14} color={colors.navy} />
+          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
-
-const heroStyles = StyleSheet.create({
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, paddingTop: 48, paddingBottom: 15, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
-  deliveryPill: { backgroundColor: "#000", flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, gap: 4 },
-  deliveryIcon: { fontSize: 13 },
-  deliveryTime: { color: "#fff", fontWeight: "900", fontSize: 12 },
-  addressWrap: { flex: 1, marginHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 3 },
-  addressLabel: { fontSize: 12, fontWeight: "900", color: colors.text },
-  addressText: { fontSize: 11, color: colors.sub, flex: 1 },
-  profileBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#f1f5f9" },
-});
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Animated Section Wrapper ──────────────────────────────────────────────────
