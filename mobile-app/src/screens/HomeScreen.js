@@ -679,12 +679,30 @@ export default function HomeScreen({ navigation }) {
 
         {/* Categories Quick Grid */}
         <CategoryQuickGrid onSelectCategory={(catName) => {
-          const match = categories.find(c => c.name.toLowerCase().includes(catName.toLowerCase()) || catName.toLowerCase().includes(c.name.toLowerCase()));
-          if (match) {
-            const idx = categories.indexOf(match);
-            handleScrollToOffset(500 + idx * 320);
-          } else {
-            setSearch(catName);
+          const norm = catName.toLowerCase();
+          if (norm.includes("phone")) {
+            const idx = categories.findIndex(c => c.name.toLowerCase().includes("phone"));
+            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
+            else setSearch("Phone");
+          } else if (norm.includes("kit") || norm.includes("repair")) {
+            const idx = categories.findIndex(c => c.name.toLowerCase().includes("kit"));
+            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
+            else setSearch("Kit");
+          } else if (norm.includes("gadget")) {
+            const idx = categories.findIndex(c => c.name.toLowerCase().includes("gadget"));
+            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
+            else setSearch("Gadget");
+          } else if (norm.includes("screwdriver")) {
+            setSearch("Screwdriver");
+          } else if (norm.includes("display")) {
+            setSearch("Glue");
+          } else if (norm.includes("opening")) {
+            setSearch("Opening");
+          } else if (norm.includes("wellness") || norm.includes("safe")) {
+            setSearch("Safe");
+          } else if (norm.includes("monsoon") || norm.includes("offer") || norm.includes("pick")) {
+            setActiveTab("Offers for you");
+            setSearch("");
           }
         }} />
 
