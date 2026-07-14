@@ -39,24 +39,90 @@ const BANNERS = [
   { id: 4, emoji: "🚚", title: "Free Shipping", sub: "On orders above ₹999", color: ["#1a0d2e", "#0d0517"] },
 ];
 
-function BannerSlider() {
-  const scrollRef = useRef(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim  = useRef(new Animated.Value(0)).current;
+function AnimatedSlide({ banner, isActive }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const sweepAnim = useRef(new Animated.Value(-120)).current;
 
-  // Glow pulse on each banner
+  // Sparkle floating particles
+  const sparkAnim1 = useRef(new Animated.Value(0)).current;
+  const sparkAnim2 = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
+    // Emoji floating (bobbing)
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1200, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(floatAnim, { toValue: -8, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Emoji rotation oscillation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateAnim, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(rotateAnim, { toValue: -1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Shine sweep loop
+    Animated.loop(
+      Animated.timing(sweepAnim, { toValue: 340, duration: 4000, easing: Easing.linear, useNativeDriver: true })
+    ).start();
+
+    // Background particles bobbing
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkAnim1, { toValue: -12, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(sparkAnim1, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkAnim2, { toValue: 12, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(sparkAnim2, { toValue: 0, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
-  // Auto-advance every 3s
+  const rotate = rotateAnim.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-8deg", "8deg"],
+  });
+
+  return (
+    <View style={bs.slideInner}>
+      {/* Background gradient simulation */}
+      <View style={[bs.slideBg, { backgroundColor: banner.color[0] }]} />
+
+      {/* Shine sweep diagonal bar */}
+      <Animated.View style={[bs.shineSweep, { transform: [{ translateX: sweepAnim }] }]} />
+
+      {/* Background floating circles/sparkles */}
+      <Animated.View style={[bs.bgCircle1, { transform: [{ translateY: sparkAnim1 }] }]} />
+      <Animated.View style={[bs.bgCircle2, { transform: [{ translateY: sparkAnim2 }] }]} />
+
+      {/* Floating Emoji */}
+      <Animated.View style={{ transform: [{ translateY: floatAnim }, { rotate }], zIndex: 10 }}>
+        <Text style={bs.slideEmoji}>{banner.emoji}</Text>
+      </Animated.View>
+
+      {/* Slide Text Content */}
+      <View style={{ zIndex: 10 }}>
+        <Text style={bs.slideTitle}>{banner.title}</Text>
+        <Text style={bs.slideSub}>{banner.sub}</Text>
+      </View>
+    </View>
+  );
+}
+
+function BannerSlider() {
+  const scrollRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Auto-advance every 3.2s
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIdx(prev => {
@@ -69,11 +135,9 @@ function BannerSlider() {
         ]).start();
         return next;
       });
-    }, 3000);
+    }, 3200);
     return () => clearInterval(interval);
   }, []);
-
-  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.45] });
 
   return (
     <View style={bs.wrapper}>
@@ -93,13 +157,7 @@ function BannerSlider() {
             key={b.id}
             style={[bs.slide, { width: WINDOW.width - 32, transform: [{ scale: i === activeIdx ? scaleAnim : 1 }] }]}
           >
-            {/* Background gradient simulation */}
-            <View style={[bs.slideBg, { backgroundColor: b.color[0] }]} />
-            {/* Glow orb */}
-            <Animated.View style={[bs.glowOrb, { opacity: glowOpacity }]} />
-            <Text style={bs.slideEmoji}>{b.emoji}</Text>
-            <Text style={bs.slideTitle}>{b.title}</Text>
-            <Text style={bs.slideSub}>{b.sub}</Text>
+            <AnimatedSlide banner={b} isActive={i === activeIdx} />
           </Animated.View>
         ))}
       </ScrollView>
@@ -123,16 +181,37 @@ const bs = StyleSheet.create({
   wrapper: { marginHorizontal: spacing.md, marginTop: spacing.md, marginBottom: 4 },
   slide: {
     height: 130, borderRadius: radius.xl, overflow: "hidden",
-    alignItems: "center", justifyContent: "center", padding: 20,
-    backgroundColor: "#0f172a", marginRight: 0,
+    marginRight: 0,
   },
-  slideBg: { ...StyleSheet.absoluteFillObject, opacity: 0.9 },
-  glowOrb: {
-    position: "absolute", top: -30, right: -30,
-    width: 160, height: 160, borderRadius: 80,
-    backgroundColor: colors.accent,
+  slideInner: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    position: "relative",
   },
-  slideEmoji: { fontSize: 34, marginBottom: 6 },
+  slideBg: { ...StyleSheet.absoluteFillObject, opacity: 0.95 },
+  shineSweep: {
+    position: "absolute",
+    top: 0, left: 0, bottom: 0,
+    width: 60,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    transform: [{ skewX: "-25deg" }],
+  },
+  bgCircle1: {
+    position: "absolute",
+    top: 10, left: 20,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  bgCircle2: {
+    position: "absolute",
+    bottom: 12, right: 30,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  slideEmoji: { fontSize: 34, marginBottom: 6, textAlign: "center" },
   slideTitle: { color: "#fff", fontSize: 18, fontWeight: "900", textAlign: "center" },
   slideSub:   { color: "#cbd5e1", fontSize: 11, marginTop: 3, textAlign: "center" },
   dots: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 8 },
