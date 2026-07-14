@@ -483,6 +483,60 @@ function ProductTile({ item, onOpen, onAdd }) {
   );
 }
 
+function PulsingBackgroundOrbs() {
+  const moveVal1 = useRef(new Animated.Value(0)).current;
+  const moveVal2 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Loop Orb 1
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(moveVal1, { toValue: 1, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(moveVal1, { toValue: 0, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Loop Orb 2
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(moveVal2, { toValue: 1, duration: 10000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(moveVal2, { toValue: 0, duration: 10000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  const transX1 = moveVal1.interpolate({ inputRange: [0, 1], outputRange: [-25, 45] });
+  const transY1 = moveVal1.interpolate({ inputRange: [0, 1], outputRange: [-35, 25] });
+
+  const transX2 = moveVal2.interpolate({ inputRange: [0, 1], outputRange: [35, -55] });
+  const transY2 = moveVal2.interpolate({ inputRange: [0, 1], outputRange: [45, -15] });
+
+  return (
+    <View style={{ ...StyleSheet.absoluteFillObject, zIndex: -1, overflow: "hidden" }} pointerEvents="none">
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 100, left: -40,
+          width: 250, height: 250,
+          borderRadius: 125,
+          backgroundColor: "rgba(245, 158, 11, 0.05)",
+          transform: [{ translateX: transX1 }, { translateY: transY1 }],
+        }}
+      />
+      <Animated.View
+        style={{
+          position: "absolute",
+          bottom: 200, right: -60,
+          width: 300, height: 300,
+          borderRadius: 150,
+          backgroundColor: "rgba(59, 130, 246, 0.06)",
+          transform: [{ translateX: transX2 }, { translateY: transY2 }],
+        }}
+      />
+    </View>
+  );
+}
+
 export default function HomeScreen({ navigation }) {
   const { addToCart, setToken } = useCart();
   const [products, setProducts] = useState([]);
@@ -661,7 +715,8 @@ export default function HomeScreen({ navigation }) {
   const hasItems = filtered.length > 0;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <PulsingBackgroundOrbs />
       <ScrollView
         ref={scrollRef}
         style={styles.container}
@@ -1250,7 +1305,7 @@ function MobileFAQ() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 10 },
   loadingText: { color: colors.sub, fontWeight: "600" },
   listContent: { paddingBottom: 32 },

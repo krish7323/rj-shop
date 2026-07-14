@@ -309,6 +309,12 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
+  // Stepper quantity animation
+  const qtyScale = useRef(new Animated.Value(1)).current;
+
+  // Trash spin
+  const trashRot = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -333,6 +339,37 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
       }),
     ]).start();
   }, []);
+
+  // Trigger quantity spring on change
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(qtyScale, { toValue: 1.3, duration: 80, useNativeDriver: true }),
+      Animated.spring(qtyScale, { toValue: 1, friction: 3, tension: 150, useNativeDriver: true }),
+    ]).start();
+  }, [item.qty]);
+
+  const handleRemove = () => {
+    // Trash icon shake
+    Animated.sequence([
+      Animated.timing(trashRot, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(trashRot, { toValue: -1, duration: 100, useNativeDriver: true }),
+      Animated.timing(trashRot, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
+
+    // Slide out to left
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: -120, duration: 350, useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.85, duration: 300, useNativeDriver: true }),
+    ]).start(() => {
+      removeItem(item._id);
+    });
+  };
+
+  const rotateTrash = trashRot.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-18deg", "18deg"],
+  });
 
   return (
     <Animated.View style={[styles.row, { opacity: opacityAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
@@ -359,7 +396,9 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
                 <Ionicons name="remove" size={16} color={colors.text} />
               </View>
             </AnimatedButton>
-            <Text style={styles.stepVal}>{item.qty}</Text>
+            <Animated.Text style={[styles.stepVal, { transform: [{ scale: qtyScale }] }]}>
+              {item.qty}
+            </Animated.Text>
             <AnimatedButton
               onPress={() => incrementItem(item._id, item.qty)}
               disabled={item.stock !== undefined && item.qty >= item.stock}
@@ -374,10 +413,10 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
         </View>
       </View>
 
-      <AnimatedButton onPress={() => removeItem(item._id)}>
-        <View style={styles.removeBtn}>
+      <AnimatedButton onPress={handleRemove}>
+        <Animated.View style={[styles.removeBtn, { transform: [{ rotate: rotateTrash }] }]}>
           <Ionicons name="trash-outline" size={18} color={colors.danger} />
-        </View>
+        </Animated.View>
       </AnimatedButton>
     </Animated.View>
   );
