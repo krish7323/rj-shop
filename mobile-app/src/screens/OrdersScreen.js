@@ -2,7 +2,7 @@
 // Order history + tracking: fetches the customer's orders from the backend, shows
 // payment method/status, the order lifecycle stage, and the Shiprocket tracking id.
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import {
   Alert,
   Dimensions,
   Image,
+  Animated,
+  Easing,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -43,6 +46,43 @@ function statusColor(s) {
   return STATUS_COLOR[s] || colors.muted;
 }
 
+function TrackStep({ step, done, active }) {
+  const scaleAnim = useRef(new Animated.Value(done ? 1 : 0.8)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (done) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+    if (active) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.25, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [done, active]);
+
+  return (
+    <View style={styles.trackStep}>
+      <Animated.View style={[
+        styles.trackDot,
+        done && { backgroundColor: colors.success, borderColor: colors.success },
+        { transform: [{ scale: active ? pulseAnim : scaleAnim }] }
+      ]}>
+        {done && <Ionicons name="checkmark" size={11} color="#fff" />}
+      </Animated.View>
+      <Text style={[styles.trackLabel, done && { color: colors.text, fontWeight: "700" }]}>{step}</Text>
+    </View>
+  );
+}
+
 function Tracker({ status }) {
   // Cancelled / returned orders show a flat state instead of the flow.
   if (status === "Cancelled" || status === "Returned") {
@@ -59,14 +99,10 @@ function Tracker({ status }) {
     <View style={styles.tracker}>
       {FLOW.map((step, i) => {
         const done = i <= activeIndex;
+        const active = i === activeIndex;
         return (
           <React.Fragment key={step}>
-            <View style={styles.trackStep}>
-              <View style={[styles.trackDot, done && { backgroundColor: colors.success, borderColor: colors.success }]}>
-                {done && <Ionicons name="checkmark" size={11} color="#fff" />}
-              </View>
-              <Text style={[styles.trackLabel, done && { color: colors.text, fontWeight: "700" }]}>{step}</Text>
-            </View>
+            <TrackStep step={step} done={done} active={active} />
             {i < FLOW.length - 1 && (
               <View style={[styles.trackLine, i < activeIndex && { backgroundColor: colors.success }]} />
             )}
@@ -76,6 +112,40 @@ function Tracker({ status }) {
     </View>
   );
 }
+
+const FadeInView = (props) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 450,
+        delay: props.index * 60,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 450,
+        delay: props.index * 60,
+        useNativeDriver: Platform.OS !== "web",
+      })
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        ...props.style,
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
+    >
+      {props.children}
+    </Animated.View>
+  );
+};
 
 function OrderCard({ order, navigation }) {
   const itemCount = (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0);
@@ -530,7 +600,11 @@ export default function OrdersScreen({ navigation }) {
           )}
         </View>
       }
-      renderItem={({ item }) => <OrderCard order={item} navigation={navigation} />}
+      renderItem={({ item, index }) => (
+        <FadeInView index={index}>
+          <OrderCard order={item} navigation={navigation} />
+        </FadeInView>
+      )}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }

@@ -11,13 +11,13 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Linking,
   Platform,
   Dimensions,
   Animated,
+  Easing,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,26 +29,181 @@ import { colors, radius, spacing } from "../lib/theme";
 import logo from "../assets/logo.png";
 import AnimatedButton from "../components/AnimatedButton";
 
+const WINDOW = Dimensions.get("window");
+
+// ─── Auto-playing Banner Slider ─────────────────────────────────────────────
+const BANNERS = [
+  { id: 1, emoji: "📱", title: "Pre-owned Phones", sub: "6-month warranty guaranteed", color: ["#1e3a5f", "#0f172a"] },
+  { id: 2, emoji: "🛠️", title: "Repair Kits", sub: "Professional S2 steel tools", color: ["#2d1b00", "#1a0f00"] },
+  { id: 3, emoji: "⚡", title: "Cool Gadgets", sub: "Latest smart accessories", color: ["#0d2d1a", "#051a0d"] },
+  { id: 4, emoji: "🚚", title: "Free Shipping", sub: "On orders above ₹999", color: ["#1a0d2e", "#0d0517"] },
+];
+
+function BannerSlider() {
+  const scrollRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim  = useRef(new Animated.Value(0)).current;
+
+  // Glow pulse on each banner
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1200, useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+  }, []);
+
+  // Auto-advance every 3s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIdx(prev => {
+        const next = (prev + 1) % BANNERS.length;
+        scrollRef.current?.scrollTo({ x: next * (WINDOW.width - 32), animated: true });
+        // Spring scale on transition
+        Animated.sequence([
+          Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: Platform.OS !== "web" }),
+          Animated.spring(scaleAnim, { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
+        ]).start();
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.45] });
+
+  return (
+    <View style={bs.wrapper}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onMomentumScrollEnd={e => {
+          const idx = Math.round(e.nativeEvent.contentOffset.x / (WINDOW.width - 32));
+          setActiveIdx(idx);
+        }}
+      >
+        {BANNERS.map((b, i) => (
+          <Animated.View
+            key={b.id}
+            style={[bs.slide, { width: WINDOW.width - 32, transform: [{ scale: i === activeIdx ? scaleAnim : 1 }] }]}
+          >
+            {/* Background gradient simulation */}
+            <View style={[bs.slideBg, { backgroundColor: b.color[0] }]} />
+            {/* Glow orb */}
+            <Animated.View style={[bs.glowOrb, { opacity: glowOpacity }]} />
+            <Text style={bs.slideEmoji}>{b.emoji}</Text>
+            <Text style={bs.slideTitle}>{b.title}</Text>
+            <Text style={bs.slideSub}>{b.sub}</Text>
+          </Animated.View>
+        ))}
+      </ScrollView>
+      {/* Dot indicators */}
+      <View style={bs.dots}>
+        {BANNERS.map((_, i) => (
+          <Animated.View
+            key={i}
+            style={[
+              bs.dot,
+              i === activeIdx && bs.dotActive,
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const bs = StyleSheet.create({
+  wrapper: { marginHorizontal: spacing.md, marginTop: spacing.md, marginBottom: 4 },
+  slide: {
+    height: 130, borderRadius: radius.xl, overflow: "hidden",
+    alignItems: "center", justifyContent: "center", padding: 20,
+    backgroundColor: "#0f172a", marginRight: 0,
+  },
+  slideBg: { ...StyleSheet.absoluteFillObject, opacity: 0.9 },
+  glowOrb: {
+    position: "absolute", top: -30, right: -30,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: colors.accent,
+  },
+  slideEmoji: { fontSize: 34, marginBottom: 6 },
+  slideTitle: { color: "#fff", fontSize: 18, fontWeight: "900", textAlign: "center" },
+  slideSub:   { color: "#cbd5e1", fontSize: 11, marginTop: 3, textAlign: "center" },
+  dots: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 8 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#cbd5e1" },
+  dotActive: { width: 18, backgroundColor: colors.accent },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Animated floating feature pill
+function AnimatedFeatureCard({ icon, label, delay = 0 }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, { toValue: -7, duration: 1400, delay, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+  }, []);
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.85, duration: 80, useNativeDriver: Platform.OS !== "web" }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 200, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+  };
+  return (
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
+      <Animated.View style={[fcStyles.card, { transform: [{ translateY: floatAnim }, { scale: scaleAnim }] }]}>
+        <Text style={fcStyles.icon}>{icon}</Text>
+        <Text style={fcStyles.label}>{label}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+const fcStyles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff", borderRadius: radius.lg,
+    paddingVertical: 10, paddingHorizontal: 12,
+    alignItems: "center", minWidth: 72,
+    elevation: 4, shadowColor: colors.accent, shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1, borderColor: "#f1f5f9",
+  },
+  icon:  { fontSize: 22, marginBottom: 4 },
+  label: { color: colors.text, fontSize: 9, fontWeight: "800", textAlign: "center" },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 const CATEGORIES = ["All", "Repair Kits", "Old Phones", "Cool Gadgets"];
 
 const FadeInView = (props) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 450,
-        delay: props.index * 60,
+        toValue: 1, duration: 420, delay: props.index * 55,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: Platform.OS !== "web",
       }),
       Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 450,
-        delay: props.index * 60,
+        toValue: 0, duration: 420, delay: props.index * 55,
+        easing: Easing.out(Easing.back(1.5)),
         useNativeDriver: Platform.OS !== "web",
-      })
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1, friction: 5, tension: 60, delay: props.index * 55,
+        useNativeDriver: Platform.OS !== "web",
+      }),
     ]).start();
   }, []);
 
@@ -57,7 +212,7 @@ const FadeInView = (props) => {
       style={{
         ...props.style,
         opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
+        transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
       }}
     >
       {props.children}
@@ -425,28 +580,9 @@ export default function HomeScreen({ navigation }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
-        <View style={styles.hero}>
-          <View style={styles.heroRow}>
-            <Image source={logo} style={styles.heroLogo} />
-            <View style={styles.heroTextCol}>
-              <Text style={styles.heroSmall}>Welcome to</Text>
-              <Text style={styles.heroTitle}>
-                RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
-              </Text>
-              <Text style={styles.heroSub}>Smart choice · Better life</Text>
-            </View>
-            <TouchableOpacity onPress={() => setDrawerOpen(true)} style={styles.menuBtn}>
-              <Ionicons name="menu-outline" size={28} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={styles.directionsBtn}
-            onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
-          >
-            <Ionicons name="location" size={14} color={colors.navy} />
-            <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
-          </TouchableOpacity>
-        </View>
+        <AnimatedHero
+          onMenuOpen={() => setDrawerOpen(true)}
+        />
 
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={18} color={colors.muted} />
@@ -464,25 +600,18 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
 
-        {/* Features Row */}
-        <View style={styles.featuresRow}>
-          <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🛡️</Text>
-            <Text style={styles.featureTitle}>100% Tested</Text>
-          </View>
-          <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🛠️</Text>
-            <Text style={styles.featureTitle}>Premium Tools</Text>
-          </View>
-          <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>💬</Text>
-            <Text style={styles.featureTitle}>Live Chat</Text>
-          </View>
-          <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🚗</Text>
-            <Text style={styles.featureTitle}>Store Pick</Text>
-          </View>
-        </View>
+        {/* Banner Slider */}
+        <BannerSlider />
+
+        {/* Animated Floating Feature Cards */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: 10, paddingTop: 10, paddingBottom: 4 }}>
+          <AnimatedFeatureCard icon="🛡️" label="100% Tested" delay={0} />
+          <AnimatedFeatureCard icon="🛠️" label="Premium Tools" delay={200} />
+          <AnimatedFeatureCard icon="💬" label="Live Chat" delay={400} />
+          <AnimatedFeatureCard icon="🚗" label="Store Pick" delay={600} />
+          <AnimatedFeatureCard icon="⭐" label="5-Star Rated" delay={800} />
+          <AnimatedFeatureCard icon="🔒" label="Secure Pay" delay={1000} />
+        </ScrollView>
 
         {!live && (
           <View style={styles.demoBanner}>
@@ -497,24 +626,26 @@ export default function HomeScreen({ navigation }) {
           </View>
         ) : (
           <View style={styles.sectionsContainer}>
-            {categorizedProducts.map((group) => {
+            {categorizedProducts.map((group, gi) => {
               if (group.products.length === 0) return null;
               return (
-                <View key={group._id || group.name} style={styles.sectionWrap}>
-                  <Text style={styles.sectionHeader}>{group.icon || "📁"} {group.name}</Text>
-                  <FlatList
-                    horizontal
-                    data={group.products}
-                    keyExtractor={(item) => item._id}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.horizontalList}
-                    renderItem={({ item, index }) => (
-                      <FadeInView index={index}>
-                        <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
-                      </FadeInView>
-                    )}
-                  />
-                </View>
+                <AnimatedSectionWrapper key={group._id || group.name} delay={gi * 120}>
+                  <View style={styles.sectionWrap}>
+                    <AnimatedSectionHeader icon={group.icon} name={group.name} />
+                    <FlatList
+                      horizontal
+                      data={group.products}
+                      keyExtractor={(item) => item._id}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.horizontalList}
+                      renderItem={({ item, index }) => (
+                        <FadeInView index={index}>
+                          <ProductTile item={item} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />
+                        </FadeInView>
+                      )}
+                    />
+                  </View>
+                </AnimatedSectionWrapper>
               );
             })}
           </View>
@@ -524,6 +655,9 @@ export default function HomeScreen({ navigation }) {
         <MobileTestimonials />
         <MobileFAQ />
       </ScrollView>
+
+      {/* Floating WhatsApp Heartbeat FAB */}
+      <WhatsAppFAB />
 
       {/* Slide Out Hamburger Drawer Overlay */}
       {drawerOpen && (
@@ -616,11 +750,166 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
+// ── Animated Hero ─────────────────────────────────────────────────────────────
+function AnimatedHero({ onMenuOpen }) {
+  const logoScale  = useRef(new Animated.Value(0.7)).current;
+  const logoOpacity= useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(-30)).current;
+  const titleOpacity=useRef(new Animated.Value(0)).current;
+  const btnScale   = useRef(new Animated.Value(0.8)).current;
+  const pulseAnim  = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Entrance sequence
+    Animated.stagger(120, [
+      Animated.parallel([
+        Animated.spring(logoScale,   { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.parallel([
+        Animated.timing(titleSlide,   { toValue: 0, duration: 400, easing: Easing.out(Easing.back(1.5)), useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.spring(btnScale, { toValue: 1, friction: 4, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+    // Logo heartbeat loop
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.12, duration: 700, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(pulseAnim, { toValue: 1,    duration: 700, useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <View style={styles.hero}>
+      {/* background glow orbs */}
+      <View style={{ position: "absolute", top: -20, right: -20, width: 140, height: 140, borderRadius: 70, backgroundColor: "rgba(245,158,11,0.07)" }} />
+      <View style={{ position: "absolute", bottom: 10, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(59,130,246,0.07)" }} />
+
+      <View style={styles.heroRow}>
+        <Animated.View style={{ transform: [{ scale: Animated.multiply(logoScale, pulseAnim) }], opacity: logoOpacity }}>
+          <Image source={logo} style={styles.heroLogo} />
+        </Animated.View>
+        <Animated.View style={[styles.heroTextCol, { opacity: titleOpacity, transform: [{ translateX: titleSlide }] }]}>
+          <Text style={styles.heroSmall}>Welcome to</Text>
+          <Text style={styles.heroTitle}>
+            RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
+          </Text>
+          <Text style={styles.heroSub}>Smart choice · Better life</Text>
+        </Animated.View>
+        <TouchableOpacity onPress={onMenuOpen} style={styles.menuBtn}>
+          <Ionicons name="menu-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+        <TouchableOpacity
+          style={styles.directionsBtn}
+          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="location" size={14} color={colors.navy} />
+          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Animated Section Wrapper ──────────────────────────────────────────────────
+function AnimatedSectionWrapper({ children, delay = 0 }) {
+  const slideAnim   = useRef(new Animated.Value(40)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, delay, easing: Easing.out(Easing.back(1.2)), useNativeDriver: Platform.OS !== "web" }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 500, delay, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+  }, []);
+  return (
+    <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Animated Section Header ───────────────────────────────────────────────────
+function AnimatedSectionHeader({ icon, name }) {
+  const iconBounce = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(iconBounce, { toValue: -5, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(iconBounce, { toValue: 0, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+  }, []);
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: spacing.md, marginBottom: spacing.sm }}>
+      <Animated.Text style={{ fontSize: 18, transform: [{ translateY: iconBounce }] }}>{icon || "📁"}</Animated.Text>
+      <Text style={styles.sectionHeader}>{name}</Text>
+    </View>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── WhatsApp Floating Heartbeat FAB ──────────────────────────────────────────
+function WhatsAppFAB() {
+  const heartAnim = useRef(new Animated.Value(1)).current;
+  const pingAnim  = useRef(new Animated.Value(1)).current;
+  const pingOp    = useRef(new Animated.Value(0.6)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(heartAnim, { toValue: 1.18, duration: 200, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(heartAnim, { toValue: 1, duration: 200, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(heartAnim, { toValue: 1.1, duration: 180, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(heartAnim, { toValue: 1, duration: 800, useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(pingAnim, { toValue: 2.2, duration: 1000, useNativeDriver: Platform.OS !== "web" }),
+          Animated.timing(pingOp,   { toValue: 0,   duration: 1000, useNativeDriver: Platform.OS !== "web" }),
+        ]),
+        Animated.parallel([
+          Animated.timing(pingAnim, { toValue: 1,   duration: 0, useNativeDriver: Platform.OS !== "web" }),
+          Animated.timing(pingOp,   { toValue: 0.6, duration: 0, useNativeDriver: Platform.OS !== "web" }),
+        ]),
+      ])
+    ).start();
+  }, []);
+  return (
+    <View style={fabStyles.wrap} pointerEvents="box-none">
+      {/* Ping ring */}
+      <Animated.View style={[fabStyles.ping, { transform: [{ scale: pingAnim }], opacity: pingOp }]} />
+      <Animated.View style={{ transform: [{ scale: heartAnim }] }}>
+        <TouchableOpacity
+          style={fabStyles.btn}
+          activeOpacity={0.85}
+          onPress={() => Linking.openURL("https://wa.me/919097377388?text=Hi%20RJ%20Mobile%20Store!")}
+        >
+          <Ionicons name="logo-whatsapp" size={28} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+const fabStyles = StyleSheet.create({
+  wrap: { position: "absolute", bottom: 24, right: 20, alignItems: "center", justifyContent: "center", zIndex: 999 },
+  ping: { position: "absolute", width: 56, height: 56, borderRadius: 28, backgroundColor: "#25D366" },
+  btn: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#25D366", alignItems: "center", justifyContent: "center", elevation: 8, shadowColor: "#25D366", shadowOpacity: 0.5, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 function MobileTestimonials() {
   const reviews = [
-    { name: "Rohan Sharma", role: "Local Customer", text: "OnePlus 9 was perfect, battery is great!" },
-    { name: "Pooja Hegde", role: "Verified Buyer", text: "WhatsApp checkout was very smooth." },
-    { name: "Amit Patel", role: "DIY Hobbyist", text: "Precision screwdriver kit is premium." }
+    { name: "Rohan Sharma", role: "Local Customer", text: "OnePlus 9 was perfect, battery is great!", stars: 5 },
+    { name: "Pooja Hegde",  role: "Verified Buyer",  text: "WhatsApp checkout was very smooth.", stars: 5 },
+    { name: "Amit Patel",   role: "DIY Hobbyist",    text: "Precision screwdriver kit is premium.", stars: 5 }
   ];
 
   return (
@@ -628,13 +917,16 @@ function MobileTestimonials() {
       <Text style={styles.nativeSectionHeader}>⭐ What Our Customers Say</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
         {reviews.map((r, idx) => (
-          <View key={idx} style={styles.testimonialCard}>
-            <Text style={styles.testimonialText}>"{r.text}"</Text>
-            <View style={{ marginTop: 8, borderTopWidth: 1, borderColor: "#f1f5f9", paddingTop: 4 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", color: colors.navy }}>{r.name}</Text>
-              <Text style={{ fontSize: 9, color: colors.sub }}>{r.role}</Text>
+          <FadeInView key={idx} index={idx}>
+            <View style={styles.testimonialCard}>
+              <Text style={{ fontSize: 11, color: colors.accent, marginBottom: 4 }}>{"★".repeat(r.stars)}</Text>
+              <Text style={styles.testimonialText}>"{r.text}"</Text>
+              <View style={{ marginTop: 8, borderTopWidth: 1, borderColor: "#f1f5f9", paddingTop: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: "bold", color: colors.navy }}>{r.name}</Text>
+                <Text style={{ fontSize: 9, color: colors.sub }}>{r.role}</Text>
+              </View>
             </View>
-          </View>
+          </FadeInView>
         ))}
       </ScrollView>
     </View>

@@ -51,7 +51,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
           {/* Cart */}
           <button
             onClick={onCartClick}
-            className={`relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2 transition hover:bg-navy-700 ${
+            className={`btn-3d relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2 transition hover:bg-navy-700 ${
               count > 0 ? "animate-pulse" : ""
             }`}
             aria-label="Open cart"
@@ -76,7 +76,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
             <div className="flex items-center gap-2.5">
               <button
                 onClick={onOrdersClick}
-                className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-navy-700 text-slate-200"
+                className="btn-3d flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 transition hover:bg-navy-700 text-slate-200"
                 title="My Orders"
               >
                 <ShoppingBag className="h-5 w-5" />
@@ -87,11 +87,11 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
                 <span className="hidden text-xs font-semibold text-slate-300 md:block max-w-[100px] truncate">
                   Hi, {user.name.split(" ")[0]}
                 </span>
-                <button
-                  onClick={onLogout}
-                  className="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-navy-700 hover:text-white transition"
-                  title="Sign Out"
-                >
+                  <button
+                    onClick={onLogout}
+                    className="btn-3d grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-navy-700 hover:text-white transition"
+                    title="Sign Out"
+                  >
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
@@ -99,7 +99,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
           ) : (
             <button
               onClick={onAuthClick}
-              className="btn-accent shrink-0 rounded-full px-4.5 py-2 text-xs font-extrabold"
+              className="btn-accent btn-3d shrink-0 rounded-full px-4.5 py-2 text-xs font-extrabold"
             >
               Sign In
             </button>
@@ -108,7 +108,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
           {/* Hamburger Menu Trigger */}
           <button
             onClick={onMenuClick}
-            className="grid h-9 w-9 place-items-center rounded-full text-slate-300 hover:bg-navy-700 hover:text-white transition ml-1"
+            className="btn-3d grid h-9 w-9 place-items-center rounded-full text-slate-300 hover:bg-navy-700 hover:text-white transition ml-1"
             title="Open Menu"
           >
             <Menu className="h-5 w-5" />

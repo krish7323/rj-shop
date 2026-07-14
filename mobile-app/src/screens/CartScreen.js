@@ -3,7 +3,7 @@
 // and a checkout modal that collects the delivery address and triggers either COD
 // or Razorpay (online) order placement against the backend.
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Linking,
+  Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -147,66 +149,18 @@ export default function CartScreen({ navigation }) {
   // --- Empty state ---
   if (items.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Ionicons name="cart-outline" size={64} color={colors.muted} />
-        <Text style={styles.emptyTitle}>Your cart is empty</Text>
-        <Text style={styles.emptySub}>Browse the catalog and add something you love.</Text>
-        <AnimatedButton onPress={() => navigation.navigate("HomeTab")}>
-          <View style={styles.shopBtn}>
-            <Ionicons name="storefront-outline" size={18} color={colors.navy} />
-            <Text style={styles.shopBtnText}>Start Shopping</Text>
-          </View>
-        </AnimatedButton>
-      </View>
+      <EmptyCartView navigation={navigation} />
     );
   }
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <View style={styles.thumbWrap}>
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={styles.thumb} />
-        ) : (
-          <View style={[styles.thumb, styles.thumbFallback]}>
-            <Ionicons name="image-outline" size={22} color={colors.muted} />
-          </View>
-        )}
-      </View>
-
-      <View style={styles.rowBody}>
-        <Text style={styles.itemName} numberOfLines={2}>
-          {item.name}
-        </Text>
-        <Text style={styles.itemUnit}>{inr(item.price)} each</Text>
-
-        <View style={styles.rowFooter}>
-          <View style={styles.stepper}>
-            <AnimatedButton onPress={() => decrementItem(item._id, item.qty)}>
-              <View style={styles.stepBtn}>
-                <Ionicons name="remove" size={16} color={colors.text} />
-              </View>
-            </AnimatedButton>
-            <Text style={styles.stepVal}>{item.qty}</Text>
-            <AnimatedButton
-              onPress={() => incrementItem(item._id, item.qty)}
-              disabled={item.stock !== undefined && item.qty >= item.stock}
-            >
-              <View style={[styles.stepBtn, item.stock !== undefined && item.qty >= item.stock && styles.stepDisabled]}>
-                <Ionicons name="add" size={16} color={colors.text} />
-              </View>
-            </AnimatedButton>
-          </View>
-
-          <Text style={styles.lineTotal}>{inr(item.price * item.qty)}</Text>
-        </View>
-      </View>
-
-      <AnimatedButton onPress={() => removeItem(item._id)}>
-        <View style={styles.removeBtn}>
-          <Ionicons name="trash-outline" size={18} color={colors.danger} />
-        </View>
-      </AnimatedButton>
-    </View>
+  const renderItem = ({ item, index }) => (
+    <CartItemRow
+      item={item}
+      index={index}
+      decrementItem={decrementItem}
+      incrementItem={incrementItem}
+      removeItem={removeItem}
+    />
   );
 
   return (
@@ -219,40 +173,15 @@ export default function CartScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Summary + checkout */}
-      <View style={styles.summary}>
-        <SummaryRow label={`Subtotal (${items.length} items)`} value={inr(subtotal)} />
-        {savings > 0 && <SummaryRow label="You save" value={`- ${inr(savings)}`} success />}
-        <SummaryRow label="Shipping" value={shipping === 0 ? "FREE" : inr(shipping)} />
-        <View style={styles.divider} />
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>{inr(grandTotal)}</Text>
-        </View>
-
-        <AnimatedButton onPress={() => setCheckoutOpen(true)}>
-          <View style={styles.checkoutBtn}>
-            <Text style={styles.checkoutText}>Proceed to Checkout</Text>
-            <Ionicons name="arrow-forward" size={18} color={colors.navy} />
-          </View>
-        </AnimatedButton>
-
-        <AnimatedButton
-          onPress={() => {
-            const message = `Hi RJ Mobile Store! I want to buy:\n${items
-              .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
-              .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
-            const encoded = encodeURIComponent(message);
-            const phone = "919097377388"; 
-            Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-          }}
-        >
-          <View style={[styles.checkoutBtn, styles.whatsappBtn]}>
-            <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-            <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
-          </View>
-        </AnimatedButton>
-      </View>
+      {/* Summary + checkout sliding up */}
+      <AnimatedSummary
+        items={items}
+        subtotal={subtotal}
+        savings={savings}
+        shipping={shipping}
+        grandTotal={grandTotal}
+        setCheckoutOpen={setCheckoutOpen}
+      />
 
       {/* Checkout modal */}
       <Modal visible={checkoutOpen} animationType="slide" onRequestClose={() => setCheckoutOpen(false)}>
@@ -335,7 +264,175 @@ export default function CartScreen({ navigation }) {
   );
 }
 
-// --- small presentational helpers ---
+// --- Animated helper components ---
+
+function EmptyCartView({ navigation }) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Pulse animation loop
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.15, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      ])
+    ).start();
+
+    // Slide up text
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, easing: Easing.out(Easing.back(1.5)), useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.empty, { opacity: opacityAnim, transform: [{ translateY: slideAnim }] }]}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }], marginBottom: 12 }}>
+        <Ionicons name="cart-outline" size={64} color={colors.accentDark} />
+      </Animated.View>
+      <Text style={styles.emptyTitle}>Your cart is empty</Text>
+      <Text style={styles.emptySub}>Browse the catalog and add something you love.</Text>
+      <AnimatedButton onPress={() => navigation.navigate("HomeTab")}>
+        <View style={styles.shopBtn}>
+          <Ionicons name="storefront-outline" size={18} color={colors.navy} />
+          <Text style={styles.shopBtnText}>Start Shopping</Text>
+        </View>
+      </AnimatedButton>
+    </Animated.View>
+  );
+}
+
+function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) {
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        delay: index * 60,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 60,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 80,
+        delay: index * 60,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.row, { opacity: opacityAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
+      <View style={styles.thumbWrap}>
+        {item.image ? (
+          <Image source={{ uri: item.image }} style={styles.thumb} />
+        ) : (
+          <View style={[styles.thumb, styles.thumbFallback]}>
+            <Ionicons name="image-outline" size={22} color={colors.muted} />
+          </View>
+        )}
+      </View>
+
+      <View style={styles.rowBody}>
+        <Text style={styles.itemName} numberOfLines={2}>
+          {item.name}
+        </Text>
+        <Text style={styles.itemUnit}>{inr(item.price)} each</Text>
+
+        <View style={styles.rowFooter}>
+          <View style={styles.stepper}>
+            <AnimatedButton onPress={() => decrementItem(item._id, item.qty)}>
+              <View style={styles.stepBtn}>
+                <Ionicons name="remove" size={16} color={colors.text} />
+              </View>
+            </AnimatedButton>
+            <Text style={styles.stepVal}>{item.qty}</Text>
+            <AnimatedButton
+              onPress={() => incrementItem(item._id, item.qty)}
+              disabled={item.stock !== undefined && item.qty >= item.stock}
+            >
+              <View style={[styles.stepBtn, item.stock !== undefined && item.qty >= item.stock && styles.stepDisabled]}>
+                <Ionicons name="add" size={16} color={colors.text} />
+              </View>
+            </AnimatedButton>
+          </View>
+
+          <Text style={styles.lineTotal}>{inr(item.price * item.qty)}</Text>
+        </View>
+      </View>
+
+      <AnimatedButton onPress={() => removeItem(item._id)}>
+        <View style={styles.removeBtn}>
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+        </View>
+      </AnimatedButton>
+    </Animated.View>
+  );
+}
+
+function AnimatedSummary({ items, subtotal, savings, shipping, grandTotal, setCheckoutOpen }) {
+  const slideAnim = useRef(new Animated.Value(150)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      friction: 6,
+      tension: 50,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.summary, { transform: [{ translateY: slideAnim }] }]}>
+      <SummaryRow label={`Subtotal (${items.length} items)`} value={inr(subtotal)} />
+      {savings > 0 && <SummaryRow label="You save" value={`- ${inr(savings)}`} success />}
+      <SummaryRow label="Shipping" value={shipping === 0 ? "FREE" : inr(shipping)} />
+      <View style={styles.divider} />
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.totalValue}>{inr(grandTotal)}</Text>
+      </View>
+
+      <AnimatedButton onPress={() => setCheckoutOpen(true)}>
+        <View style={styles.checkoutBtn}>
+          <Text style={styles.checkoutText}>Proceed to Checkout</Text>
+          <Ionicons name="arrow-forward" size={18} color={colors.navy} />
+        </View>
+      </AnimatedButton>
+
+      <AnimatedButton
+        onPress={() => {
+          const message = `Hi RJ Mobile Store! I want to buy:\n${items
+            .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
+            .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
+          const encoded = encodeURIComponent(message);
+          const phone = "919097377388"; 
+          Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
+        }}
+      >
+        <View style={[styles.checkoutBtn, styles.whatsappBtn]}>
+          <Ionicons name="logo-whatsapp" size={18} color="#fff" />
+          <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
+        </View>
+      </AnimatedButton>
+    </Animated.View>
+  );
+}
+
 function SummaryRow({ label, value, success }) {
   return (
     <View style={styles.sumRow}>

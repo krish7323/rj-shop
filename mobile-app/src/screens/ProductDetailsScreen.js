@@ -14,6 +14,7 @@ import {
   Dimensions,
   Linking,
   Animated,
+  Easing,
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,25 +30,46 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const { addToCart, count } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim   = useRef(new Animated.Value(1)).current;
+  const pulseAnim   = useRef(new Animated.Value(1)).current;
+  // Entrance animations
+  const imgSlide    = useRef(new Animated.Value(-60)).current;
+  const imgOpacity  = useRef(new Animated.Value(0)).current;
+  const bodySlide   = useRef(new Animated.Value(80)).current;
+  const bodyOpacity = useRef(new Animated.Value(0)).current;
+  const brandSlide  = useRef(new Animated.Value(20)).current;
+  const titleSlide  = useRef(new Animated.Value(20)).current;
+  const priceSlide  = useRef(new Animated.Value(20)).current;
+  const barSlide    = useRef(new Animated.Value(60)).current;
 
   useEffect(() => {
+    // Staggered entrance sequence
+    Animated.stagger(80, [
+      Animated.parallel([
+        Animated.timing(imgSlide,   { toValue: 0, duration: 500, easing: Easing.out(Easing.back(1.2)), useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(imgOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.parallel([
+        Animated.spring(bodySlide, { toValue: 0, friction: 6, tension: 60, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(bodyOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
+      ]),
+      Animated.spring(brandSlide, { toValue: 0, friction: 5, useNativeDriver: Platform.OS !== "web" }),
+      Animated.spring(titleSlide, { toValue: 0, friction: 5, useNativeDriver: Platform.OS !== "web" }),
+      Animated.spring(priceSlide, { toValue: 0, friction: 5, useNativeDriver: Platform.OS !== "web" }),
+      Animated.spring(barSlide,   { toValue: 0, friction: 5, useNativeDriver: Platform.OS !== "web" }),
+    ]).start();
+    // Add to Cart button pulse loop
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.035,
-          duration: 900,
-          useNativeDriver: Platform.OS !== "web",
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 900,
-          useNativeDriver: Platform.OS !== "web",
-        }),
+        Animated.timing(pulseAnim, { toValue: 1.035, duration: 900, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: Platform.OS !== "web" }),
       ])
     ).start();
   }, []);
+
+  useEffect(() => {
+    if (!added) return;
+  }, [added]);
 
   if (!product) {
     return (
@@ -88,8 +110,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-        {/* Image + back / cart */}
-        <View style={styles.imageWrap}>
+        {/* Image with slide-in */}
+        <Animated.View style={[styles.imageWrap, { opacity: imgOpacity, transform: [{ translateY: imgSlide }] }]}>
           {img ? (
             <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
           ) : (
@@ -115,16 +137,16 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </TouchableOpacity>
 
           {pct > 0 && (
-            <View style={styles.discountTag}>
+            <Animated.View style={[styles.discountTag]}>
               <Text style={styles.discountText}>-{pct}% OFF</Text>
-            </View>
+            </Animated.View>
           )}
-        </View>
+        </Animated.View>
 
-        {/* Details */}
-        <View style={styles.body}>
-          <Text style={styles.brand}>{product.brand || product.category}</Text>
-          <Text style={styles.name}>{product.name}</Text>
+        {/* Details — spring up */}
+        <Animated.View style={[styles.body, { opacity: bodyOpacity, transform: [{ translateY: bodySlide }] }]}>
+          <Animated.Text style={[styles.brand, { transform: [{ translateY: brandSlide }] }]}>{product.brand || product.category}</Animated.Text>
+          <Animated.Text style={[styles.name, { transform: [{ translateY: titleSlide }] }]}>{product.name}</Animated.Text>
 
           {product.rating > 0 && (
             <View style={styles.ratingRow}>
@@ -136,11 +158,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
           )}
 
-          <View style={styles.priceRow}>
+          <Animated.View style={[styles.priceRow, { transform: [{ translateY: priceSlide }] }]}>
             <Text style={styles.price}>{inr(product.price)}</Text>
             {pct > 0 && <Text style={styles.mrp}>{inr(product.mrp)}</Text>}
             {pct > 0 && <Text style={styles.save}>Save {pct}%</Text>}
-          </View>
+          </Animated.View>
 
           {/* Stock safeguard indicator */}
           <View style={styles.stockRow}>
@@ -161,11 +183,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <Text style={styles.descTitle}>Description</Text>
           <Text style={styles.desc}>{product.description || "No description available."}</Text>
 
-        </View>
+        </Animated.View>
       </ScrollView>
 
-      {/* Sticky bottom actions bar */}
-      <View style={styles.bottomBar}>
+      {/* Sticky bottom actions bar — slides up */}
+      <Animated.View style={[styles.bottomBar, { transform: [{ translateY: barSlide }] }]}>
         {out ? (
           <AnimatedButton
             onPress={() => {
@@ -224,7 +246,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </AnimatedButton>
           </View>
         )}
-      </View>
+      </Animated.View>
     </View>
   );
 }

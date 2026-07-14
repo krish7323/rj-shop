@@ -1,5 +1,4 @@
-// src/screens/ProfileScreen.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +9,8 @@ import {
   Alert,
   Linking,
   Platform,
+  Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,6 +22,16 @@ export default function ProfileScreen() {
   const { setToken } = useCart();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Animated values
+  const headerScale = useRef(new Animated.Value(0.92)).current;
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const sec1Slide = useRef(new Animated.Value(30)).current;
+  const sec1Opacity = useRef(new Animated.Value(0)).current;
+  const sec2Slide = useRef(new Animated.Value(30)).current;
+  const sec2Opacity = useRef(new Animated.Value(0)).current;
+  const logoutScale = useRef(new Animated.Value(0.85)).current;
+  const logoutOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     (async () => {
@@ -34,6 +45,29 @@ export default function ProfileScreen() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.stagger(80, [
+        Animated.parallel([
+          Animated.spring(headerScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }),
+          Animated.timing(headerOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(sec1Slide, { toValue: 0, duration: 450, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(sec1Opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(sec2Slide, { toValue: 0, duration: 450, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(sec2Opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.spring(logoutScale, { toValue: 1, friction: 5, useNativeDriver: true }),
+          Animated.timing(logoutOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+        ])
+      ]).start();
+    }
+  }, [loading]);
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -69,16 +103,16 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
       {/* Profile Header Card */}
-      <View style={styles.profileHeader}>
+      <Animated.View style={[styles.profileHeader, { opacity: headerOpacity, transform: [{ scale: headerScale }] }]}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{firstLetter}</Text>
         </View>
         <Text style={styles.name}>{user?.name || "Customer"}</Text>
         <Text style={styles.email}>{user?.email}</Text>
-      </View>
+      </Animated.View>
 
       {/* Account Info Details */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, { opacity: sec1Opacity, transform: [{ translateY: sec1Slide }] }]}>
         <Text style={styles.sectionTitle}>Account Information</Text>
         
         <View style={styles.infoRow}>
@@ -112,10 +146,10 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Connect With Us */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, { opacity: sec2Opacity, transform: [{ translateY: sec2Slide }] }]}>
         <Text style={styles.sectionTitle}>Connect With Us</Text>
 
         <TouchableOpacity 
@@ -153,13 +187,15 @@ export default function ProfileScreen() {
           <Text style={styles.socialText}>YouTube Channel</Text>
           <Ionicons name="chevron-forward-outline" size={16} color={colors.muted} />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* Logout Action */}
-      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-        <Ionicons name="log-out-outline" size={18} color="#fff" />
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+      <Animated.View style={{ opacity: logoutOpacity, transform: [{ scale: logoutScale }] }}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={18} color="#fff" />
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </ScrollView>
   );
 }

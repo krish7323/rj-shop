@@ -28,7 +28,7 @@ export default function ProductCard({ product, onOpen }) {
   return (
     <div
       onClick={() => onOpen?.(product)}
-      className="card-3d group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card"
+      className="card-3d animate-fade-in-slide group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-card"
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-slate-50">
@@ -66,7 +66,7 @@ export default function ProductCard({ product, onOpen }) {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-4 animate-desc">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-600">
           {product.brand || product.category}
         </p>
@@ -98,7 +98,7 @@ export default function ProductCard({ product, onOpen }) {
           <button
             onClick={handleAdd}
             disabled={outOfStock}
-            className={`btn-accent flex-1 text-xs py-2 px-3 ${
+            className={`btn-accent btn-3d flex-1 text-xs py-2 px-3 ${
               added ? "!bg-emerald-500 !text-white animate-bounce" : ""
             } ${outOfStock ? "opacity-60" : ""}`}
           >
@@ -124,7 +124,7 @@ export default function ProductCard({ product, onOpen }) {
               const phone = import.meta.env.VITE_WHATSAPP_NUMBER || "919097377388";
               window.open(`https://wa.me/${phone}?text=${encoded}`, "_blank");
             }}
-            className="flex items-center justify-center gap-1 rounded-full border border-emerald-600 bg-emerald-50/50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition active:scale-[.97]"
+            className="btn-3d flex items-center justify-center gap-1 rounded-full border border-emerald-600 bg-emerald-50/50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition"
             title="Inquire on WhatsApp"
           >
             <svg className="h-3.5 w-3.5 fill-emerald-600" viewBox="0 0 24 24">
