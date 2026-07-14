@@ -412,6 +412,7 @@ export default function HomeScreen({ navigation }) {
   const [live, setLive] = useState(false);
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState("Order again");
 
   // Drawer & Profile states
   const [currentUser, setCurrentUser] = useState(null);
@@ -522,12 +523,22 @@ export default function HomeScreen({ navigation }) {
     });
   }, [products, search]);
 
+  const processedProducts = useMemo(() => {
+    let result = [...filtered];
+    if (activeTab === "Best prices") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (activeTab === "Offers for you") {
+      result = result.filter((p) => p.mrp > p.price);
+    }
+    return result;
+  }, [filtered, activeTab]);
+
   const categorizedProducts = useMemo(() => {
     return categories.map((cat) => ({
       ...cat,
-      products: filtered.filter((p) => p.category === cat.name),
+      products: processedProducts.filter((p) => p.category === cat.name),
     }));
-  }, [categories, filtered]);
+  }, [categories, processedProducts]);
 
   const openProduct = (item) => navigation.navigate("ProductDetails", { product: item });
 
@@ -584,27 +595,31 @@ export default function HomeScreen({ navigation }) {
           onMenuOpen={() => setDrawerOpen(true)}
         />
 
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search kits, phones & gadgets…"
-            placeholderTextColor={colors.muted}
-            style={styles.searchInput}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={18} color={colors.muted} />
-            </TouchableOpacity>
-          )}
-        </View>
+        {/* Typewriter Search Bar */}
+        <TypewriterSearchInput value={search} onChangeText={setSearch} />
+
+        {/* Categories Quick Grid */}
+        <CategoryQuickGrid onSelectCategory={(catName) => {
+          const match = categories.find(c => c.name.toLowerCase().includes(catName.toLowerCase()) || catName.toLowerCase().includes(c.name.toLowerCase()));
+          if (match) {
+            const idx = categories.indexOf(match);
+            handleScrollToOffset(500 + idx * 320);
+          } else {
+            setSearch(catName);
+          }
+        }} />
+
+        {/* Offer Marquee Banner */}
+        <OfferMarquee />
 
         {/* Banner Slider */}
         <BannerSlider />
 
+        {/* Segmented Tabs Control */}
+        <SegmentedTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
         {/* Animated Floating Feature Cards */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: 10, paddingTop: 10, paddingBottom: 4 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: 10, paddingTop: 14, paddingBottom: 4 }}>
           <AnimatedFeatureCard icon="🛡️" label="100% Tested" delay={0} />
           <AnimatedFeatureCard icon="🛠️" label="Premium Tools" delay={200} />
           <AnimatedFeatureCard icon="💬" label="Live Chat" delay={400} />
@@ -655,6 +670,9 @@ export default function HomeScreen({ navigation }) {
         <MobileTestimonials />
         <MobileFAQ />
       </ScrollView>
+
+      {/* Brand of the Day Sticker badge */}
+      <BrandOfTheDayBadge />
 
       {/* Floating WhatsApp Heartbeat FAB */}
       <WhatsAppFAB />
@@ -750,71 +768,293 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-// ── Animated Hero ─────────────────────────────────────────────────────────────
-function AnimatedHero({ onMenuOpen }) {
-  const logoScale  = useRef(new Animated.Value(0.7)).current;
-  const logoOpacity= useRef(new Animated.Value(0)).current;
-  const titleSlide = useRef(new Animated.Value(-30)).current;
-  const titleOpacity=useRef(new Animated.Value(0)).current;
-  const btnScale   = useRef(new Animated.Value(0.8)).current;
-  const pulseAnim  = useRef(new Animated.Value(1)).current;
+// ── Typewriter Search Bar placeholder cycling ──────────────────────────────
+function TypewriterSearchInput({ value, onChangeText }) {
+  const placeholders = [
+    "Search 'screwdriver'...",
+    "Search 'refurbished iPhone'...",
+    "Search 'soldering kit'...",
+    "Search 'cool gadgets'...",
+  ];
+  const [index, setIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance sequence
-    Animated.stagger(120, [
+    const interval = setInterval(() => {
       Animated.parallel([
-        Animated.spring(logoScale,   { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
-      ]),
-      Animated.parallel([
-        Animated.timing(titleSlide,   { toValue: 0, duration: 400, easing: Easing.out(Easing.back(1.5)), useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(titleOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
-      ]),
-      Animated.spring(btnScale, { toValue: 1, friction: 4, useNativeDriver: Platform.OS !== "web" }),
-    ]).start();
-    // Logo heartbeat loop
+        Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: -8, duration: 180, useNativeDriver: true }),
+      ]).start(() => {
+        setIndex((prev) => (prev + 1) % placeholders.length);
+        slideAnim.setValue(8);
+        Animated.parallel([
+          Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
+          Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+        ]).start();
+      });
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <View style={styles.searchWrap}>
+      <Ionicons name="search" size={18} color={colors.muted} />
+      <View style={{ flex: 1, height: 40, justifyContent: "center" }}>
+        {value ? (
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            style={[styles.searchInput, { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, paddingVertical: 0 }]}
+          />
+        ) : (
+          <>
+            <Animated.Text
+              style={{
+                color: colors.muted,
+                fontSize: 13,
+                fontWeight: "600",
+                position: "absolute",
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              }}
+            >
+              {placeholders[index]}
+            </Animated.Text>
+            <TextInput
+              value={value}
+              onChangeText={onChangeText}
+              style={[styles.searchInput, { opacity: 0 }]}
+            />
+          </>
+        )}
+      </View>
+      {value.length > 0 && (
+        <TouchableOpacity onPress={() => onChangeText("")}>
+          <Ionicons name="close-circle" size={18} color={colors.muted} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+// ── Categories Quick Grid ───────────────────────────────────────────────────
+const QUICK_GRID_CATEGORIES = [
+  { name: "Monsoon picks", icon: "☔", color: "#eff6ff" },
+  { name: "Old Phones",    icon: "📱", color: "#faf5ff" },
+  { name: "Repair Kits",  icon: "🛠️", color: "#ecfdf5" },
+  { name: "Cool Gadgets",  icon: "🔌", color: "#fffbeb" },
+  { name: "Displays",      icon: "📺", color: "#fdf2f8" },
+  { name: "Opening tools", icon: "🧼", color: "#f0fdfa" },
+  { name: "Wellness kits", icon: "🔋", color: "#f0fdf4" },
+  { name: "Screwdrivers",  icon: "🪛", color: "#fff7ed" },
+];
+
+function CategoryQuickGrid({ onSelectCategory }) {
+  return (
+    <View style={gridStyles.container}>
+      <Text style={gridStyles.title}>Shop By Category</Text>
+      <View style={gridStyles.grid}>
+        {QUICK_GRID_CATEGORIES.map((c, i) => (
+          <TouchableOpacity
+            key={i}
+            onPress={() => onSelectCategory(c.name)}
+            activeOpacity={0.85}
+            style={[gridStyles.card, { backgroundColor: c.color }]}
+          >
+            <Text style={gridStyles.cardIcon}>{c.icon}</Text>
+            <Text style={gridStyles.cardText} numberOfLines={2}>{c.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const gridStyles = StyleSheet.create({
+  container: { paddingHorizontal: spacing.md, marginTop: 15 },
+  title: { fontSize: 11, fontWeight: "900", color: colors.sub, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 },
+  card: {
+    width: "23%",
+    height: 75,
+    borderRadius: radius.md,
+    padding: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  cardIcon: { fontSize: 24, marginBottom: 3 },
+  cardText: { fontSize: 9, fontWeight: "800", color: colors.text, textAlign: "center" },
+});
+
+// ── Offer Marquee Loop Banner ────────────────────────────────────────────────
+function OfferMarquee() {
+  const animVal = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
     Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.12, duration: 700, useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(pulseAnim, { toValue: 1,    duration: 700, useNativeDriver: Platform.OS !== "web" }),
-      ])
+      Animated.timing(animVal, {
+        toValue: -340,
+        duration: 12000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
     ).start();
   }, []);
 
   return (
-    <View style={styles.hero}>
-      {/* background glow orbs */}
-      <View style={{ position: "absolute", top: -20, right: -20, width: 140, height: 140, borderRadius: 70, backgroundColor: "rgba(245,158,11,0.07)" }} />
-      <View style={{ position: "absolute", bottom: 10, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(59,130,246,0.07)" }} />
-
-      <View style={styles.heroRow}>
-        <Animated.View style={{ transform: [{ scale: Animated.multiply(logoScale, pulseAnim) }], opacity: logoOpacity }}>
-          <Image source={logo} style={styles.heroLogo} />
-        </Animated.View>
-        <Animated.View style={[styles.heroTextCol, { opacity: titleOpacity, transform: [{ translateX: titleSlide }] }]}>
-          <Text style={styles.heroSmall}>Welcome to</Text>
-          <Text style={styles.heroTitle}>
-            RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
-          </Text>
-          <Text style={styles.heroSub}>Smart choice · Better life</Text>
-        </Animated.View>
-        <TouchableOpacity onPress={onMenuOpen} style={styles.menuBtn}>
-          <Ionicons name="menu-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
-      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-        <TouchableOpacity
-          style={styles.directionsBtn}
-          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="location" size={14} color={colors.navy} />
-          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
-        </TouchableOpacity>
+    <View style={mqStyles.container}>
+      <Animated.View style={[mqStyles.track, { transform: [{ translateX: animVal }] }]}>
+        <Text style={mqStyles.text}>⚡ Get FREE shipping on orders above ₹999 • Valid once on all SBI Credit Cards. Use SBI30 • 20% discount on refurbished gadgets! ⚡</Text>
       </Animated.View>
     </View>
   );
 }
+
+const mqStyles = StyleSheet.create({
+  container: { backgroundColor: "#f0fdf4", marginHorizontal: spacing.md, marginTop: 12, borderRadius: radius.md, overflow: "hidden", paddingVertical: 8, borderWidth: 1, borderColor: "#bbf7d0" },
+  track: { flexDirection: "row", width: 900 },
+  text: { fontSize: 11, fontWeight: "800", color: "#166534" },
+});
+
+// ── Segmented Tabs selector ──────────────────────────────────────────────
+function SegmentedTabs({ activeTab, onTabChange }) {
+  const tabs = ["Order again", "Best prices", "Offers for you"];
+  const barX = useRef(new Animated.Value(0)).current;
+
+  const handlePress = (tabName, index) => {
+    onTabChange(tabName);
+    Animated.spring(barX, {
+      toValue: index * (WINDOW.width / 3),
+      friction: 5,
+      tension: 60,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <View style={segStyles.container}>
+      <Text style={segStyles.title}>REORDER & SAVE</Text>
+      <View style={segStyles.tabsRow}>
+        {tabs.map((tab, i) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => handlePress(tab, i)}
+            style={segStyles.tabBtn}
+            activeOpacity={0.8}
+          >
+            <Text style={[segStyles.tabText, activeTab === tab && segStyles.tabTextActive]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Animated.View style={[segStyles.indicator, { transform: [{ translateX: barX }] }]} />
+    </View>
+  );
+}
+
+const segStyles = StyleSheet.create({
+  container: { marginTop: 20, borderBottomWidth: 1, borderBottomColor: "#e2e8f0", position: "relative" },
+  title: { fontSize: 16, fontWeight: "950", color: colors.navy, paddingHorizontal: spacing.md, marginBottom: 8 },
+  tabsRow: { flexDirection: "row" },
+  tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center" },
+  tabText: { fontSize: 13, fontWeight: "700", color: colors.muted },
+  tabTextActive: { color: "#166534", fontWeight: "900" },
+  indicator: { position: "absolute", bottom: 0, left: 0, width: "33.3%", height: 3, backgroundColor: "#166534" },
+});
+
+// ── Floating Rotating Sticker Badge ─────────────────────────────────────────
+function BrandOfTheDayBadge() {
+  const rotVal = useRef(new Animated.Value(0)).current;
+  const pulseVal = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotVal, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseVal, { toValue: 1.08, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseVal, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  const rotate = rotVal.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <Animated.View style={[badgeStyles.container, { transform: [{ rotate }, { scale: pulseVal }] }]}>
+      <Text style={badgeStyles.text}>Brand of the Day</Text>
+    </Animated.View>
+  );
+}
+
+const badgeStyles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    bottom: 90,
+    right: 20,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: "#bef264",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    zIndex: 999,
+  },
+  text: { fontSize: 9, fontWeight: "950", color: "#1a2e05", textAlign: "center", textTransform: "uppercase" },
+});
+
+// ── Animated Hero (Zepto/Blinkit Delivery Header Format) ────────────────────
+function AnimatedHero({ onMenuOpen }) {
+  return (
+    <View style={heroStyles.headerRow}>
+      <View style={heroStyles.deliveryPill}>
+        <Text style={heroStyles.deliveryIcon}>⚡</Text>
+        <Text style={heroStyles.deliveryTime}>11 mins</Text>
+      </View>
+
+      <TouchableOpacity onPress={onMenuOpen} style={heroStyles.addressWrap} activeOpacity={0.8}>
+        <Text style={heroStyles.addressLabel}>🏡 Home</Text>
+        <Text style={heroStyles.addressText} numberOfLines={1}>house no 178, Phase 9, Punjab - 16...</Text>
+        <Ionicons name="chevron-down" size={14} color={colors.sub} />
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onMenuOpen} style={heroStyles.profileBtn} activeOpacity={0.8}>
+        <Ionicons name="person-circle-outline" size={32} color="#475569" />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const heroStyles = StyleSheet.create({
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, paddingTop: 48, paddingBottom: 15, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
+  deliveryPill: { backgroundColor: "#000", flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, gap: 4 },
+  deliveryIcon: { fontSize: 13 },
+  deliveryTime: { color: "#fff", fontWeight: "900", fontSize: 12 },
+  addressWrap: { flex: 1, marginHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 3 },
+  addressLabel: { fontSize: 12, fontWeight: "900", color: colors.text },
+  addressText: { fontSize: 11, color: colors.sub, flex: 1 },
+  profileBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#f1f5f9" },
+});
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Animated Section Wrapper ──────────────────────────────────────────────────
