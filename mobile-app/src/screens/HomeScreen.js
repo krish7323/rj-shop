@@ -765,9 +765,6 @@ export default function HomeScreen({ navigation }) {
         <MobileFAQ />
       </ScrollView>
 
-      {/* Brand of the Day Sticker badge */}
-      <BrandOfTheDayBadge />
-
       {/* Floating WhatsApp Heartbeat FAB */}
       <WhatsAppFAB />
 
@@ -1032,61 +1029,7 @@ const segStyles = StyleSheet.create({
   indicator: { position: "absolute", bottom: 0, left: 0, width: "33.3%", height: 3, backgroundColor: "#166534" },
 });
 
-// ── Floating Rotating Sticker Badge ─────────────────────────────────────────
-function BrandOfTheDayBadge() {
-  const rotVal = useRef(new Animated.Value(0)).current;
-  const pulseVal = useRef(new Animated.Value(1)).current;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotVal, {
-        toValue: 1,
-        duration: 10000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseVal, { toValue: 1.08, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulseVal, { toValue: 1, duration: 600, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  const rotate = rotVal.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
-
-  return (
-    <Animated.View style={[badgeStyles.container, { transform: [{ rotate }, { scale: pulseVal }] }]}>
-      <Text style={badgeStyles.text}>Brand of the Day</Text>
-    </Animated.View>
-  );
-}
-
-const badgeStyles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 90,
-    right: 20,
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: "#bef264",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    zIndex: 999,
-  },
-  text: { fontSize: 9, fontWeight: "950", color: "#1a2e05", textAlign: "center", textTransform: "uppercase" },
-});
 
 // ── Animated Welcome Hero Restored ──────────────────────────────────────────
 function AnimatedHero({ onMenuOpen }) {
