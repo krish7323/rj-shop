@@ -42,6 +42,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const priceSlide  = useRef(new Animated.Value(20)).current;
   const barSlide    = useRef(new Animated.Value(60)).current;
 
+  // Parallax Scroll Value
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const whatsappWobble = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     // Staggered entrance sequence
     Animated.stagger(80, [
@@ -65,6 +69,17 @@ export default function ProductDetailsScreen({ route, navigation }) {
         Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: Platform.OS !== "web" }),
       ])
     ).start();
+
+    // WhatsApp wobble looping with random delays
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(2200),
+        Animated.timing(whatsappWobble, { toValue: 1, duration: 150, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(whatsappWobble, { toValue: -1, duration: 150, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(whatsappWobble, { toValue: 1, duration: 150, useNativeDriver: Platform.OS !== "web" }),
+        Animated.timing(whatsappWobble, { toValue: 0, duration: 150, useNativeDriver: Platform.OS !== "web" }),
+      ])
+    ).start();
   }, []);
 
   useEffect(() => {
@@ -84,7 +99,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const cap = product.stock !== undefined ? product.stock : 99;
   const img = product.images && product.images.length ? product.images[0] : null;
 
-  // Stock safeguards: never exceed available inventory, never below 1.
+  // Stock safeguards
   const dec = () => setQty((q) => Math.max(1, q - 1));
   const inc = () => setQty((q) => Math.min(cap, q + 1));
 
@@ -107,13 +122,44 @@ export default function ProductDetailsScreen({ route, navigation }) {
     setTimeout(() => setAdded(false), 1400);
   };
 
+  // Parallax Header interpolations
+  const headerScale = scrollY.interpolate({
+    inputRange: [-200, 0],
+    outputRange: [1.8, 1],
+    extrapolateLeft: "extend",
+    extrapolateRight: "clamp",
+  });
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [-200, 0, 320],
+    outputRange: [0, 0, -60],
+    extrapolate: "clamp",
+  });
+
+  const waRotate = whatsappWobble.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-15deg", "15deg"],
+  });
+
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-        {/* Image with slide-in */}
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: Platform.OS !== "web" }
+        )}
+      >
+        {/* Image with slide-in & parallax scroll */}
         <Animated.View style={[styles.imageWrap, { opacity: imgOpacity, transform: [{ translateY: imgSlide }] }]}>
           {img ? (
-            <Image source={{ uri: img }} style={styles.image} resizeMode="cover" />
+            <Animated.Image
+              source={{ uri: img }}
+              style={[styles.image, { transform: [{ scale: headerScale }, { translateY: headerTranslateY }] }]}
+              resizeMode="cover"
+            />
           ) : (
             <View style={[styles.image, styles.imageFallback]}>
               <Ionicons name="image-outline" size={48} color={colors.muted} />
@@ -180,43 +226,39 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </Text>
           </View>
 
-          <Text style={styles.descTitle}>Description</Text>
-          <Text style={styles.desc}>{product.description || "No description available."}</Text>
+          <Text style={styles.descTitle}>Product Description</Text>
+          <Text style={styles.desc}>{product.description || "No description provided."}</Text>
 
-        </Animated.View>
-      </ScrollView>
-
-      {/* Sticky bottom actions bar — slides up */}
-      <Animated.View style={[styles.bottomBar, { transform: [{ translateY: barSlide }] }]}>
-        {out ? (
-          <AnimatedButton
-            onPress={() => {
-              const message = `Hi RJ Mobile Store! I am interested in inquiring about "${product.name}" (Currently out of stock). When will this be available?`;
-              const encoded = encodeURIComponent(message);
-              const phone = "919097377388";
-              Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-            }}
-            style={{ flex: 1 }}
-          >
-            <View style={[styles.addBtn, { backgroundColor: "#16a34a", width: "100%" }]}>
-              <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-              <Text style={[styles.addBtnText, { color: "#fff" }]}>Inquire via WhatsApp</Text>
+          {/* Trust badges */}
+          <View style={styles.trustRow}>
+            <View style={styles.trustItem}>
+              <Ionicons name="shield-checkmark" size={24} color={colors.accent} />
+              <Text style={styles.trustText}>6-Month Store Warranty</Text>
             </View>
-          </AnimatedButton>
+            <View style={styles.trustItem}>
+              <Ionicons name="ribbon" size={24} color={colors.accent} />
+              <Text style={styles.trustText}>100% Tested Genuine Parts</Text>
+            </View>
+          </View>
+        </Animated.View>
+      </Animated.ScrollView>
+
+      {/* Floating Add to Cart bar with glassmorphic style */}
+      <Animated.View style={[styles.bottomBar, { transform: [{ translateY: barSlide }, { scale: scaleAnim }] }]}>
+        {out ? (
+          <View style={[styles.addBtn, { width: "100%", backgroundColor: "#cbd5e1" }]}>
+            <Text style={styles.addBtnText}>Out of Stock</Text>
+          </View>
         ) : (
-          <View style={{ flex: 1, flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
             <View style={styles.qtyBox}>
-              <AnimatedButton onPress={dec}>
-                <View style={styles.qtyBtn}>
-                  <Ionicons name="remove" size={18} color={colors.text} />
-                </View>
-              </AnimatedButton>
+              <TouchableOpacity style={styles.qtyBtn} onPress={dec}>
+                <Ionicons name="remove" size={18} color={colors.text} />
+              </TouchableOpacity>
               <Text style={styles.qtyValue}>{qty}</Text>
-              <AnimatedButton onPress={inc} disabled={qty >= cap}>
-                <View style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]}>
-                  <Ionicons name="add" size={18} color={colors.text} />
-                </View>
-              </AnimatedButton>
+              <TouchableOpacity style={[styles.qtyBtn, qty >= cap && styles.qtyBtnDisabled]} onPress={inc} disabled={qty >= cap}>
+                <Ionicons name="add" size={18} color={colors.text} />
+              </TouchableOpacity>
             </View>
 
             <AnimatedButton
@@ -232,7 +274,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
               </View>
             </AnimatedButton>
 
-            <AnimatedButton
+            <TouchableOpacity
               onPress={() => {
                 const message = `Hi RJ Mobile Store! I want to inquire about "${product.name}" (Price: ${inr(product.price * qty)}). Can you please share more details or availability?`;
                 const encoded = encodeURIComponent(message);
@@ -240,10 +282,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
                 Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
               }}
             >
-              <View style={styles.detailsInquireBtn}>
+              <Animated.View style={[styles.detailsInquireBtn, { transform: [{ rotate: waRotate }] }]}>
                 <Ionicons name="logo-whatsapp" size={20} color="#15803d" />
-              </View>
-            </AnimatedButton>
+              </Animated.View>
+            </TouchableOpacity>
           </View>
         )}
       </Animated.View>
