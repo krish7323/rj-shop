@@ -229,6 +229,48 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <Text style={styles.descTitle}>Product Description</Text>
           <Text style={styles.desc}>{product.description || "No description provided."}</Text>
 
+          <Text style={styles.descTitle}>Specifications & Details</Text>
+          <View style={styles.specsContainer}>
+            <View style={styles.specRow}>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>Brand</Text>
+                <Text style={styles.specValText}>{product.brand || "RJ"}</Text>
+              </View>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>SKU Model</Text>
+                <Text style={styles.specValText}>{product.sku || "RJ-GEN-01"}</Text>
+              </View>
+            </View>
+            <View style={styles.specRow}>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>Category</Text>
+                <Text style={styles.specValText}>{product.category || "General"}</Text>
+              </View>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>Condition</Text>
+                <Text style={styles.specValText}>
+                  {product.name?.toLowerCase().includes("refurbished") || product.name?.toLowerCase().includes("pre-owned")
+                    ? "Refurbished (Grade A+)"
+                    : "Brand New / Sealed"}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.specRow}>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>Warranty</Text>
+                <Text style={styles.specValText}>
+                  {product.category === "Old Phones"
+                    ? "6 Months Store Warranty"
+                    : "1 Month Replacement"}
+                </Text>
+              </View>
+              <View style={styles.specCol}>
+                <Text style={styles.specLabel}>Delivery Speed</Text>
+                <Text style={styles.specValText}>Dispatch in 24 Hours</Text>
+              </View>
+            </View>
+          </View>
+
           {/* Trust badges */}
           <View style={styles.trustRow}>
             <View style={styles.trustItem}>
@@ -426,5 +468,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0fdf4",
     alignItems: "center",
     justifyContent: "center",
+  },
+  specsContainer: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: 6,
+    gap: 12,
+  },
+  specRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  specCol: {
+    flex: 1,
+  },
+  specLabel: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  specValText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "850",
+    marginTop: 2,
   },
 });

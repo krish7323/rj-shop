@@ -1054,7 +1054,6 @@ function SegmentedTabs({ activeTab, onTabChange }) {
 
   return (
     <View style={segStyles.container}>
-      <Text style={segStyles.title}>REORDER & SAVE</Text>
       <View style={segStyles.tabsRow}>
         {tabs.map((tab, i) => (
           <TouchableOpacity
