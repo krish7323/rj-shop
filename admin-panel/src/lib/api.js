@@ -5,7 +5,18 @@
 
 import axios from "axios";
 
-let rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+let rawUrl = import.meta.env.VITE_API_URL;
+
+if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+  if (!rawUrl || rawUrl.includes("localhost") || rawUrl.includes("127.0.0.1")) {
+    rawUrl = "https://rj-mobile-backend.onrender.com/api";
+  }
+}
+
+if (!rawUrl) {
+  rawUrl = "http://localhost:5000/api";
+}
+
 if (rawUrl && !rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
   rawUrl = `https://${rawUrl}`;
 }
