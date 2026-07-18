@@ -5,7 +5,10 @@
 
 import axios from "axios";
 
-const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+let rawUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+if (rawUrl && !rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+  rawUrl = `https://${rawUrl}`;
+}
 const apiBase = rawUrl.endsWith("/api") ? rawUrl : `${rawUrl}/api`;
 
 const api = axios.create({
