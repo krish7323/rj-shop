@@ -25,6 +25,20 @@ services:
         value: dummy@shiprocket.com
       - key: SHIPROCKET_PASSWORD
         value: dummypassword
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_TBqA7PHSILBWgs
+      - key: RAZORPAY_KEY_SECRET
+        value: 8ZrXnN7BNrn6ZmQXhHCVz2CP
+      - key: RAZORPAY_WEBHOOK_SECRET
+        value: dummywebhooksecret
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_USER
+        value: rjmobileinfo@gmail.com
+      - key: SMTP_PASS
+        value: rusgpdbjncyjuqnw
 
   # 2. Frontend Storefront Static Site
   - type: web
