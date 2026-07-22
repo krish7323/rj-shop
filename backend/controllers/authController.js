@@ -80,14 +80,20 @@ const register = async (req, res) => {
     });
 
     // Send OTP email (only for customers)
+    let emailSent = true;
     if (safeRole === "Customer") {
-      await sendOTP(normalizedEmail, otp);
+      try {
+        await sendOTP(normalizedEmail, otp);
+      } catch (mailError) {
+        console.error(`Failed to send OTP email: ${mailError.message}`);
+        emailSent = false;
+      }
     }
 
     return res.status(201).json({
       success: true,
       message: safeRole === "Customer" 
-        ? "Verification code sent to your email. Please verify to log in." 
+        ? (emailSent ? "Verification code sent to your email. Please verify to log in." : "Account registered, but verification email failed to send. Please request a new code or contact support.")
         : "Admin account registered successfully.",
       email: normalizedEmail,
       user: publicUser(user),
@@ -185,7 +191,15 @@ const resendOTP = async (req, res) => {
     user.otpExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    await sendOTP(normalizedEmail, otp);
+    try {
+      await sendOTP(normalizedEmail, otp);
+    } catch (mailError) {
+      console.error(`Failed to resend OTP email: ${mailError.message}`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please verify your SMTP server configuration or try again.",
+      });
+    }
 
     return res.status(200).json({
       success: true,
