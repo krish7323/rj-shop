@@ -34,7 +34,7 @@ export default function Sidebar({ active, onNavigate, isOpen }) {
       </div>
 
       {/* Nav */}
-      <nav className="mt-2 flex-1 space-y-1 px-3">
+      <nav className="mt-2 flex-1 space-y-1.5 px-3">
         {NAV.map(({ key, label, icon: Icon, hint }) => {
           const isActive = active === key;
           return (
@@ -42,16 +42,16 @@ export default function Sidebar({ active, onNavigate, isOpen }) {
               key={key}
               onClick={() => onNavigate(key)}
               className={[
-                "group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left transition",
+                "group relative flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-all duration-200 ease-expo active:scale-[.98]",
                 isActive
-                  ? "bg-brand-600/95 text-white shadow-soft"
-                  : "text-slate-300 hover:bg-ink-700/70 hover:text-white",
+                  ? "bg-gradient-signature text-white shadow-soft font-semibold"
+                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white",
               ].join(" ")}
             >
               <span
                 className={[
-                  "grid h-9 w-9 place-items-center rounded-lg transition",
-                  isActive ? "bg-white/15" : "bg-ink-700 group-hover:bg-ink-800",
+                  "grid h-9 w-9 place-items-center rounded-lg transition-all duration-200 ease-expo",
+                  isActive ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-white",
                 ].join(" ")}
               >
                 <Icon className="h-[18px] w-[18px]" />
@@ -61,7 +61,7 @@ export default function Sidebar({ active, onNavigate, isOpen }) {
                 <span
                   className={[
                     "block text-[11px] leading-tight",
-                    isActive ? "text-brand-100" : "text-slate-500",
+                    isActive ? "text-indigo-100 font-normal" : "text-slate-500",
                   ].join(" ")}
                 >
                   {hint}
