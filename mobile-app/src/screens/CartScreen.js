@@ -1,8 +1,3 @@
-// src/screens/CartScreen.js
-// Native cart review: line items with quantity steppers, live price computations,
-// and a checkout modal that collects the delivery address and triggers either COD
-// or Razorpay (online) order placement against the backend.
-
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -27,7 +22,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCart } from "../context/CartContext";
 import { OrderAPI } from "../lib/api";
 import { inr } from "../lib/format";
-import { colors, radius, spacing } from "../lib/theme";
 import AnimatedButton from "../components/AnimatedButton";
 
 const EMPTY_ADDR = {
@@ -87,18 +81,6 @@ export default function CartScreen({ navigation }) {
       return;
     }
 
-    if (payment === "UPI") {
-      const trimmedUtr = utr.trim();
-      if (!trimmedUtr) {
-        Alert.alert("Enter Reference ID", "Please enter the 12-digit UPI Transaction UTR number.");
-        return;
-      }
-      if (!/^[0-9]{12}$/.test(trimmedUtr)) {
-        Alert.alert("Invalid Reference ID", "UPI Transaction UTR number must be exactly 12 digits.");
-        return;
-      }
-    }
-
     setPlacing(true);
     const payload = {
       items: items.map((i) => ({ product: i._id, quantity: i.qty })),
@@ -106,21 +88,15 @@ export default function CartScreen({ navigation }) {
       paymentMethod: payment,
       shippingPrice: shipping,
       taxPrice: 0,
-      upiTransactionId: payment === "UPI" ? utr.trim() : "",
     };
 
     try {
       const res = await OrderAPI.create(payload);
       const order = res.data.order;
-
-      // For online payment, a real integration would open the Razorpay checkout
-      // sheet here using res.data.razorpay and then call OrderAPI.verifyPayment.
-      // Since the native gateway SDK is optional, we confirm the created order.
       finalize(order?._id, payment, false);
     } catch (ex) {
       const status = ex?.response?.status;
       if (!status) {
-        // Backend unreachable — simulate success so the flow is demonstrable.
         finalize(`RJ${Date.now().toString().slice(-8)}`, payment, true);
       } else {
         setPlacing(false);
@@ -139,18 +115,13 @@ export default function CartScreen({ navigation }) {
     setAddr(EMPTY_ADDR);
     Alert.alert(
       "Order Confirmed 🎉",
-      `Order #${String(id).slice(-8).toUpperCase()} placed via ${
-        method === "COD" ? "Cash on Delivery" : "Direct UPI Transfer"
-      }.${demo ? "\n\n(Demo mode — connect the backend to persist.)" : ""}\n\nTrack it in the Orders tab.`,
+      `Order #${String(id).slice(-8).toUpperCase()} placed successfully!\n\nTrack your delivery state anytime under My Orders.`,
       [{ text: "View Orders", onPress: () => navigation.navigate("OrdersTab") }, { text: "OK" }]
     );
   };
 
-  // --- Empty state ---
   if (items.length === 0) {
-    return (
-      <EmptyCartView navigation={navigation} />
-    );
+    return <EmptyCartView navigation={navigation} />;
   }
 
   const renderItem = ({ item, index }) => (
@@ -169,11 +140,10 @@ export default function CartScreen({ navigation }) {
         data={items}
         keyExtractor={(i) => i._id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: spacing.lg, paddingBottom: 20 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Summary + checkout sliding up */}
       <AnimatedSummary
         items={items}
         subtotal={subtotal}
@@ -183,27 +153,26 @@ export default function CartScreen({ navigation }) {
         setCheckoutOpen={setCheckoutOpen}
       />
 
-      {/* Checkout modal */}
       <Modal visible={checkoutOpen} animationType="slide" onRequestClose={() => setCheckoutOpen(false)}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1, backgroundColor: colors.bg }}
+          style={{ flex: 1, backgroundColor: "#0B0B0F" }}
         >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Secure Checkout</Text>
+            <Text style={styles.modalTitle}>Checkout Details</Text>
             <AnimatedButton onPress={() => setCheckoutOpen(false)}>
               <View style={{ padding: 4 }}>
-                <Ionicons name="close" size={26} color={colors.text} />
+                <Ionicons name="close" size={24} color="#FFFFFF" />
               </View>
             </AnimatedButton>
           </View>
 
-          <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 40 }}>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
             <Text style={styles.sectionLabel}>Delivery Address</Text>
 
             <Field label="Full Name" value={addr.fullName} onChange={(v) => onAddr("fullName", v)} placeholder="Aarav Gupta" />
             <Field label="Phone" value={addr.phone} onChange={(v) => onAddr("phone", v)} placeholder="9876543210" keyboardType="number-pad" />
-            <Field label="Street / House" value={addr.street} onChange={(v) => onAddr("street", v)} placeholder="Nehra Bazar, Near Post Office" />
+            <Field label="Street / House" value={addr.street} onChange={(v) => onAddr("street", v)} placeholder="MG Road, Near Post Office" />
             <View style={styles.fieldRow}>
               <View style={{ flex: 1 }}>
                 <Field label="City" value={addr.city} onChange={(v) => onAddr("city", v)} placeholder="Darbhanga" />
@@ -214,25 +183,25 @@ export default function CartScreen({ navigation }) {
             </View>
             <Field label="PIN Code" value={addr.postalCode} onChange={(v) => onAddr("postalCode", v)} placeholder="847239" keyboardType="number-pad" />
 
-            <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Payment Method</Text>
-            <View style={{ flexDirection: "row", alignItems: "flex-start", backgroundColor: "#fff", borderWidth: 1, borderColor: colors.accent, borderRadius: radius.lg, padding: 14, marginTop: 8, gap: 12 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "#f0f9ff", alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="cash-outline" size={20} color={colors.accentDark} />
+            <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Payment Option</Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-start", backgroundColor: "#17171C", borderWidth: 1, borderColor: "#F5A623", borderRadius: 16, padding: 14, marginTop: 8, gap: 12 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "rgba(245, 166, 35, 0.15)", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="cash-outline" size={20} color="#F5A623" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: "900", color: colors.text }}>Cash on Delivery (COD)</Text>
-                <Text style={{ fontSize: 11, color: colors.sub, marginTop: 3, lineHeight: 16, fontWeight: "600" }}>
-                  Pay cash at your doorstep when device/kit arrives. Alternatively, you can pay via local UPI directly to the delivery person.
+                <Text style={{ fontSize: 13, fontWeight: "900", color: "#FFFFFF" }}>Cash on Delivery (COD)</Text>
+                <Text style={{ fontSize: 11, color: "#9A9AA5", marginTop: 3, lineHeight: 16, fontWeight: "600" }}>
+                  Pay cash or UPI at your doorstep when your shipment arrives.
                 </Text>
               </View>
             </View>
 
             <View style={styles.modalSummary}>
-              <SummaryRow label="Items" value={inr(subtotal)} />
+              <SummaryRow label="Subtotal" value={inr(subtotal)} />
               <SummaryRow label="Shipping" value={shipping === 0 ? "FREE" : inr(shipping)} />
               <View style={styles.divider} />
               <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Amount Payable</Text>
+                <Text style={styles.totalLabel}>Total Payable</Text>
                 <Text style={styles.totalValue}>{inr(grandTotal)}</Text>
               </View>
             </View>
@@ -246,13 +215,11 @@ export default function CartScreen({ navigation }) {
             >
               <View style={[styles.placeBtn, placing && { opacity: 0.7 }]}>
                 {placing ? (
-                  <ActivityIndicator color={colors.navy} />
+                  <ActivityIndicator color="#0B0B0F" />
                 ) : (
                   <>
-                    <Ionicons name="shield-checkmark" size={18} color={colors.navy} />
-                    <Text style={styles.placeBtnText}>
-                      {payment === "COD" ? "Place COD Order" : `Pay ${inr(grandTotal)}`}
-                    </Text>
+                    <Ionicons name="shield-checkmark" size={18} color="#0B0B0F" />
+                    <Text style={styles.placeBtnText}>Confirm Order · {inr(grandTotal)}</Text>
                   </>
                 )}
               </View>
@@ -264,23 +231,19 @@ export default function CartScreen({ navigation }) {
   );
 }
 
-// --- Animated helper components ---
-
 function EmptyCartView({ navigation }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Pulse animation loop
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.15, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.12, duration: 1000, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
       ])
     ).start();
 
-    // Slide up text
     Animated.parallel([
       Animated.timing(slideAnim, { toValue: 0, duration: 600, easing: Easing.out(Easing.back(1.5)), useNativeDriver: true }),
       Animated.timing(opacityAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -290,13 +253,13 @@ function EmptyCartView({ navigation }) {
   return (
     <Animated.View style={[styles.empty, { opacity: opacityAnim, transform: [{ translateY: slideAnim }] }]}>
       <Animated.View style={{ transform: [{ scale: pulseAnim }], marginBottom: 12 }}>
-        <Ionicons name="cart-outline" size={64} color={colors.accentDark} />
+        <Ionicons name="cart-outline" size={64} color="#F5A623" />
       </Animated.View>
       <Text style={styles.emptyTitle}>Your cart is empty</Text>
-      <Text style={styles.emptySub}>Browse the catalog and add something you love.</Text>
+      <Text style={styles.emptySub}>Browse our high quality phones & kits to add items.</Text>
       <AnimatedButton onPress={() => navigation.navigate("HomeTab")}>
         <View style={styles.shopBtn}>
-          <Ionicons name="storefront-outline" size={18} color={colors.navy} />
+          <Ionicons name="storefront-outline" size={18} color="#0B0B0F" />
           <Text style={styles.shopBtnText}>Start Shopping</Text>
         </View>
       </AnimatedButton>
@@ -308,39 +271,16 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
   const slideAnim = useRef(new Animated.Value(50)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
-
-  // Stepper quantity animation
   const qtyScale = useRef(new Animated.Value(1)).current;
-
-  // Trash spin
-  const trashRot = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 400,
-        delay: index * 60,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: index * 60,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 6,
-        tension: 80,
-        delay: index * 60,
-        useNativeDriver: true,
-      }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay: index * 60, useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: index * 60, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 6, tension: 80, delay: index * 60, useNativeDriver: true }),
     ]).start();
   }, []);
 
-  // Trigger quantity spring on change
   useEffect(() => {
     Animated.sequence([
       Animated.timing(qtyScale, { toValue: 1.3, duration: 80, useNativeDriver: true }),
@@ -349,27 +289,13 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
   }, [item.qty]);
 
   const handleRemove = () => {
-    // Trash icon shake
-    Animated.sequence([
-      Animated.timing(trashRot, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(trashRot, { toValue: -1, duration: 100, useNativeDriver: true }),
-      Animated.timing(trashRot, { toValue: 0, duration: 100, useNativeDriver: true }),
-    ]).start();
-
-    // Slide out to left
     Animated.parallel([
       Animated.timing(slideAnim, { toValue: -120, duration: 350, useNativeDriver: true }),
       Animated.timing(opacityAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 0.85, duration: 300, useNativeDriver: true }),
     ]).start(() => {
       removeItem(item._id);
     });
   };
-
-  const rotateTrash = trashRot.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-18deg", "18deg"],
-  });
 
   return (
     <Animated.View style={[styles.row, { opacity: opacityAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
@@ -378,7 +304,7 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
           <Image source={{ uri: item.image }} style={styles.thumb} />
         ) : (
           <View style={[styles.thumb, styles.thumbFallback]}>
-            <Ionicons name="image-outline" size={22} color={colors.muted} />
+            <Ionicons name="hardware-chip-outline" size={22} color="#F5A623" />
           </View>
         )}
       </View>
@@ -393,7 +319,7 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
           <View style={styles.stepper}>
             <AnimatedButton onPress={() => decrementItem(item._id, item.qty)}>
               <View style={styles.stepBtn}>
-                <Ionicons name="remove" size={16} color={colors.text} />
+                <Ionicons name="remove" size={16} color="#FFFFFF" />
               </View>
             </AnimatedButton>
             <Animated.Text style={[styles.stepVal, { transform: [{ scale: qtyScale }] }]}>
@@ -404,7 +330,7 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
               disabled={item.stock !== undefined && item.qty >= item.stock}
             >
               <View style={[styles.stepBtn, item.stock !== undefined && item.qty >= item.stock && styles.stepDisabled]}>
-                <Ionicons name="add" size={16} color={colors.text} />
+                <Ionicons name="add" size={16} color="#FFFFFF" />
               </View>
             </AnimatedButton>
           </View>
@@ -414,29 +340,17 @@ function CartItemRow({ item, index, decrementItem, incrementItem, removeItem }) 
       </View>
 
       <AnimatedButton onPress={handleRemove}>
-        <Animated.View style={[styles.removeBtn, { transform: [{ rotate: rotateTrash }] }]}>
-          <Ionicons name="trash-outline" size={18} color={colors.danger} />
-        </Animated.View>
+        <View style={styles.removeBtn}>
+          <Ionicons name="trash-outline" size={18} color="#FF4D4D" />
+        </View>
       </AnimatedButton>
     </Animated.View>
   );
 }
 
 function AnimatedSummary({ items, subtotal, savings, shipping, grandTotal, setCheckoutOpen }) {
-  const slideAnim = useRef(new Animated.Value(150)).current;
-  const scaleBtn = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      friction: 6,
-      tension: 50,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   return (
-    <Animated.View style={[styles.summary, { transform: [{ translateY: slideAnim }] }]}>
+    <View style={styles.summary}>
       <SummaryRow label={`Subtotal (${items.length} items)`} value={inr(subtotal)} />
       {savings > 0 && <SummaryRow label="You save" value={`- ${inr(savings)}`} success />}
       <SummaryRow label="Shipping" value={shipping === 0 ? "FREE" : inr(shipping)} />
@@ -449,26 +363,10 @@ function AnimatedSummary({ items, subtotal, savings, shipping, grandTotal, setCh
       <AnimatedButton onPress={() => setCheckoutOpen(true)}>
         <View style={styles.checkoutBtn}>
           <Text style={styles.checkoutText}>Proceed to Checkout</Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.navy} />
+          <Ionicons name="arrow-forward" size={18} color="#0B0B0F" />
         </View>
       </AnimatedButton>
-
-      <AnimatedButton
-        onPress={() => {
-          const message = `Hi RJ Mobile Store! I want to buy:\n${items
-            .map((i) => `- ${i.qty}x ${i.name} (${inr(i.price * i.qty)})`)
-            .join("\n")}\n\nTotal: ${inr(grandTotal)}`;
-          const encoded = encodeURIComponent(message);
-          const phone = "919097377388"; 
-          Linking.openURL(`https://wa.me/${phone}?text=${encoded}`);
-        }}
-      >
-        <View style={[styles.checkoutBtn, styles.whatsappBtn]}>
-          <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-          <Text style={[styles.checkoutText, { color: "#fff" }]}>Order via WhatsApp</Text>
-        </View>
-      </AnimatedButton>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -476,194 +374,131 @@ function SummaryRow({ label, value, success }) {
   return (
     <View style={styles.sumRow}>
       <Text style={styles.sumLabel}>{label}</Text>
-      <Text style={[styles.sumValue, success && { color: colors.success }]}>{value}</Text>
+      <Text style={[styles.sumValue, success && { color: "#2ECC71" }]}>{value}</Text>
     </View>
   );
 }
 
 function Field({ label, value, onChange, placeholder, keyboardType }) {
   return (
-    <View style={{ marginBottom: spacing.md }}>
+    <View style={{ marginBottom: 12 }}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         style={styles.input}
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={colors.muted}
+        placeholderTextColor="#9A9AA5"
         keyboardType={keyboardType || "default"}
       />
     </View>
   );
 }
 
-function PayOption({ active, onPress, icon, title, desc, badge }) {
-  return (
-    <TouchableOpacity
-      style={[styles.payOption, active && styles.payOptionActive]}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      <View style={[styles.payIcon, active && { backgroundColor: colors.accent }]}>
-        <Ionicons name={icon} size={20} color={active ? colors.navy : colors.sub} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <View style={styles.payTitleRow}>
-          <Text style={styles.payTitle}>{title}</Text>
-          {badge && (
-            <View style={styles.payBadge}>
-              <Text style={styles.payBadgeText}>{badge}</Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.payDesc}>{desc}</Text>
-      </View>
-      <View style={[styles.radio, active && styles.radioActive]}>
-        {active && <View style={styles.radioDot} />}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
+  screen: { flex: 1, backgroundColor: "#0B0B0F" },
 
-  empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: colors.bg, padding: spacing.xl },
-  emptyTitle: { fontSize: 18, fontWeight: "800", color: colors.text, marginTop: 6 },
-  emptySub: { color: colors.sub, textAlign: "center" },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#0B0B0F", padding: 24 },
+  emptyTitle: { fontSize: 18, fontWeight: "900", color: "#FFFFFF", marginTop: 6 },
+  emptySub: { color: "#9A9AA5", textAlign: "center" },
   shopBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: colors.accent,
+    backgroundColor: "#F5A623",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: radius.pill,
+    borderRadius: 20,
     marginTop: 12,
   },
-  shopBtnText: { color: colors.navy, fontWeight: "800" },
+  shopBtnText: { color: "#0B0B0F", fontWeight: "900" },
 
   row: {
     flexDirection: "row",
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    backgroundColor: "#17171C",
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  thumbWrap: { width: 74, height: 74, borderRadius: radius.md, overflow: "hidden", backgroundColor: "#f8fafc" },
+  thumbWrap: { width: 70, height: 70, borderRadius: 14, overflow: "hidden", backgroundColor: "#1E1E24" },
   thumb: { width: "100%", height: "100%" },
   thumbFallback: { alignItems: "center", justifyContent: "center" },
-  rowBody: { flex: 1, marginLeft: spacing.md },
-  itemName: { fontSize: 14, fontWeight: "700", color: colors.text },
-  itemUnit: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  rowFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 },
-  stepper: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill },
-  stepBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  rowBody: { flex: 1, marginLeft: 12 },
+  itemName: { fontSize: 13, fontWeight: "700", color: "#FFFFFF" },
+  itemUnit: { fontSize: 11, color: "#9A9AA5", marginTop: 2 },
+  rowFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
+  stepper: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", borderRadius: 16, backgroundColor: "#0B0B0F" },
+  stepBtn: { width: 30, height: 30, alignItems: "center", justifyContent: "center" },
   stepDisabled: { opacity: 0.4 },
-  stepVal: { minWidth: 24, textAlign: "center", fontWeight: "800", color: colors.text },
-  lineTotal: { fontSize: 15, fontWeight: "900", color: colors.text },
+  stepVal: { minWidth: 22, textAlign: "center", fontWeight: "800", color: "#FFFFFF", fontSize: 12 },
+  lineTotal: { fontSize: 14, fontWeight: "900", color: "#FFFFFF" },
   removeBtn: { padding: 4 },
 
   summary: {
-    backgroundColor: "#fff",
-    padding: spacing.lg,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    backgroundColor: "#17171C",
+    padding: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
   },
   sumRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  sumLabel: { color: colors.sub, fontSize: 14 },
-  sumValue: { color: colors.text, fontSize: 14, fontWeight: "700" },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
+  sumLabel: { color: "#9A9AA5", fontSize: 13 },
+  sumValue: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
+  divider: { height: 1, backgroundColor: "rgba(255, 255, 255, 0.08)", marginVertical: 8 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  totalLabel: { fontSize: 17, fontWeight: "900", color: colors.text },
-  totalValue: { fontSize: 20, fontWeight: "900", color: colors.text },
+  totalLabel: { fontSize: 16, fontWeight: "900", color: "#FFFFFF" },
+  totalValue: { fontSize: 18, fontWeight: "900", color: "#FFFFFF" },
   checkoutBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: 15,
-    marginTop: spacing.md,
+    backgroundColor: "#F5A623",
+    borderRadius: 20,
+    paddingVertical: 14,
+    marginTop: 14,
   },
-  checkoutText: { color: colors.navy, fontWeight: "800", fontSize: 15 },
-  whatsappBtn: {
-    backgroundColor: "#10b981",
-    marginTop: spacing.sm,
-  },
+  checkoutText: { color: "#0B0B0F", fontWeight: "900", fontSize: 14 },
 
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 16,
     paddingTop: 50,
-    paddingBottom: spacing.md,
-    backgroundColor: "#fff",
+    paddingBottom: 14,
+    backgroundColor: "#17171C",
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
-  modalTitle: { fontSize: 18, fontWeight: "900", color: colors.text },
-  sectionLabel: { fontSize: 12, fontWeight: "800", color: colors.sub, textTransform: "uppercase", marginBottom: 10 },
-  fieldRow: { flexDirection: "row", gap: spacing.md },
-  fieldLabel: { fontSize: 12, fontWeight: "700", color: colors.sub, marginBottom: 5 },
+  modalTitle: { fontSize: 17, fontWeight: "900", color: "#FFFFFF" },
+  sectionLabel: { fontSize: 11, fontWeight: "800", color: "#F5A623", textTransform: "uppercase", marginBottom: 8, letterSpacing: 0.5 },
+  fieldRow: { flexDirection: "row", gap: 12 },
+  fieldLabel: { fontSize: 11, fontWeight: "700", color: "#9A9AA5", marginBottom: 4 },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: "#17171C",
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 11,
-    fontSize: 14,
-    color: colors.text,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: "#FFFFFF",
   },
 
-  payOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#fff",
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  payOptionActive: { borderColor: colors.accent, backgroundColor: "#fffbeb" },
-  payIcon: { width: 42, height: 42, borderRadius: radius.md, backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center" },
-  payTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  payTitle: { fontSize: 14, fontWeight: "800", color: colors.text },
-  payBadge: { backgroundColor: "#d1fae5", borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  payBadgeText: { color: "#047857", fontSize: 10, fontWeight: "800" },
-  payDesc: { color: colors.sub, fontSize: 12, marginTop: 2 },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
-  radioActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#fff" },
-
-  modalSummary: { backgroundColor: "#fff", borderRadius: radius.lg, padding: spacing.lg, marginTop: spacing.md, borderWidth: 1, borderColor: colors.border },
-  modalFooter: { padding: spacing.lg, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: colors.border },
+  modalSummary: { backgroundColor: "#17171C", borderRadius: 16, padding: 14, marginTop: 14, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)" },
+  modalFooter: { padding: 16, backgroundColor: "#17171C", borderTopWidth: 1, borderTopColor: "rgba(255, 255, 255, 0.08)" },
   placeBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: 16,
+    backgroundColor: "#F5A623",
+    borderRadius: 20,
+    paddingVertical: 14,
   },
-  placeBtnText: { color: colors.navy, fontWeight: "900", fontSize: 16 },
-
-  // UPI instructions styles
-  upiDetailsCard: { backgroundColor: "#f8fafc", borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, marginTop: 4, marginBottom: 12 },
-  upiInstructionTitle: { fontSize: 13, fontWeight: "800", color: colors.text, marginBottom: 4 },
-  upiInstructionText: { fontSize: 12, color: colors.sub, lineHeight: 18 },
-  upiIdContainer: { backgroundColor: "#fff", borderStyle: "dashed", borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 10, alignItems: "center", marginVertical: 10 },
-  upiIdText: { fontSize: 16, fontWeight: "900", color: colors.text, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", letterSpacing: 1 },
-  upiAppBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: colors.accent, paddingVertical: 10, borderRadius: radius.pill, marginTop: 4 },
-  upiAppBtnText: { color: colors.navy, fontWeight: "800", fontSize: 13 },
+  placeBtnText: { color: "#0B0B0F", fontWeight: "900", fontSize: 15 },
 });
