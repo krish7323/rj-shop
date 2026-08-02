@@ -33,86 +33,55 @@ const WINDOW = Dimensions.get("window");
 
 // ─── Auto-playing Banner Slider ─────────────────────────────────────────────
 const BANNERS = [
-  { id: 1, emoji: "📱", title: "Pre-owned Phones", sub: "6-month warranty guaranteed", color: ["#1e3a5f", "#0f172a"] },
-  { id: 2, emoji: "🛠️", title: "Repair Kits", sub: "Professional S2 steel tools", color: ["#2d1b00", "#1a0f00"] },
-  { id: 3, emoji: "⚡", title: "Cool Gadgets", sub: "Latest smart accessories", color: ["#0d2d1a", "#051a0d"] },
-  { id: 4, emoji: "🚚", title: "Free Shipping", sub: "On orders above ₹999", color: ["#1a0d2e", "#0d0517"] },
+  {
+    id: 1,
+    tag: "LIMITED TIME OFFER",
+    title: "Summer Sale",
+    highlight: "Up to 50% OFF",
+    sub: "on Premium Accessories",
+    buttonText: "Shop Now",
+    emoji: "🎧",
+  },
+  {
+    id: 2,
+    tag: "SPECIAL DISCOUNT",
+    title: "Refurbished iPhones",
+    highlight: "Flat ₹10,000 OFF",
+    sub: "6 Months Store Warranty",
+    buttonText: "Explore Now",
+    emoji: "📱",
+  },
 ];
 
-function AnimatedSlide({ banner, isActive }) {
+function AnimatedSlide({ banner }) {
   const floatAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const sweepAnim = useRef(new Animated.Value(-120)).current;
-
-  // Sparkle floating particles
-  const sparkAnim1 = useRef(new Animated.Value(0)).current;
-  const sparkAnim2 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Emoji floating (bobbing)
     Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, { toValue: -8, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(floatAnim, { toValue: 0, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
-
-    // Emoji rotation oscillation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateAnim, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(rotateAnim, { toValue: -1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
-
-    // Shine sweep loop
-    Animated.loop(
-      Animated.timing(sweepAnim, { toValue: 340, duration: 4000, easing: Easing.linear, useNativeDriver: true })
-    ).start();
-
-    // Background particles bobbing
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(sparkAnim1, { toValue: -12, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(sparkAnim1, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(sparkAnim2, { toValue: 12, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(sparkAnim2, { toValue: 0, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: -8, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     ).start();
   }, []);
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-8deg", "8deg"],
-  });
-
   return (
     <View style={bs.slideInner}>
-      {/* Background gradient simulation */}
-      <View style={[bs.slideBg, { backgroundColor: banner.color[0] }]} />
-
-      {/* Shine sweep diagonal bar */}
-      <Animated.View style={[bs.shineSweep, { transform: [{ translateX: sweepAnim }] }]} />
-
-      {/* Background floating circles/sparkles */}
-      <Animated.View style={[bs.bgCircle1, { transform: [{ translateY: sparkAnim1 }] }]} />
-      <Animated.View style={[bs.bgCircle2, { transform: [{ translateY: sparkAnim2 }] }]} />
-
-      {/* Floating Emoji */}
-      <Animated.View style={{ transform: [{ translateY: floatAnim }, { rotate }], zIndex: 10 }}>
-        <Text style={bs.slideEmoji}>{banner.emoji}</Text>
-      </Animated.View>
-
-      {/* Slide Text Content */}
-      <View style={{ zIndex: 10 }}>
+      <View style={bs.leftCol}>
+        <Text style={bs.tagBadge}>{banner.tag}</Text>
         <Text style={bs.slideTitle}>{banner.title}</Text>
+        <Text style={bs.slideHighlight}>{banner.highlight}</Text>
         <Text style={bs.slideSub}>{banner.sub}</Text>
+        
+        <TouchableOpacity style={bs.ctaBtn} activeOpacity={0.85}>
+          <Text style={bs.ctaBtnText}>{banner.buttonText}</Text>
+        </TouchableOpacity>
       </View>
+
+      <Animated.View style={[bs.rightCol, { transform: [{ translateY: floatAnim }] }]}>
+        <View style={bs.glowSpotlight} />
+        <Text style={{ fontSize: 68 }}>{banner.emoji}</Text>
+      </Animated.View>
     </View>
   );
 }
@@ -120,22 +89,15 @@ function AnimatedSlide({ banner, isActive }) {
 function BannerSlider() {
   const scrollRef = useRef(null);
   const [activeIdx, setActiveIdx] = useState(0);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Auto-advance every 3.2s
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIdx(prev => {
         const next = (prev + 1) % BANNERS.length;
         scrollRef.current?.scrollTo({ x: next * (WINDOW.width - 32), animated: true });
-        // Spring scale on transition
-        Animated.sequence([
-          Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: Platform.OS !== "web" }),
-          Animated.spring(scaleAnim, { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
-        ]).start();
         return next;
       });
-    }, 3200);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -152,19 +114,16 @@ function BannerSlider() {
           setActiveIdx(idx);
         }}
       >
-        {BANNERS.map((b, i) => (
-          <Animated.View
-            key={b.id}
-            style={[bs.slide, { width: WINDOW.width - 32, transform: [{ scale: i === activeIdx ? scaleAnim : 1 }] }]}
-          >
-            <AnimatedSlide banner={b} isActive={i === activeIdx} />
-          </Animated.View>
+        {BANNERS.map((b) => (
+          <View key={b.id} style={[bs.slide, { width: WINDOW.width - 32 }]}>
+            <AnimatedSlide banner={b} />
+          </View>
         ))}
       </ScrollView>
       {/* Dot indicators */}
       <View style={bs.dots}>
         {BANNERS.map((_, i) => (
-          <Animated.View
+          <View
             key={i}
             style={[
               bs.dot,
@@ -180,83 +139,104 @@ function BannerSlider() {
 const bs = StyleSheet.create({
   wrapper: { marginHorizontal: spacing.md, marginTop: spacing.md, marginBottom: 4 },
   slide: {
-    height: 130, borderRadius: radius.xl, overflow: "hidden",
-    marginRight: 0,
+    height: 165,
+    borderRadius: 24,
+    backgroundColor: "#17171C",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   slideInner: {
     width: "100%",
     height: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+  },
+  leftCol: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  tagBadge: {
+    color: "#F5A623",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  slideTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 24,
+  },
+  slideHighlight: {
+    color: "#F5A623",
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 24,
+  },
+  slideSub: {
+    color: "#9A9AA5",
+    fontSize: 11,
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  ctaBtn: {
+    backgroundColor: "#F5A623",
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    alignSelf: "flex-start",
+  },
+  ctaBtnText: {
+    color: "#0B0B0F",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  rightCol: {
+    width: 100,
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
     position: "relative",
   },
-  slideBg: { ...StyleSheet.absoluteFillObject, opacity: 0.95 },
-  shineSweep: {
+  glowSpotlight: {
     position: "absolute",
-    top: 0, left: 0, bottom: 0,
-    width: 60,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    transform: [{ skewX: "-25deg" }],
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(245, 166, 35, 0.2)",
   },
-  bgCircle1: {
-    position: "absolute",
-    top: 10, left: 20,
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
-  bgCircle2: {
-    position: "absolute",
-    bottom: 12, right: 30,
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  slideEmoji: { fontSize: 34, marginBottom: 6, textAlign: "center" },
-  slideTitle: { color: "#fff", fontSize: 18, fontWeight: "900", textAlign: "center" },
-  slideSub:   { color: "#cbd5e1", fontSize: 11, marginTop: 3, textAlign: "center" },
-  dots: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 8 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#cbd5e1" },
-  dotActive: { width: 18, backgroundColor: colors.accent },
+  dots: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 10 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255, 255, 255, 0.2)" },
+  dotActive: { width: 18, backgroundColor: "#F5A623" },
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Animated floating feature pill
-function AnimatedFeatureCard({ icon, label, delay = 0 }) {
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, { toValue: -7, duration: 1400, delay, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(floatAnim, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
-      ])
-    ).start();
-  }, []);
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.85, duration: 80, useNativeDriver: Platform.OS !== "web" }),
-      Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 200, useNativeDriver: Platform.OS !== "web" }),
-    ]).start();
-  };
+function AnimatedFeatureCard({ icon, title, sub }) {
   return (
-    <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
-      <Animated.View style={[fcStyles.card, { transform: [{ translateY: floatAnim }, { scale: scaleAnim }] }]}>
-        <Text style={fcStyles.icon}>{icon}</Text>
-        <Text style={fcStyles.label}>{label}</Text>
-      </Animated.View>
-    </TouchableOpacity>
+    <View style={fcStyles.card}>
+      <Ionicons name={icon} size={22} color="#F5A623" style={{ marginBottom: 4 }} />
+      <Text style={fcStyles.title}>{title}</Text>
+      <Text style={fcStyles.sub}>{sub}</Text>
+    </View>
   );
 }
 const fcStyles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff", borderRadius: radius.lg,
-    paddingVertical: 10, paddingHorizontal: 12,
-    alignItems: "center", minWidth: 72,
-    elevation: 4, shadowColor: colors.accent, shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
-    borderWidth: 1, borderColor: "#f1f5f9",
+    flex: 1,
+    backgroundColor: "#17171C",
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  icon:  { fontSize: 22, marginBottom: 4 },
-  label: { color: colors.text, fontSize: 9, fontWeight: "800", textAlign: "center" },
+  title: { color: "#FFFFFF", fontSize: 10, fontWeight: "800", textAlign: "center" },
+  sub: { color: "#9A9AA5", fontSize: 8, fontWeight: "500", textAlign: "center", marginTop: 2 },
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -767,15 +747,13 @@ export default function HomeScreen({ navigation }) {
         {/* Segmented Tabs Control */}
         <SegmentedTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Animated Floating Feature Cards */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: 10, paddingTop: 14, paddingBottom: 4 }}>
-          <AnimatedFeatureCard icon="🛡️" label="100% Tested" delay={0} />
-          <AnimatedFeatureCard icon="🛠️" label="Premium Tools" delay={200} />
-          <AnimatedFeatureCard icon="💬" label="Live Chat" delay={400} />
-          <AnimatedFeatureCard icon="🚗" label="Store Pick" delay={600} />
-          <AnimatedFeatureCard icon="⭐" label="5-Star Rated" delay={800} />
-          <AnimatedFeatureCard icon="🔒" label="Secure Pay" delay={1000} />
-        </ScrollView>
+        {/* Trust Badges Row */}
+        <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: spacing.md, marginTop: 14 }}>
+          <AnimatedFeatureCard icon="shield-checkmark-outline" title="100% Original" sub="Genuine Products" />
+          <AnimatedFeatureCard icon="bus-outline" title="Same Day" sub="Delivery" />
+          <AnimatedFeatureCard icon="ribbon-outline" title="6 Months" sub="Warranty" />
+          <AnimatedFeatureCard icon="headset-outline" title="24/7 Support" sub="We're Here" />
+        </View>
 
         {!live && (
           <View style={styles.demoBanner}>
@@ -916,101 +894,83 @@ export default function HomeScreen({ navigation }) {
 
 // ── Typewriter Search Bar placeholder cycling ──────────────────────────────
 function TypewriterSearchInput({ value, onChangeText }) {
-  const placeholders = [
-    "Search 'screwdriver'...",
-    "Search 'refurbished iPhone'...",
-    "Search 'soldering kit'...",
-    "Search 'cool gadgets'...",
-  ];
-  const [index, setIndex] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(slideAnim, { toValue: -8, duration: 180, useNativeDriver: true }),
-      ]).start(() => {
-        setIndex((prev) => (prev + 1) % placeholders.length);
-        slideAnim.setValue(8);
-        Animated.parallel([
-          Animated.timing(fadeAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
-          Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-        ]).start();
-      });
-    }, 2800);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <View style={styles.searchWrap}>
-      <Ionicons name="search" size={18} color={colors.muted} />
-      <View style={{ flex: 1, height: 40, justifyContent: "center" }}>
-        {value ? (
-          <TextInput
-            value={value}
-            onChangeText={onChangeText}
-            style={[styles.searchInput, { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, paddingVertical: 0 }]}
-          />
-        ) : (
-          <>
-            <Animated.Text
-              style={{
-                color: colors.muted,
-                fontSize: 13,
-                fontWeight: "600",
-                position: "absolute",
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              }}
-            >
-              {placeholders[index]}
-            </Animated.Text>
-            <TextInput
-              value={value}
-              onChangeText={onChangeText}
-              style={[styles.searchInput, { opacity: 0 }]}
-            />
-          </>
-        )}
-      </View>
-      {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText("")}>
-          <Ionicons name="close-circle" size={18} color={colors.muted} />
+    <View style={searchStyles.searchWrap}>
+      <Ionicons name="search-outline" size={20} color="#F5A623" />
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder="Search iPhone, Samsung, Accessories..."
+        placeholderTextColor="#9A9AA5"
+        style={searchStyles.searchInput}
+      />
+      <View style={searchStyles.iconsRight}>
+        <TouchableOpacity>
+          <Ionicons name="mic-outline" size={20} color="#9A9AA5" />
         </TouchableOpacity>
-      )}
+        <TouchableOpacity>
+          <Ionicons name="qr-code-outline" size={20} color="#F5A623" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
+const searchStyles = StyleSheet.create({
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#17171C",
+    borderRadius: 22,
+    height: 50,
+    paddingHorizontal: 16,
+    marginHorizontal: spacing.md,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  searchInput: {
+    flex: 1,
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "500",
+    marginLeft: 10,
+  },
+  iconsRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+});
+
 // ── Categories Quick Grid ───────────────────────────────────────────────────
 const QUICK_GRID_CATEGORIES = [
-  { name: "Monsoon picks", icon: "☔", color: "#eff6ff" },
-  { name: "Old Phones",    icon: "📱", color: "#faf5ff" },
-  { name: "Repair Kits",  icon: "🛠️", color: "#ecfdf5" },
-  { name: "Cool Gadgets",  icon: "🔌", color: "#fffbeb" },
-  { name: "Displays",      icon: "📺", color: "#fdf2f8" },
-  { name: "Opening tools", icon: "🧼", color: "#f0fdfa" },
-  { name: "Wellness kits", icon: "🔋", color: "#f0fdf4" },
-  { name: "Screwdrivers",  icon: "🪛", color: "#fff7ed" },
+  { name: "Mobiles",       icon: "📱", active: true },
+  { name: "Repair Kits",   icon: "🛠️" },
+  { name: "Accessories",   icon: "🎧" },
+  { name: "Chargers",      icon: "🔌" },
+  { name: "Smart Watches", icon: "⌚" },
+  { name: "Cables",        icon: "⚡" },
+  { name: "Power Banks",   icon: "🔋" },
+  { name: "Tools",         icon: "🧰" },
 ];
 
 function CategoryQuickGrid({ onSelectCategory }) {
   return (
     <View style={gridStyles.container}>
-      <Text style={gridStyles.title}>Shop By Category</Text>
       <View style={gridStyles.grid}>
         {QUICK_GRID_CATEGORIES.map((c, i) => (
           <TouchableOpacity
             key={i}
             onPress={() => onSelectCategory(c.name)}
             activeOpacity={0.85}
-            style={[gridStyles.card, { backgroundColor: c.color }]}
+            style={[
+              gridStyles.card,
+              c.active && gridStyles.cardActive,
+            ]}
           >
             <Text style={gridStyles.cardIcon}>{c.icon}</Text>
-            <Text style={gridStyles.cardText} numberOfLines={2}>{c.name}</Text>
+            <Text style={[gridStyles.cardText, c.active && gridStyles.cardTextActive]} numberOfLines={1}>{c.name}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -1019,24 +979,29 @@ function CategoryQuickGrid({ onSelectCategory }) {
 }
 
 const gridStyles = StyleSheet.create({
-  container: { paddingHorizontal: spacing.md, marginTop: 15 },
-  title: { fontSize: 11, fontWeight: "900", color: colors.sub, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 },
+  container: { paddingHorizontal: spacing.md, marginTop: 14 },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
   card: {
-    width: "23%",
-    height: 75,
-    borderRadius: radius.md,
-    padding: 6,
+    width: "22%",
+    height: 78,
+    borderRadius: 20,
+    backgroundColor: "#17171C",
+    padding: 8,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  cardIcon: { fontSize: 24, marginBottom: 3 },
-  cardText: { fontSize: 9, fontWeight: "800", color: colors.text, textAlign: "center" },
+  cardActive: {
+    borderColor: "#F5A623",
+    borderWidth: 1.5,
+    backgroundColor: "#1E1E24",
+  },
+  cardIcon: { fontSize: 26, marginBottom: 4 },
+  cardText: { fontSize: 10, fontWeight: "600", color: "#9A9AA5", textAlign: "center" },
+  cardTextActive: { color: "#FFFFFF", fontWeight: "700" },
 });
 
-// ── Offer Marquee Loop Banner ────────────────────────────────────────────────
 // ── Segmented Tabs selector ──────────────────────────────────────────────
 function SegmentedTabs({ activeTab, onTabChange }) {
   const tabs = ["Order again", "Best prices", "Offers for you"];
@@ -1074,81 +1039,141 @@ function SegmentedTabs({ activeTab, onTabChange }) {
 }
 
 const segStyles = StyleSheet.create({
-  container: { marginTop: 20, borderBottomWidth: 1, borderBottomColor: "#e2e8f0", position: "relative" },
-  title: { fontSize: 16, fontWeight: "950", color: colors.navy, paddingHorizontal: spacing.md, marginBottom: 8 },
+  container: { marginTop: 16, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.08)", position: "relative" },
   tabsRow: { flexDirection: "row" },
-  tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center" },
-  tabText: { fontSize: 13, fontWeight: "700", color: colors.muted },
-  tabTextActive: { color: "#166534", fontWeight: "900" },
-  indicator: { position: "absolute", bottom: 0, left: 0, width: "33.3%", height: 3, backgroundColor: "#166534" },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center" },
+  tabText: { fontSize: 12, fontWeight: "600", color: "#9A9AA5" },
+  tabTextActive: { color: "#F5A623", fontWeight: "800" },
+  indicator: { position: "absolute", bottom: 0, left: 0, width: "33.3%", height: 2, backgroundColor: "#F5A623" },
 });
 
-
-
-// ── Animated Welcome Hero Restored ──────────────────────────────────────────
+// ── Animated Welcome Hero ──────────────────────────────────────────
 function AnimatedHero({ onMenuOpen }) {
-  const logoScale  = useRef(new Animated.Value(0.7)).current;
-  const logoOpacity= useRef(new Animated.Value(0)).current;
-  const titleSlide = useRef(new Animated.Value(-30)).current;
-  const titleOpacity=useRef(new Animated.Value(0)).current;
-  const btnScale   = useRef(new Animated.Value(0.8)).current;
-  const pulseAnim  = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.stagger(120, [
-      Animated.parallel([
-        Animated.spring(logoScale,   { toValue: 1, friction: 4, tension: 80, useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
-      ]),
-      Animated.parallel([
-        Animated.timing(titleSlide,   { toValue: 0, duration: 400, easing: Easing.out(Easing.back(1.5)), useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(titleOpacity, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== "web" }),
-      ]),
-      Animated.spring(btnScale, { toValue: 1, friction: 4, useNativeDriver: Platform.OS !== "web" }),
-    ]).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.12, duration: 700, useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(pulseAnim, { toValue: 1,    duration: 700, useNativeDriver: Platform.OS !== "web" }),
-      ])
-    ).start();
-  }, []);
-
   return (
-    <View style={styles.hero}>
-      {/* background glow orbs */}
-      <View style={{ position: "absolute", top: -20, right: -20, width: 140, height: 140, borderRadius: 70, backgroundColor: "rgba(245,158,11,0.07)" }} />
-      <View style={{ position: "absolute", bottom: 10, left: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(59,130,246,0.07)" }} />
+    <View style={heroStyles.headerWrap}>
+      {/* Top Header Row */}
+      <View style={heroStyles.topRow}>
+        <TouchableOpacity onPress={onMenuOpen} style={heroStyles.menuBox}>
+          <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
 
-      <View style={styles.heroRow}>
-        <Animated.View style={{ transform: [{ scale: Animated.multiply(logoScale, pulseAnim) }], opacity: logoOpacity }}>
-          <Image source={logo} style={styles.heroLogo} />
-        </Animated.View>
-        <Animated.View style={[styles.heroTextCol, { opacity: titleOpacity, transform: [{ translateX: titleSlide }] }]}>
-          <Text style={styles.heroSmall}>Welcome to</Text>
-          <Text style={styles.heroTitle}>
-            RJ <Text style={{ color: colors.accent }}>Mobile Store</Text>
-          </Text>
-          <Text style={styles.heroSub}>Smart choice · Better life</Text>
-        </Animated.View>
-        <TouchableOpacity onPress={onMenuOpen} style={styles.menuBtn}>
-          <Ionicons name="menu-outline" size={28} color="#fff" />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={heroStyles.greetingText}>Good Morning! 👋</Text>
+          <Text style={heroStyles.brandTitle}>RJ Mobile Store</Text>
+          <Text style={heroStyles.taglineText}>Smart Choice. Better Life.</Text>
+        </View>
+
+        <TouchableOpacity style={heroStyles.bellBox}>
+          <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
+          <View style={heroStyles.bellBadge}>
+            <Text style={heroStyles.bellBadgeText}>3</Text>
+          </View>
         </TouchableOpacity>
       </View>
-      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-        <TouchableOpacity
-          style={styles.directionsBtn}
-          onPress={() => Linking.openURL("https://g.page/r/CfQowZnHRUxZECI")}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="location" size={14} color={colors.navy} />
-          <Text style={styles.directionsText}>Visit Our Shop / Get Directions</Text>
+
+      {/* Quick Action Pill Buttons */}
+      <View style={heroStyles.pillsRow}>
+        <TouchableOpacity style={heroStyles.pillBtn} activeOpacity={0.8}>
+          <Ionicons name="storefront-outline" size={15} color="#F5A623" />
+          <Text style={heroStyles.pillBtnText}>Visit Our Store</Text>
         </TouchableOpacity>
-      </Animated.View>
+
+        <TouchableOpacity style={heroStyles.pillBtn} activeOpacity={0.8}>
+          <Ionicons name="heart-outline" size={15} color="#F5A623" />
+          <Text style={heroStyles.pillBtnText}>Wishlist</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
+
+const heroStyles = StyleSheet.create({
+  headerWrap: {
+    paddingHorizontal: spacing.md,
+    paddingTop: Platform.OS === "ios" ? 54 : 18,
+    paddingBottom: 10,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  menuBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#17171C",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  greetingText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#9A9AA5",
+  },
+  brandTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    marginTop: 1,
+  },
+  taglineText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#9A9AA5",
+    marginTop: 1,
+  },
+  bellBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#17171C",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  bellBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#FF4D4D",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "900",
+  },
+  pillsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+  pillBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#17171C",
+    borderWidth: 1.5,
+    borderColor: "#F5A623",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  pillBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+});
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Animated Section Wrapper ──────────────────────────────────────────────────
@@ -1169,21 +1194,17 @@ function AnimatedSectionWrapper({ children, delay = 0 }) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Animated Section Header ───────────────────────────────────────────────────
 function AnimatedSectionHeader({ icon, name }) {
-  const iconBounce = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(iconBounce, { toValue: -5, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
-        Animated.timing(iconBounce, { toValue: 0, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: Platform.OS !== "web" }),
-      ])
-    ).start();
-  }, []);
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: spacing.md, marginBottom: spacing.sm }}>
-      <Animated.Text style={{ fontSize: 18, transform: [{ translateY: iconBounce }] }}>{icon || "📁"}</Animated.Text>
-      <Text style={styles.sectionHeader}>{name}</Text>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.md, marginBottom: 12, marginTop: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Text style={{ fontSize: 18 }}>{icon || "🔥"}</Text>
+        <Text style={{ fontSize: 16, fontWeight: "900", color: "#FFFFFF" }}>{name}</Text>
+      </View>
+      <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+        <Text style={{ fontSize: 12, fontWeight: "700", color: "#F5A623" }}>View All</Text>
+        <Ionicons name="chevron-forward" size={14} color="#F5A623" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -1367,80 +1388,72 @@ const styles = StyleSheet.create({
   },
   demoBannerText: { color: colors.accentDark, fontSize: 11, fontWeight: "700" },
 
-  sectionsContainer: { marginTop: spacing.lg, gap: spacing.lg },
-  sectionWrap: { backgroundColor: "#fff", paddingVertical: spacing.md, borderRadius: radius.xl, marginHorizontal: spacing.sm, borderWidth: 1, borderColor: "#f1f5f9" },
-  sectionHeader: { fontSize: 15, fontWeight: "900", color: colors.text, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  sectionsContainer: { marginTop: spacing.md, gap: spacing.md },
+  sectionWrap: { backgroundColor: "transparent", paddingVertical: 4 },
+  sectionHeader: { fontSize: 16, fontWeight: "900", color: "#FFFFFF" },
   horizontalList: { paddingHorizontal: spacing.md },
 
   tile: {
     width: 165,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    marginRight: spacing.sm,
+    backgroundColor: "#17171C",
+    borderRadius: 22,
+    marginRight: 12,
     marginBottom: spacing.xs,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    elevation: 1.5,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: "#f8fafc" },
+  imageWrap: { position: "relative", aspectRatio: 1, backgroundColor: "#1E1E24", alignItems: "center", justifyContent: "center" },
   image: { width: "100%", height: "100%" },
   imageFallback: { alignItems: "center", justifyContent: "center" },
   discountTag: {
     position: "absolute",
-    top: 6,
-    left: 6,
-    backgroundColor: colors.danger,
-    borderRadius: radius.pill,
+    top: 8,
+    left: 8,
+    backgroundColor: "#FF4D4D",
+    borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  discountText: { color: "#fff", fontWeight: "850", fontSize: 10 },
+  discountText: { color: "#fff", fontWeight: "900", fontSize: 9 },
   stockTag: {
     position: "absolute",
-    top: 6,
-    right: 6,
-    borderRadius: radius.pill,
+    top: 8,
+    right: 8,
+    borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  stockTagText: { color: "#fff", fontWeight: "750", fontSize: 9 },
+  stockTagText: { color: "#fff", fontWeight: "800", fontSize: 8 },
 
-  tileBody: { padding: spacing.sm },
-  brand: { color: colors.accentDark, fontSize: 9, fontWeight: "850", textTransform: "uppercase" },
-  name: { color: colors.text, fontSize: 12, fontWeight: "700", marginTop: 2, minHeight: 32 },
+  tileBody: { padding: 12 },
+  brand: { color: "#F5A623", fontSize: 9, fontWeight: "800", textTransform: "uppercase" },
+  name: { color: "#FFFFFF", fontSize: 12, fontWeight: "700", marginTop: 2, minHeight: 32 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
   ratingBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-    backgroundColor: colors.star,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
+    backgroundColor: "transparent",
   },
-  ratingText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  reviews: { color: colors.muted, fontSize: 10 },
-  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 5, marginTop: 5 },
-  price: { fontSize: 15, fontWeight: "900", color: colors.text },
-  mrp: { fontSize: 11, color: colors.muted, textDecorationLine: "line-through", marginBottom: 1 },
+  ratingText: { color: "#F5A623", fontSize: 10, fontWeight: "800" },
+  reviews: { color: "#9A9AA5", fontSize: 10 },
+  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 5, marginTop: 6 },
+  price: { fontSize: 15, fontWeight: "900", color: "#FFFFFF" },
+  mrp: { fontSize: 11, color: "#9A9AA5", textDecorationLine: "line-through", marginBottom: 1 },
 
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
+    backgroundColor: "#F5A623",
+    borderRadius: 16,
     paddingVertical: 7,
     marginTop: 8,
   },
   addBtnDisabled: { opacity: 0.5 },
-  addBtnText: { color: colors.navy, fontWeight: "850", fontSize: 12 },
+  addBtnText: { color: "#0B0B0F", fontWeight: "900", fontSize: 11 },
 
   featuresRow: {
     flexDirection: "row",
