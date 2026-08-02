@@ -627,15 +627,40 @@ export default function HomeScreen({ navigation }) {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
+    const cat = activeCategory ? activeCategory.trim().toLowerCase() : "";
+
     return products.filter((p) => {
       const termOk =
         !term ||
         p.name?.toLowerCase().includes(term) ||
         p.brand?.toLowerCase().includes(term) ||
         p.category?.toLowerCase().includes(term);
-      return termOk;
+
+      let catOk = true;
+      if (cat && cat !== "all") {
+        if (cat.includes("mobile") || cat.includes("phone")) {
+          catOk = p.category?.toLowerCase().includes("phone") || p.category?.toLowerCase().includes("mobile");
+        } else if (cat.includes("repair") || cat.includes("kit")) {
+          catOk = p.category?.toLowerCase().includes("kit") || p.category?.toLowerCase().includes("repair") || p.name?.toLowerCase().includes("kit");
+        } else if (cat.includes("accessory") || cat.includes("headset")) {
+          catOk = p.category?.toLowerCase().includes("accessory") || p.category?.toLowerCase().includes("gadget");
+        } else if (cat.includes("charger")) {
+          catOk = p.category?.toLowerCase().includes("charger") || p.name?.toLowerCase().includes("charger") || p.name?.toLowerCase().includes("adapter");
+        } else if (cat.includes("watch")) {
+          catOk = p.category?.toLowerCase().includes("watch") || p.name?.toLowerCase().includes("watch");
+        } else if (cat.includes("cable")) {
+          catOk = p.category?.toLowerCase().includes("cable") || p.name?.toLowerCase().includes("cable");
+        } else if (cat.includes("power") || cat.includes("bank")) {
+          catOk = p.category?.toLowerCase().includes("power") || p.name?.toLowerCase().includes("power");
+        } else if (cat.includes("tool")) {
+          catOk = p.category?.toLowerCase().includes("tool") || p.name?.toLowerCase().includes("tool") || p.name?.toLowerCase().includes("screwdriver");
+        } else {
+          catOk = p.category?.toLowerCase().includes(cat);
+        }
+      }
+      return termOk && catOk;
     });
-  }, [products, search]);
+  }, [products, search, activeCategory]);
 
   const processedProducts = useMemo(() => {
     let result = [...filtered];
@@ -648,11 +673,19 @@ export default function HomeScreen({ navigation }) {
   }, [filtered, activeTab]);
 
   const categorizedProducts = useMemo(() => {
-    return categories.map((cat) => ({
+    if (categories.length === 0) {
+      return [{ _id: "default", name: activeCategory || "Products", icon: "📱", products: processedProducts }];
+    }
+    const grouped = categories.map((cat) => ({
       ...cat,
       products: processedProducts.filter((p) => p.category === cat.name),
     }));
-  }, [categories, processedProducts]);
+    const hasAnyGrouped = grouped.some((g) => g.products.length > 0);
+    if (!hasAnyGrouped && processedProducts.length > 0) {
+      return [{ _id: "selected", name: activeCategory || "Products", icon: "📱", products: processedProducts }];
+    }
+    return grouped;
+  }, [categories, processedProducts, activeCategory]);
 
   const openProduct = (item) => navigation.navigate("ProductDetails", { product: item });
 
