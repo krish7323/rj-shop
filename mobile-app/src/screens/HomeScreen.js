@@ -1059,7 +1059,9 @@ function AnimatedHero({ onMenuOpen }) {
 
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={heroStyles.greetingText}>Good Morning! 👋</Text>
-          <Text style={heroStyles.brandTitle}>RJ Mobile Store</Text>
+          <Text style={heroStyles.brandTitle}>
+            <Text style={{ color: "#F5A623" }}>RJ </Text>Mobile Store
+          </Text>
           <Text style={heroStyles.taglineText}>Smart Choice. Better Life.</Text>
         </View>
 

@@ -30,7 +30,7 @@ export default function Navbar({ search, onSearch, category, onCategory, onCartC
           <a href="#top" className="flex shrink-0 items-center gap-2">
             <img src={logo} alt="RJ Mobile Store Logo" className="h-9 w-9 rounded-lg border border-accent-400 object-cover" />
             <span className="text-lg font-extrabold tracking-tight">
-              RJ<span className="text-accent-400"> Mobile Store</span>
+              <span className="text-gold-500">RJ </span><span className="text-white">Mobile Store</span>
             </span>
           </a>
 
