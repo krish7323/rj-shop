@@ -4,35 +4,42 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "Geist", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Poppins", "Inter", "SF Pro Rounded", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         brand: {
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          400: "#818cf8",
-          500: "#6366F1",
-          600: "#4F46E5",
-          700: "#4338ca",
+          50: "#fffbeb",
+          100: "#fef3c7",
+          400: "#FFC542",
+          500: "#F5A623",
+          600: "#E09314",
+          700: "#B8720A",
         },
-        purple: {
-          500: "#8B5CF6",
-          600: "#7C3AED",
-          700: "#6D28D9",
+        gold: {
+          400: "#FFC542",
+          500: "#F5A623",
+          600: "#E09314",
+        },
+        purpleGlow: {
+          500: "#7B2FF7",
+          600: "#C13CFF",
+          700: "#FF3CAC",
         },
         ink: {
-          900: "#0a0a0f",
-          800: "#131318",
-          700: "#1e1e24",
+          900: "#0B0B0F",
+          800: "#17171C",
+          700: "#1E1E24",
         },
       },
       backgroundImage: {
-        "gradient-signature": "linear-gradient(135deg, #4F46E5, #7C3AED, #A855F7)",
+        "gradient-signature": "linear-gradient(135deg, #F5A623 0%, #FFC542 100%)",
+        "gradient-gold": "linear-gradient(135deg, #F5A623 0%, #FFC542 100%)",
+        "gradient-purple-pink": "linear-gradient(135deg, #7B2FF7 0%, #C13CFF 50%, #FF3CAC 100%)",
       },
       boxShadow: {
-        card: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
-        soft: "0 10px 25px -5px rgba(15, 23, 42, 0.08)",
-        glow: "0 0 20px -3px rgba(99, 102, 241, 0.35)",
+        card: "0 8px 24px rgba(0, 0, 0, 0.4)",
+        soft: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+        glow: "0 0 20px -3px rgba(245, 166, 35, 0.35)",
       },
       transitionTimingFunction: {
         expo: "cubic-bezier(0.16, 1, 0.3, 1)",
