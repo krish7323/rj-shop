@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   Animated,
   Easing,
@@ -87,6 +88,24 @@ function CustomTabBar({ state, descriptors, navigation }) {
         })}
       </View>
     </View>
+  );
+}
+
+// ─── HOME STACK ──────────────────────────────────────────────────────────────
+function HomeStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="ProductDetails"
+        component={ProductDetailsScreen}
+        options={{
+          headerShown: false,
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
+      />
+    </Stack.Navigator>
   );
 }
 
