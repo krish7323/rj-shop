@@ -526,6 +526,7 @@ export default function HomeScreen({ navigation }) {
   const [search, setSearch] = useState("");
   const [categories, setCategories] = useState([]);
   const [activeTab, setActiveTab] = useState("Order again");
+  const [activeCategory, setActiveCategory] = useState("Mobiles");
 
   // Drawer & Profile states
   const [currentUser, setCurrentUser] = useState(null);
@@ -713,33 +714,40 @@ export default function HomeScreen({ navigation }) {
         <TypewriterSearchInput value={search} onChangeText={setSearch} />
 
         {/* Categories Quick Grid */}
-        <CategoryQuickGrid onSelectCategory={(catName) => {
-          const norm = catName.toLowerCase();
-          if (norm.includes("phone")) {
-            const idx = categories.findIndex(c => c.name.toLowerCase().includes("phone"));
-            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
-            else setSearch("Phone");
-          } else if (norm.includes("kit") || norm.includes("repair")) {
-            const idx = categories.findIndex(c => c.name.toLowerCase().includes("kit"));
-            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
-            else setSearch("Kit");
-          } else if (norm.includes("gadget")) {
-            const idx = categories.findIndex(c => c.name.toLowerCase().includes("gadget"));
-            if (idx !== -1) handleScrollToOffset(260 + idx * 360);
-            else setSearch("Gadget");
-          } else if (norm.includes("screwdriver")) {
-            setSearch("Screwdriver");
-          } else if (norm.includes("display")) {
-            setSearch("Glue");
-          } else if (norm.includes("opening")) {
-            setSearch("Opening");
-          } else if (norm.includes("wellness") || norm.includes("safe")) {
-            setSearch("Safe");
-          } else if (norm.includes("monsoon") || norm.includes("offer") || norm.includes("pick")) {
-            setActiveTab("Offers for you");
-            setSearch("");
-          }
-        }} />
+        <CategoryQuickGrid
+          activeCategory={search || activeCategory}
+          onSelectCategory={(catName) => {
+            setActiveCategory(catName);
+            const norm = catName.toLowerCase();
+            if (norm.includes("mobile") || norm.includes("phone")) {
+              setSearch("Phone");
+              handleScrollToOffset(500);
+            } else if (norm.includes("repair") || norm.includes("kit")) {
+              setSearch("Kit");
+              handleScrollToOffset(500);
+            } else if (norm.includes("accessory") || norm.includes("headset")) {
+              setSearch("Accessory");
+              handleScrollToOffset(500);
+            } else if (norm.includes("charger")) {
+              setSearch("Charger");
+              handleScrollToOffset(500);
+            } else if (norm.includes("watch")) {
+              setSearch("Watch");
+              handleScrollToOffset(500);
+            } else if (norm.includes("cable")) {
+              setSearch("Cable");
+              handleScrollToOffset(500);
+            } else if (norm.includes("power") || norm.includes("bank")) {
+              setSearch("Power Bank");
+              handleScrollToOffset(500);
+            } else if (norm.includes("tool")) {
+              setSearch("Tool");
+              handleScrollToOffset(500);
+            } else {
+              setSearch(catName);
+            }
+          }}
+        />
 
         {/* Banner Slider */}
         <BannerSlider />
@@ -945,37 +953,44 @@ const searchStyles = StyleSheet.create({
 
 // ── Categories Quick Grid ───────────────────────────────────────────────────
 const QUICK_GRID_CATEGORIES = [
-  { name: "Mobiles",       iconName: "phone-portrait", iconColor: "#8B5CF6", glowColor: "rgba(139, 92, 246, 0.25)", active: true },
-  { name: "Repair Kits",   iconName: "build",          iconColor: "#F5A623", glowColor: "rgba(245, 166, 35, 0.2)" },
-  { name: "Accessories",   iconName: "headset",        iconColor: "#FFC542", glowColor: "rgba(255, 197, 66, 0.2)" },
-  { name: "Chargers",      iconName: "flash",          iconColor: "#C13CFF", glowColor: "rgba(193, 60, 255, 0.2)" },
-  { name: "Smart Watches", iconName: "watch",          iconColor: "#7B2FF7", glowColor: "rgba(123, 47, 247, 0.25)" },
-  { name: "Cables",        iconName: "git-commit",     iconColor: "#F5A623", glowColor: "rgba(245, 166, 35, 0.2)" },
-  { name: "Power Banks",   iconName: "battery-charging", iconColor: "#3B82F6", glowColor: "rgba(59, 130, 246, 0.2)" },
-  { name: "Tools",         iconName: "briefcase",      iconColor: "#FF3CAC", glowColor: "rgba(255, 60, 172, 0.2)" },
+  { name: "Mobiles",       iconName: "phone-portrait-outline", iconColor: "#A855F7", circleBg: "rgba(139, 92, 246, 0.25)" },
+  { name: "Repair Kits",   iconName: "construct-outline",      iconColor: "#F5A623", circleBg: "rgba(245, 166, 35, 0.25)" },
+  { name: "Accessories",   iconName: "headset-outline",        iconColor: "#FFC542", circleBg: "rgba(255, 197, 66, 0.25)" },
+  { name: "Chargers",      iconName: "flash-outline",          iconColor: "#C13CFF", circleBg: "rgba(193, 60, 255, 0.25)" },
+  { name: "Smart Watches", iconName: "watch-outline",          iconColor: "#8B5CF6", circleBg: "rgba(123, 47, 247, 0.25)" },
+  { name: "Cables",        iconName: "infinite-outline",       iconColor: "#F5A623", circleBg: "rgba(245, 166, 35, 0.25)" },
+  { name: "Power Banks",   iconName: "battery-charging-outline", iconColor: "#3B82F6", circleBg: "rgba(59, 130, 246, 0.25)" },
+  { name: "Tools",         iconName: "briefcase-outline",      iconColor: "#FF3CAC", circleBg: "rgba(255, 60, 172, 0.25)" },
 ];
 
-function CategoryQuickGrid({ onSelectCategory }) {
+function CategoryQuickGrid({ activeCategory, onSelectCategory }) {
   return (
     <View style={gridStyles.container}>
       <View style={gridStyles.grid}>
-        {QUICK_GRID_CATEGORIES.map((c, i) => (
-          <TouchableOpacity
-            key={i}
-            onPress={() => onSelectCategory(c.name)}
-            activeOpacity={0.85}
-            style={[
-              gridStyles.card,
-              c.active && gridStyles.cardActive,
-            ]}
-          >
-            {/* Spotlight Glow behind icon */}
-            <View style={[gridStyles.iconGlow, { backgroundColor: c.glowColor }]} />
-            
-            <Ionicons name={c.iconName} size={24} color={c.iconColor} style={{ marginBottom: 4, zIndex: 2 }} />
-            <Text style={[gridStyles.cardText, c.active && gridStyles.cardTextActive]} numberOfLines={1}>{c.name}</Text>
-          </TouchableOpacity>
-        ))}
+        {QUICK_GRID_CATEGORIES.map((c, i) => {
+          const isActive = (activeCategory || "Mobiles").toLowerCase().includes(c.name.toLowerCase()) ||
+                           (c.name === "Mobiles" && (!activeCategory || activeCategory === "All"));
+          return (
+            <TouchableOpacity
+              key={i}
+              onPress={() => onSelectCategory(c.name)}
+              activeOpacity={0.85}
+              style={[
+                gridStyles.card,
+                isActive && gridStyles.cardActive,
+              ]}
+            >
+              {/* Circular Icon Badge */}
+              <View style={[gridStyles.iconCircle, { backgroundColor: c.circleBg }]}>
+                <Ionicons name={c.iconName} size={20} color={c.iconColor} />
+              </View>
+              
+              <Text style={[gridStyles.cardText, isActive && gridStyles.cardTextActive]} numberOfLines={1}>
+                {c.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -986,16 +1001,15 @@ const gridStyles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
   card: {
     width: "22%",
-    height: 80,
+    height: 82,
     borderRadius: 20,
     backgroundColor: "#17171C",
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
-    position: "relative",
-    overflow: "hidden",
   },
   cardActive: {
     borderColor: "#F5A623",
@@ -1007,15 +1021,15 @@ const gridStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 8,
   },
-  iconGlow: {
-    position: "absolute",
-    top: 8,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    zIndex: 1,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 5,
   },
-  cardText: { fontSize: 10, fontWeight: "600", color: "#9A9AA5", textAlign: "center", zIndex: 2 },
+  cardText: { fontSize: 10, fontWeight: "600", color: "#9A9AA5", textAlign: "center" },
   cardTextActive: { color: "#FFFFFF", fontWeight: "800" },
 });
 
