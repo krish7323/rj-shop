@@ -945,14 +945,14 @@ const searchStyles = StyleSheet.create({
 
 // ── Categories Quick Grid ───────────────────────────────────────────────────
 const QUICK_GRID_CATEGORIES = [
-  { name: "Mobiles",       icon: "📱", active: true },
-  { name: "Repair Kits",   icon: "🛠️" },
-  { name: "Accessories",   icon: "🎧" },
-  { name: "Chargers",      icon: "🔌" },
-  { name: "Smart Watches", icon: "⌚" },
-  { name: "Cables",        icon: "⚡" },
-  { name: "Power Banks",   icon: "🔋" },
-  { name: "Tools",         icon: "🧰" },
+  { name: "Mobiles",       iconName: "phone-portrait", iconColor: "#8B5CF6", glowColor: "rgba(139, 92, 246, 0.25)", active: true },
+  { name: "Repair Kits",   iconName: "build",          iconColor: "#F5A623", glowColor: "rgba(245, 166, 35, 0.2)" },
+  { name: "Accessories",   iconName: "headset",        iconColor: "#FFC542", glowColor: "rgba(255, 197, 66, 0.2)" },
+  { name: "Chargers",      iconName: "flash",          iconColor: "#C13CFF", glowColor: "rgba(193, 60, 255, 0.2)" },
+  { name: "Smart Watches", iconName: "watch",          iconColor: "#7B2FF7", glowColor: "rgba(123, 47, 247, 0.25)" },
+  { name: "Cables",        iconName: "git-commit",     iconColor: "#F5A623", glowColor: "rgba(245, 166, 35, 0.2)" },
+  { name: "Power Banks",   iconName: "battery-charging", iconColor: "#3B82F6", glowColor: "rgba(59, 130, 246, 0.2)" },
+  { name: "Tools",         iconName: "briefcase",      iconColor: "#FF3CAC", glowColor: "rgba(255, 60, 172, 0.2)" },
 ];
 
 function CategoryQuickGrid({ onSelectCategory }) {
@@ -969,7 +969,10 @@ function CategoryQuickGrid({ onSelectCategory }) {
               c.active && gridStyles.cardActive,
             ]}
           >
-            <Text style={gridStyles.cardIcon}>{c.icon}</Text>
+            {/* Spotlight Glow behind icon */}
+            <View style={[gridStyles.iconGlow, { backgroundColor: c.glowColor }]} />
+            
+            <Ionicons name={c.iconName} size={24} color={c.iconColor} style={{ marginBottom: 4, zIndex: 2 }} />
             <Text style={[gridStyles.cardText, c.active && gridStyles.cardTextActive]} numberOfLines={1}>{c.name}</Text>
           </TouchableOpacity>
         ))}
@@ -983,7 +986,7 @@ const gridStyles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 },
   card: {
     width: "22%",
-    height: 78,
+    height: 80,
     borderRadius: 20,
     backgroundColor: "#17171C",
     padding: 8,
@@ -991,15 +994,29 @@ const gridStyles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
+    position: "relative",
+    overflow: "hidden",
   },
   cardActive: {
     borderColor: "#F5A623",
     borderWidth: 1.5,
     backgroundColor: "#1E1E24",
+    shadowColor: "#F5A623",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
   },
-  cardIcon: { fontSize: 26, marginBottom: 4 },
-  cardText: { fontSize: 10, fontWeight: "600", color: "#9A9AA5", textAlign: "center" },
-  cardTextActive: { color: "#FFFFFF", fontWeight: "700" },
+  iconGlow: {
+    position: "absolute",
+    top: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    zIndex: 1,
+  },
+  cardText: { fontSize: 10, fontWeight: "600", color: "#9A9AA5", textAlign: "center", zIndex: 2 },
+  cardTextActive: { color: "#FFFFFF", fontWeight: "800" },
 });
 
 // ── Segmented Tabs selector ──────────────────────────────────────────────
