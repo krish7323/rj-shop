@@ -21,7 +21,7 @@ import RJMascot from "../components/RJMascot";
 import logo from "../assets/logo.png";
 
 const { width: SCREEN_W } = Dimensions.get("window");
-const CARD_W = Math.min(SCREEN_W - 48, 360);
+const CARD_W = Math.min(SCREEN_W - 44, 360);
 
 export default function AuthScreen({ onAuthSuccess }) {
   const [mode, setMode] = useState("login"); // "login" | "register" | "verify"
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 28,
+    paddingVertical: 20,
     paddingHorizontal: 0,
   },
 
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   // Header
   header: {
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 10,
     width: "100%",
   },
 
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 4,
+    paddingVertical: 4,
+    marginBottom: 2,
   },
   badgeLogoBox: {
     width: 20,
@@ -532,27 +532,27 @@ const styles = StyleSheet.create({
 
   // Mascot container
   mascotWrap: {
-    width: 130,
-    height: 130,
+    width: 120,
+    height: 120,
     alignItems: "center",
     justifyContent: "center",
   },
 
   // Headings
   heading: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "900",
     color: TEXT,
     textAlign: "center",
-    marginTop: 4,
-    lineHeight: 28,
+    marginTop: 2,
+    lineHeight: 26,
   },
   subheading: {
-    fontSize: 12,
+    fontSize: 11,
     color: MUTED,
     fontWeight: "500",
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 3,
   },
 
   // Card
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     borderColor: "rgba(255,176,0,0.4)",
-    padding: 20,
+    padding: 16,
     shadowColor: GOLD,
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
   },
 
   form: {
-    gap: 12,
+    gap: 10,
   },
 
   // Success
