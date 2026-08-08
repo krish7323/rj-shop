@@ -38,8 +38,6 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
   const [authError, setAuthError] = useState(null);
   const [focusedInput, setFocusedInput] = useState(null);
 
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
   // Dynamic Mascot State
   const getMascotState = () => {
     if (authSuccess) return "login_success";
@@ -92,7 +90,7 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
             setAuthSuccess(true);
             setTimeout(() => {
               if (onAuthSuccess) onAuthSuccess(res.data.token);
-            }, 1000);
+            }, 1200);
           }
         } catch (ex) {
           if (ex?.response?.status === 403 && ex?.response?.data?.email) {
@@ -105,7 +103,7 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
         }
       }
     } catch (err) {
-      const errMsg = err?.response?.data?.message || "Invalid credentials. Please try again.";
+      const errMsg = err?.response?.data?.message || "Incorrect password, try again.";
       setAuthError(errMsg);
     } finally {
       setAuthLoading(false);
@@ -127,7 +125,7 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
         setAuthSuccess(true);
         setTimeout(() => {
           if (onAuthSuccess) onAuthSuccess(res.data.token);
-        }, 1000);
+        }, 1200);
       }
     } catch (err) {
       setAuthError(err?.response?.data?.message || "Invalid verification code.");
@@ -146,11 +144,13 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
         {/* Brand Header */}
         <View style={styles.header}>
           <View style={styles.badge}>
-            <Image source={logo} style={styles.logo} resizeMode="contain" />
+            <View style={styles.badgeLogoBox}>
+              <Image source={logo} style={styles.logo} resizeMode="contain" />
+            </View>
             <Text style={styles.brandTitle}>RJ MOBILE STORE</Text>
           </View>
 
-          {/* Interactive Mascot */}
+          {/* Compact Mascot */}
           <RJMascot state={mascotState} emailLength={email.length} />
 
           <Text style={styles.title}>
@@ -165,23 +165,24 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
           </Text>
         </View>
 
-        {/* Login Card */}
+        {/* Login Card (Pixel-Accurate to Reference Screenshot) */}
         <View style={styles.card}>
           
-          {authError && (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle-outline" size={16} color="#FF3B30" />
-              <Text style={styles.errorText}>{authError}</Text>
+          {authSuccess ? (
+            <View style={styles.successContainer}>
+              <View style={styles.successCircle}>
+                <Ionicons name="checkmark" size={32} color="#0D0D12" />
+              </View>
+              <Text style={styles.successTitle}>Login Successful!</Text>
+              <Text style={styles.successSub}>Redirecting...</Text>
             </View>
-          )}
-
-          {isVerifying ? (
-            <View style={{ gap: 14 }}>
+          ) : isVerifying ? (
+            <View style={{ gap: 12 }}>
               <Text style={styles.inputLabel}>6-DIGIT OTP VERIFICATION CODE</Text>
               <TextInput
-                style={[styles.input, { letterSpacing: 6, textAlign: "center", fontSize: 20, fontWeight: "bold", color: "#FFB300" }]}
+                style={[styles.input, { letterSpacing: 6, textAlign: "center", fontSize: 20, fontWeight: "bold", color: "#FFB000" }]}
                 placeholder="123456"
-                placeholderTextColor="#666675"
+                placeholderTextColor="#666670"
                 value={otp}
                 onChangeText={(val) => {
                   setOtp(val);
@@ -192,24 +193,24 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
               />
               <TouchableOpacity style={styles.btn} onPress={handleVerify} disabled={authLoading}>
                 {authLoading ? (
-                  <ActivityIndicator color="#0B0B0F" />
+                  <ActivityIndicator color="#000000" />
                 ) : (
                   <Text style={styles.btnText}>VERIFY & LOG IN →</Text>
                 )}
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 11 }}>
               {isRegister && (
                 <>
                   <View>
-                    <Text style={styles.inputLabel}>FULL NAME</Text>
+                    <Text style={styles.inputLabel}>Full Name</Text>
                     <View style={[styles.inputWrap, focusedInput === "name" && styles.inputWrapFocused]}>
-                      <Ionicons name="person-outline" size={16} color="#9A9AA3" />
+                      <Ionicons name="person-outline" size={16} color="#85858D" />
                       <TextInput
                         style={styles.inputText}
                         placeholder="Rahul Sharma"
-                        placeholderTextColor="#666675"
+                        placeholderTextColor="#666670"
                         value={name}
                         onFocus={() => setFocusedInput("name")}
                         onBlur={() => setFocusedInput(null)}
@@ -219,13 +220,13 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
                   </View>
 
                   <View>
-                    <Text style={styles.inputLabel}>WHATSAPP PHONE NUMBER</Text>
+                    <Text style={styles.inputLabel}>WhatsApp Number</Text>
                     <View style={[styles.inputWrap, focusedInput === "phone" && styles.inputWrapFocused]}>
                       <Text style={styles.prefix}>+91</Text>
                       <TextInput
                         style={styles.inputText}
                         placeholder="10-digit number"
-                        placeholderTextColor="#666675"
+                        placeholderTextColor="#666670"
                         value={phone}
                         onFocus={() => setFocusedInput("phone")}
                         onBlur={() => setFocusedInput(null)}
@@ -240,22 +241,20 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
 
               {/* Email Address */}
               <View>
-                <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
+                <Text style={styles.inputLabel}>Email Address</Text>
                 <View
                   style={[
                     styles.inputWrap,
                     focusedInput === "email" && styles.inputWrapFocused,
                   ]}
                 >
-                  <Ionicons
-                    name="mail-outline"
-                    size={16}
-                    color={focusedInput === "email" ? "#FFB300" : "#9A9AA3"}
-                  />
+                  <View style={styles.iconBox}>
+                    <Ionicons name="mail" size={15} color="#FFB000" />
+                  </View>
                   <TextInput
                     style={styles.inputText}
                     placeholder="customer@rjshop.com"
-                    placeholderTextColor="#666675"
+                    placeholderTextColor="#666670"
                     value={email}
                     onFocus={() => setFocusedInput("email")}
                     onBlur={() => setFocusedInput(null)}
@@ -266,13 +265,12 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
-                  {isValidEmail && <Ionicons name="checkmark-circle" size={16} color="#2ECC71" />}
                 </View>
               </View>
 
               {/* Password */}
               <View>
-                <Text style={styles.inputLabel}>PASSWORD</Text>
+                <Text style={styles.inputLabel}>Password</Text>
                 <View
                   style={[
                     styles.inputWrap,
@@ -280,15 +278,13 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
                     focusedInput === "password" && styles.inputWrapFocused,
                   ]}
                 >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={16}
-                    color={focusedInput === "password" ? "#FFB300" : "#9A9AA3"}
-                  />
+                  <View style={[styles.iconBox, authError && { backgroundColor: "rgba(255,59,48,0.15)" }]}>
+                    <Ionicons name="lock-closed" size={15} color={authError ? "#FF3B30" : "#FFB000"} />
+                  </View>
                   <TextInput
                     style={styles.inputText}
                     placeholder="••••••••••••"
-                    placeholderTextColor="#666675"
+                    placeholderTextColor="#666670"
                     value={password}
                     onFocus={() => setFocusedInput("password")}
                     onBlur={() => setFocusedInput(null)}
@@ -305,10 +301,17 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
                     <Ionicons
                       name={showPassword ? "eye-off-outline" : "eye-outline"}
                       size={18}
-                      color="#9A9AA3"
+                      color="#85858D"
                     />
                   </TouchableOpacity>
                 </View>
+
+                {authError && (
+                  <View style={styles.errorRow}>
+                    <Ionicons name="alert-circle" size={14} color="#FF3B30" />
+                    <Text style={styles.errorText}>{authError}</Text>
+                  </View>
+                )}
               </View>
 
               {/* Remember Me & Forgot Password Row */}
@@ -320,7 +323,7 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
                     activeOpacity={0.8}
                   >
                     <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                      {rememberMe && <Ionicons name="checkmark" size={12} color="#0B0B0F" />}
+                      {rememberMe && <Ionicons name="checkmark" size={12} color="#000000" />}
                     </View>
                     <Text style={styles.rememberText}>Remember Me</Text>
                   </TouchableOpacity>
@@ -333,29 +336,26 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
 
               {/* Primary CTA Button */}
               <TouchableOpacity
-                style={[styles.btn, authSuccess && styles.btnSuccess]}
+                style={styles.btn}
                 onPress={handleAuth}
-                disabled={authLoading || authSuccess}
+                disabled={authLoading}
                 activeOpacity={0.85}
               >
                 {authLoading ? (
-                  <ActivityIndicator color="#0B0B0F" />
-                ) : authSuccess ? (
-                  <View style={styles.btnRow}>
-                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                    <Text style={[styles.btnText, { color: "#FFFFFF" }]}>SUCCESSFUL!</Text>
-                  </View>
+                  <ActivityIndicator color="#000000" />
                 ) : (
                   <View style={styles.btnRow}>
                     <Text style={styles.btnText}>
-                      {isRegister ? "CREATE ACCOUNT" : "SIGN IN"}
+                      {isRegister ? "Create Account" : "Sign In"}
                     </Text>
-                    <Ionicons name="arrow-forward" size={16} color="#0B0B0F" />
+                    <View style={styles.arrowBadge}>
+                      <Ionicons name="arrow-forward" size={14} color="#000000" />
+                    </View>
                   </View>
                 )}
               </TouchableOpacity>
 
-              {/* Divider */}
+              {/* OR Divider */}
               <View style={styles.dividerRow}>
                 <View style={styles.line} />
                 <Text style={styles.dividerText}>OR</Text>
@@ -387,101 +387,114 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0D0D12" },
-  scroll: { flexGrow: 1, justifyContent: "center", padding: 18 },
+  scroll: { flexGrow: 1, justifyContent: "center", padding: 16, paddingVertical: 24 },
   
-  header: { alignItems: "center", marginBottom: 14 },
+  header: { alignItems: "center", marginBottom: 12 },
   badge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#15151B",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    backgroundColor: "#141419",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#28282F",
-    marginBottom: 4,
+    borderColor: "#2A2A31",
+    marginBottom: 2,
   },
-  logo: { width: 18, height: 18 },
-  brandTitle: { fontSize: 11, fontWeight: "900", color: "#FFB300", letterSpacing: 1 },
+  badgeLogoBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 176, 0, 0.15)",
+    borderWidth: 1,
+    borderColor: "#FFB000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: { width: 12, height: 12 },
+  brandTitle: { fontSize: 10, fontWeight: "900", color: "#FFB000", letterSpacing: 1 },
   
-  title: { fontSize: 24, fontWeight: "900", color: "#F5F5F5", marginTop: 4 },
-  subtitle: { fontSize: 12, color: "#9A9AA3", fontWeight: "600", marginTop: 2 },
+  title: { fontSize: 24, fontWeight: "900", color: "#F5F5F5", marginTop: 2 },
+  subtitle: { fontSize: 12, color: "#85858D", fontWeight: "600", marginTop: 2 },
   
   card: {
-    backgroundColor: "#1A1A20",
-    padding: 22,
+    backgroundColor: "#18181E",
+    padding: 20,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 179, 0, 0.3)",
+    borderColor: "rgba(255, 176, 0, 0.35)",
     elevation: 8,
-    shadowColor: "#FFB300",
-    shadowOpacity: 0.15,
+    shadowColor: "#FFB000",
+    shadowOpacity: 0.12,
     shadowRadius: 16,
   },
-  
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(255, 59, 48, 0.15)",
-    padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255, 59, 48, 0.4)",
-    marginBottom: 10,
-  },
-  errorText: { fontSize: 12, color: "#FF3B30", fontWeight: "700", flex: 1 },
 
-  inputLabel: { fontSize: 10, fontWeight: "900", color: "#9A9AA3", letterSpacing: 0.8, marginBottom: 4 },
+  successContainer: { paddingVertical: 20, alignItems: "center", justifyContent: "center", gap: 10 },
+  successCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#2ECC71", alignItems: "center", justifyContent: "center" },
+  successTitle: { fontSize: 18, fontWeight: "900", color: "#F5F5F5" },
+  successSub: { fontSize: 12, color: "#85858D", fontWeight: "600" },
+  
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  errorText: { fontSize: 11, color: "#FF3B30", fontWeight: "700" },
+
+  inputLabel: { fontSize: 11, fontWeight: "700", color: "#85858D", marginBottom: 4 },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    height: 48,
-    backgroundColor: "#15151B",
-    borderRadius: 16,
+    height: 46,
+    backgroundColor: "#141419",
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#28282F",
-    paddingHorizontal: 14,
-    gap: 10,
+    borderColor: "#2A2A31",
+    paddingHorizontal: 8,
+    gap: 8,
   },
   inputWrapFocused: {
-    borderColor: "#FFB300",
-    shadowColor: "#FFB300",
-    shadowOpacity: 0.3,
+    borderColor: "#FFB000",
+    shadowColor: "#FFB000",
+    shadowOpacity: 0.25,
     shadowRadius: 8,
   },
-  inputText: { flex: 1, color: "#F5F5F5", fontSize: 13, fontWeight: "700" },
-  prefix: { color: "#FFB300", fontSize: 12, fontWeight: "900", paddingRight: 6, borderRightWidth: 1, borderRightColor: "#28282F" },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "rgba(255, 176, 0, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inputText: { flex: 1, color: "#F5F5F5", fontSize: 13, fontWeight: "600", paddingHorizontal: 4 },
+  prefix: { color: "#FFB000", fontSize: 12, fontWeight: "900", paddingRight: 6, borderRightWidth: 1, borderRightColor: "#2A2A31" },
 
-  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 4 },
+  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 2 },
   rememberRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  checkbox: { width: 18, height: 18, borderRadius: 5, borderWidth: 1, borderColor: "#28282F", backgroundColor: "#15151B", alignItems: "center", justifyContent: "center" },
-  checkboxChecked: { backgroundColor: "#FFB300", borderColor: "#FFB300" },
-  rememberText: { fontSize: 12, color: "#9A9AA3", fontWeight: "600" },
-  forgotText: { fontSize: 12, color: "#FFB300", fontWeight: "800" },
+  checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: "#2A2A31", backgroundColor: "#141419", alignItems: "center", justifyContent: "center" },
+  checkboxChecked: { backgroundColor: "#FFB000", borderColor: "#FFB000" },
+  rememberText: { fontSize: 12, color: "#F5F5F5", fontWeight: "600" },
+  forgotText: { fontSize: 12, color: "#FFB000", fontWeight: "700" },
 
   btn: {
     height: 48,
-    backgroundColor: "#FFB300",
+    backgroundColor: "#FFB000",
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
-    shadowColor: "#FFB300",
+    marginTop: 6,
+    shadowColor: "#FFB000",
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 4,
   },
-  btnSuccess: { backgroundColor: "#2ECC71" },
   btnRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  btnText: { color: "#0B0B0F", fontSize: 13, fontWeight: "900", letterSpacing: 0.5 },
+  btnText: { color: "#000000", fontSize: 14, fontWeight: "900" },
+  arrowBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: "rgba(0, 0, 0, 0.15)", alignItems: "center", justifyContent: "center" },
 
-  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 14 },
-  line: { flex: 1, height: 1, backgroundColor: "#28282F" },
-  dividerText: { marginHorizontal: 10, fontSize: 10, fontWeight: "900", color: "#9A9AA3" },
+  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 12 },
+  line: { flex: 1, height: 1, backgroundColor: "#2A2A31" },
+  dividerText: { marginHorizontal: 10, fontSize: 11, fontWeight: "700", color: "#85858D" },
 
   toggleBtn: { alignItems: "center" },
-  toggleSub: { fontSize: 12, color: "#9A9AA3", fontWeight: "700" },
-  toggleHighlight: { color: "#FFB300", fontWeight: "900" },
+  toggleSub: { fontSize: 12, color: "#F5F5F5", fontWeight: "600" },
+  toggleHighlight: { color: "#FFB000", fontWeight: "900" },
 });

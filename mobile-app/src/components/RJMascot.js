@@ -14,13 +14,13 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(floatAnim, {
-            toValue: -6,
+            toValue: -5,
             duration: 1800,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(floatAnim, {
-            toValue: 6,
+            toValue: 5,
             duration: 1800,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
@@ -36,10 +36,10 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
   useEffect(() => {
     if (state === "login_error") {
       Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 10, duration: 80, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -10, duration: 80, useNativeDriver: true }),
         Animated.timing(shakeAnim, { toValue: 8, duration: 80, useNativeDriver: true }),
         Animated.timing(shakeAnim, { toValue: -8, duration: 80, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 6, duration: 80, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -6, duration: 80, useNativeDriver: true }),
         Animated.timing(shakeAnim, { toValue: 0, duration: 80, useNativeDriver: true }),
       ]).start();
     }
@@ -49,7 +49,7 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
   useEffect(() => {
     if (state === "login_success") {
       Animated.spring(scaleAnim, {
-        toValue: 1.12,
+        toValue: 1.1,
         friction: 4,
         useNativeDriver: true,
       }).start();
@@ -64,7 +64,7 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
       const timer = setInterval(() => {
         setBlink(true);
         setTimeout(() => setBlink(false), 200);
-      }, 3500);
+      }, 3200);
       return () => clearInterval(timer);
     }
   }, [state]);
@@ -105,27 +105,27 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
         {/* Robot Head */}
         <View style={styles.headShell}>
           {/* Ear Caps */}
-          <View style={[styles.earCap, { left: -10 }]} />
-          <View style={[styles.earCap, { right: -10 }]} />
+          <View style={[styles.earCap, { left: -9 }]} />
+          <View style={[styles.earCap, { right: -9 }]} />
 
-          {/* Digital Visor */}
+          {/* Digital Screen Visor */}
           <View style={styles.visor}>
             {state === "password_focus" ? (
-              // Visor in password focus: hands covering eyes
+              // Visor when password focused: hands covering eyes
               <View style={styles.coveredEyesRow}>
-                <Ionicons name="hand-stop" size={24} color="#FFB300" />
-                <Ionicons name="hand-stop" size={24} color="#FFB300" />
+                <Ionicons name="hand-stop" size={22} color="#FFB000" />
+                <Ionicons name="hand-stop" size={22} color="#FFB000" />
               </View>
             ) : state === "password_visible" ? (
-              // Happy winking visor
+              // Happy winking visor (matching reference "PASSWORD VISIBLE")
               <View style={styles.visorContent}>
                 <Text style={styles.eyeText}>^  ~</Text>
                 <Text style={styles.mouthText}>‿</Text>
               </View>
             ) : state === "email_focus" ? (
-              // Looking down towards email field
+              // Looking down towards email field (matching reference "FOCUS EMAIL")
               <View style={styles.visorContent}>
-                <Text style={[styles.eyeText, { transform: [{ translateY: 4 }] }]}>
+                <Text style={[styles.eyeText, { transform: [{ translateY: 3 }] }]}>
                   {blink ? "-  -" : "•  •"}
                 </Text>
                 <Text style={styles.mouthText}>o</Text>
@@ -143,21 +143,21 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
                 <Text style={styles.mouthText}>⎼</Text>
               </View>
             ) : state === "login_success" ? (
-              // Joyful celebrating visor
+              // Joyful celebrating visor (matching reference "LOGIN SUCCESS")
               <View style={styles.visorContent}>
                 <Text style={[styles.eyeText, { color: "#2ECC71" }]}>^  ^</Text>
                 <Text style={[styles.mouthText, { color: "#2ECC71" }]}>◡</Text>
               </View>
             ) : state === "login_error" ? (
-              // Sad worried visor
+              // Sad worried visor (matching reference "LOGIN ERROR")
               <View style={styles.visorContent}>
                 <Text style={[styles.eyeText, { color: "#FF3B30" }]}>u  u</Text>
                 <Text style={[styles.mouthText, { color: "#FF3B30" }]}>︵</Text>
               </View>
             ) : (
-              // Default IDLE visor
+              // Default IDLE Visor (matching main reference image)
               <View style={styles.visorContent}>
-                <Text style={styles.eyeText}>{blink ? "-  -" : "◉  ◉"}</Text>
+                <Text style={styles.eyeText}>{blink ? "-  -" : "^  ◉"}</Text>
                 <Text style={styles.mouthText}>◡</Text>
               </View>
             )}
@@ -179,17 +179,17 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 8,
+    marginVertical: 4,
     position: "relative",
   },
   glowRing: {
     position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(255, 179, 0, 0.12)",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255, 176, 0, 0.12)",
     borderWidth: 1,
-    borderColor: "rgba(255, 179, 0, 0.3)",
+    borderColor: "rgba(255, 176, 0, 0.35)",
   },
   glowRingSuccess: {
     backgroundColor: "rgba(46, 204, 113, 0.2)",
@@ -205,48 +205,48 @@ const styles = StyleSheet.create({
   },
   antennaStem: {
     width: 4,
-    height: 12,
-    backgroundColor: "#28282F",
+    height: 10,
+    backgroundColor: "#2A2A31",
   },
   antennaTip: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#FFB300",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFB000",
     marginBottom: -2,
   },
   antennaTipLoading: {
-    backgroundColor: "#FFC107",
-    scale: 1.25,
+    backgroundColor: "#FFA000",
+    scale: 1.2,
   },
   headShell: {
-    width: 90,
-    height: 66,
-    borderRadius: 24,
-    backgroundColor: "#1D1D24",
+    width: 82,
+    height: 60,
+    borderRadius: 22,
+    backgroundColor: "#1C1C24",
     borderWidth: 2,
-    borderColor: "#FFB300",
+    borderColor: "#FFB000",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   earCap: {
     position: "absolute",
-    top: 22,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#FFB300",
-    borderWidth: 2,
-    borderColor: "#15151B",
+    top: 20,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#FFB000",
+    borderWidth: 1.5,
+    borderColor: "#141419",
   },
   visor: {
-    width: 74,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "#0B0B0F",
+    width: 68,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#0D0D12",
     borderWidth: 1,
-    borderColor: "#28282F",
+    borderColor: "#2A2A31",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -256,44 +256,44 @@ const styles = StyleSheet.create({
   },
   coveredEyesRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
     alignItems: "center",
     justifyContent: "center",
   },
   eyeText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "900",
-    color: "#FFC107",
+    color: "#FFB000",
     letterSpacing: 2,
   },
   mouthText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
-    color: "#FFB300",
+    color: "#FFB000",
     marginTop: -4,
   },
   bodyShell: {
-    width: 60,
-    height: 32,
-    borderRadius: 12,
-    backgroundColor: "#15151B",
+    width: 54,
+    height: 28,
+    borderRadius: 10,
+    backgroundColor: "#141419",
     borderWidth: 1.5,
-    borderColor: "#28282F",
+    borderColor: "#2A2A31",
     alignItems: "center",
     justifyContent: "center",
     marginTop: -4,
   },
   rjBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    backgroundColor: "#0B0B0F",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 5,
+    backgroundColor: "#0D0D12",
     borderWidth: 1,
-    borderColor: "#FFB300",
+    borderColor: "#FFB000",
   },
   rjBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "900",
-    color: "#FFB300",
+    color: "#FFB000",
   },
 });
