@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,55 +9,82 @@ import {
   Alert,
   Linking,
   Animated,
-  Easing,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthAPI } from "../lib/api";
 import { useCart } from "../context/CartContext";
+import AuthScreen from "./AuthScreen";
 
 export default function ProfileScreen() {
-  const { setToken } = useCart();
+  const { token, setToken } = useCart();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const headerScale = useRef(new Animated.Value(0.92)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await AuthAPI.me();
-        setUser(res.data.user);
-      } catch (err) {
-        // Token might be missing/invalid
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const fetchProfile = useCallback(async () => {
+    const storedToken = await AsyncStorage.getItem("rj_token");
+    if (!storedToken) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await AuthAPI.me();
+      setUser(res.data.user);
+    } catch (err) {
+      await AsyncStorage.removeItem("rj_token");
+      setToken(null);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [setToken]);
 
   useEffect(() => {
-    if (!loading) {
+    setLoading(true);
+    fetchProfile();
+  }, [fetchProfile, token]);
+
+  useEffect(() => {
+    if (!loading && user) {
       Animated.parallel([
         Animated.spring(headerScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }),
         Animated.timing(headerOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
     }
-  }, [loading]);
+  }, [loading, user]);
 
   const handleSignOut = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await AsyncStorage.removeItem("rj_token");
-          setToken(null);
+    const doLogout = async () => {
+      try {
+        await AsyncStorage.removeItem("rj_token");
+        setToken(null);
+        setUser(null);
+      } catch (e) {
+        // Fallback
+        setUser(null);
+        setToken(null);
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm("Are you sure you want to sign out?")) {
+        doLogout();
+      }
+    } else {
+      Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: doLogout,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const openUrl = (url) => {
@@ -69,9 +96,22 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#F5A623" />
+        <ActivityIndicator size="large" color="#FFB300" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
+    );
+  }
+
+  // If user is not logged in, render the Login Screen
+  if (!user) {
+    return (
+      <AuthScreen
+        onAuthSuccess={async (newToken) => {
+          setToken(newToken);
+          setLoading(true);
+          await fetchProfile();
+        }}
+      />
     );
   }
 
@@ -84,8 +124,8 @@ export default function ProfileScreen() {
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{firstLetter}</Text>
         </View>
-        <Text style={styles.name}>{user?.name || "RJ Store Customer"}</Text>
-        <Text style={styles.email}>{user?.email || "customer@rjstore.com"}</Text>
+        <Text style={styles.name}>{user?.name || "RJ Customer"}</Text>
+        <Text style={styles.email}>{user?.email || "customer@rjshop.com"}</Text>
       </Animated.View>
 
       {/* Account Info Details */}
@@ -133,7 +173,7 @@ export default function ProfileScreen() {
           style={styles.socialBtn}
           onPress={() => openUrl("https://maps.google.com/?q=MG+Road+Mobile+Store")}
         >
-          <Ionicons name="map-outline" size={18} color="#F5A623" />
+          <Ionicons name="map-outline" size={18} color="#FFB300" />
           <Text style={styles.socialText}>Visit Physical Store</Text>
           <Ionicons name="chevron-forward-outline" size={16} color="#9A9AA5" />
         </TouchableOpacity>
@@ -158,8 +198,8 @@ export default function ProfileScreen() {
       </View>
 
       {/* Logout Action */}
-      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-        <Ionicons name="log-out-outline" size={18} color="#FF4D4D" />
+      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
+        <Ionicons name="log-out-outline" size={18} color="#FF3B30" />
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -167,29 +207,29 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0F" },
-  scroll: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, backgroundColor: "#0B0B0F", alignItems: "center", justifyContent: "center" },
+  container: { flex: 1, backgroundColor: "#0D0D12" },
+  scroll: { padding: 16, paddingBottom: 90 },
+  center: { flex: 1, backgroundColor: "#0D0D12", alignItems: "center", justifyContent: "center" },
   loadingText: { marginTop: 10, fontSize: 13, color: "#9A9AA5", fontWeight: "700" },
   
-  profileHeader: { alignItems: "center", backgroundColor: "#17171C", borderRadius: 20, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", paddingVertical: 24, paddingHorizontal: 16, marginBottom: 16 },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F5A623", alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  avatarText: { color: "#0B0B0F", fontSize: 24, fontWeight: "900" },
-  name: { fontSize: 18, fontWeight: "900", color: "#FFFFFF" },
+  profileHeader: { alignItems: "center", backgroundColor: "#1D1D24", borderRadius: 24, borderWidth: 1, borderColor: "rgba(255, 179, 0, 0.2)", paddingVertical: 24, paddingHorizontal: 16, marginBottom: 16 },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#FFB300", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  avatarText: { color: "#0D0D12", fontSize: 24, fontWeight: "900" },
+  name: { fontSize: 18, fontWeight: "900", color: "#F5F5F5" },
   email: { fontSize: 12, color: "#9A9AA5", marginTop: 2 },
 
-  section: { backgroundColor: "#17171C", borderRadius: 20, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", padding: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 11, fontWeight: "900", color: "#F5A623", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 14 },
+  section: { backgroundColor: "#1D1D24", borderRadius: 24, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", padding: 16, marginBottom: 16 },
+  sectionTitle: { fontSize: 11, fontWeight: "900", color: "#FFB300", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 14 },
   
   infoRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
-  iconWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: "#0B0B0F", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", alignItems: "center", justifyContent: "center" },
+  iconWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: "#15151B", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", alignItems: "center", justifyContent: "center" },
   infoText: { flex: 1 },
   infoLabel: { fontSize: 10, color: "#9A9AA5", fontWeight: "800" },
-  infoValue: { fontSize: 13, color: "#FFFFFF", fontWeight: "700", marginTop: 1 },
+  infoValue: { fontSize: 13, color: "#F5F5F5", fontWeight: "700", marginTop: 1 },
 
   socialBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "rgba(255, 255, 255, 0.08)" },
-  socialText: { flex: 1, fontSize: 13, fontWeight: "700", color: "#FFFFFF" },
+  socialText: { flex: 1, fontSize: 13, fontWeight: "700", color: "#F5F5F5" },
   
-  signOutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 46, backgroundColor: "rgba(255, 77, 77, 0.15)", borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: "rgba(255, 77, 77, 0.3)" },
-  signOutText: { color: "#FF4D4D", fontSize: 14, fontWeight: "900" },
+  signOutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 48, backgroundColor: "rgba(255, 59, 48, 0.15)", borderRadius: 24, marginTop: 8, borderWidth: 1, borderColor: "rgba(255, 59, 48, 0.3)" },
+  signOutText: { color: "#FF3B30", fontSize: 14, fontWeight: "900" },
 });
