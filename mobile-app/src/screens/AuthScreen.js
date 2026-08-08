@@ -1,5 +1,5 @@
 // src/screens/AuthScreen.js
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,54 +20,50 @@ import { AuthAPI } from "../lib/api";
 import RJMascot from "../components/RJMascot";
 import logo from "../assets/logo.png";
 
-export default function AuthScreen({ onAuthSuccess, onClose }) {
-  const [isRegister, setIsRegister] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  
+const { width: SCREEN_W } = Dimensions.get("window");
+const CARD_W = Math.min(SCREEN_W - 48, 360);
+
+export default function AuthScreen({ onAuthSuccess }) {
+  const [mode, setMode] = useState("login"); // "login" | "register" | "verify"
+
+  // Fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [currentDevice, setCurrentDevice] = useState("");
   const [otp, setOtp] = useState("");
-  
+
+  // UI states
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
 
+  // Auth states
   const [authLoading, setAuthLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [authError, setAuthError] = useState(null);
-  const [focusedInput, setFocusedInput] = useState(null);
 
-  // Dynamic Mascot State
+  // ── Mascot state ─────────────────────────────────────────────
   const getMascotState = () => {
     if (authSuccess) return "login_success";
     if (authError) return "login_error";
     if (authLoading) return "login_loading";
-    if (focusedInput === "password") {
+    if (focusedInput === "password")
       return showPassword ? "password_visible" : "password_focus";
-    }
-    if (focusedInput === "email") {
+    if (focusedInput === "email")
       return email.length > 0 ? "typing_email" : "email_focus";
-    }
     return "idle";
   };
 
-  const mascotState = getMascotState();
-
-  const handleAuth = async () => {
-    if (!email.trim() || !password.trim()) {
-      setAuthError("Please fill in both email and password.");
-      return;
-    }
-    if (isRegister) {
-      if (!name.trim()) {
-        setAuthError("Please enter your full name.");
-        return;
-      }
+  // ── Auth logic ───────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!email.trim()) { setAuthError("Please enter your email."); return; }
+    if (mode !== "verify" && !password.trim()) { setAuthError("Please enter your password."); return; }
+    if (mode === "register") {
+      if (!name.trim()) { setAuthError("Please enter your full name."); return; }
       if (!phone.trim() || !/^[0-9]{10}$/.test(phone.trim())) {
-        setAuthError("Please enter a valid 10-digit WhatsApp phone number.");
-        return;
+        setAuthError("Enter a valid 10-digit phone number."); return;
       }
     }
 
@@ -74,15 +71,17 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
     setAuthError(null);
 
     try {
-      if (isRegister) {
-        const res = await AuthAPI.register(name.trim(), email.trim(), password, phone.trim(), currentDevice.trim());
+      if (mode === "register") {
+        const res = await AuthAPI.register(
+          name.trim(), email.trim(), password, phone.trim(), currentDevice.trim()
+        );
         setAuthSuccess(true);
         setTimeout(() => {
           setAuthSuccess(false);
-          Alert.alert("Verification Sent", res.data.message || "OTP code sent to your email!");
-          setIsVerifying(true);
+          Alert.alert("OTP Sent", res.data.message || "Check your email for the verification code.");
+          setMode("verify");
         }, 1000);
-      } else {
+      } else if (mode === "login") {
         try {
           const res = await AuthAPI.login(email.trim(), password);
           if (res.data.token) {
@@ -90,411 +89,702 @@ export default function AuthScreen({ onAuthSuccess, onClose }) {
             setAuthSuccess(true);
             setTimeout(() => {
               if (onAuthSuccess) onAuthSuccess(res.data.token);
-            }, 1200);
+            }, 1300);
           }
         } catch (ex) {
           if (ex?.response?.status === 403 && ex?.response?.data?.email) {
             setEmail(ex.response.data.email);
-            Alert.alert("Verification Required", ex.response.data.message || "Please verify your email address to log in.");
-            setIsVerifying(true);
+            Alert.alert("Verify Email", ex.response.data.message || "Please verify your email first.");
+            setMode("verify");
           } else {
             throw ex;
           }
         }
+      } else if (mode === "verify") {
+        if (!otp.trim()) { setAuthError("Enter the 6-digit OTP code."); setAuthLoading(false); return; }
+        const res = await AuthAPI.verifyOTP(email, otp);
+        if (res.data.token) {
+          await AsyncStorage.setItem("rj_token", res.data.token);
+          setAuthSuccess(true);
+          setTimeout(() => {
+            if (onAuthSuccess) onAuthSuccess(res.data.token);
+          }, 1300);
+        }
       }
     } catch (err) {
-      const errMsg = err?.response?.data?.message || "Incorrect password, try again.";
-      setAuthError(errMsg);
+      setAuthError(err?.response?.data?.message || "Incorrect password, try again.");
     } finally {
       setAuthLoading(false);
     }
   };
 
-  const handleVerify = async () => {
-    if (!otp.trim()) {
-      setAuthError("Please enter the 6-digit OTP code.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthError(null);
-    try {
-      const res = await AuthAPI.verifyOTP(email, otp);
-      if (res.data.token) {
-        await AsyncStorage.setItem("rj_token", res.data.token);
-        setAuthSuccess(true);
-        setTimeout(() => {
-          if (onAuthSuccess) onAuthSuccess(res.data.token);
-        }, 1200);
-      }
-    } catch (err) {
-      setAuthError(err?.response?.data?.message || "Invalid verification code.");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  const mascotState = getMascotState();
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={styles.root}
     >
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        
-        {/* Brand Header */}
-        <View style={styles.header}>
-          <View style={styles.badge}>
-            <View style={styles.badgeLogoBox}>
-              <Image source={logo} style={styles.logo} resizeMode="contain" />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Background ambient glows ── */}
+        <View style={styles.glowTopRight} />
+        <View style={styles.glowBottomLeft} />
+
+        <View style={styles.inner}>
+
+          {/* ══════════════════════════════════════
+              HEADER — Brand badge + Mascot + Headings
+              ══════════════════════════════════════ */}
+          <View style={styles.header}>
+
+            {/* Brand pill badge */}
+            <View style={styles.brandBadge}>
+              <View style={styles.badgeLogoBox}>
+                <Image source={logo} style={styles.badgeLogo} resizeMode="contain" />
+              </View>
+              <Text style={styles.brandText}>RJ MOBILE STORE</Text>
             </View>
-            <Text style={styles.brandTitle}>RJ MOBILE STORE</Text>
+
+            {/* Mascot — fixed 130×130 */}
+            <View style={styles.mascotWrap}>
+              <RJMascot state={mascotState} />
+            </View>
+
+            {/* Heading */}
+            <Text style={styles.heading}>
+              {mode === "login" && "Welcome Back!"}
+              {mode === "register" && "Create Account"}
+              {mode === "verify" && "Verify Email"}
+            </Text>
+
+            {/* Subtitle */}
+            <Text style={styles.subheading}>
+              {mode === "login" && "Sign in to continue shopping"}
+              {mode === "register" && "Join RJ Mobile Store for exclusive deals"}
+              {mode === "verify" && `Enter the OTP sent to ${email}`}
+            </Text>
           </View>
 
-          {/* Compact Mascot */}
-          <RJMascot state={mascotState} emailLength={email.length} />
+          {/* ══════════════════════════════════════
+              LOGIN CARD
+              ══════════════════════════════════════ */}
+          <View style={styles.card}>
 
-          <Text style={styles.title}>
-            {isVerifying ? "Verify Email" : isRegister ? "Create Account" : "Welcome Back!"}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isVerifying
-              ? `Enter OTP sent to ${email}`
-              : isRegister
-              ? "Join RJ Mobile Store for tech deals"
-              : "Sign in to continue shopping"}
-          </Text>
-        </View>
-
-        {/* Login Card (Pixel-Accurate to Reference Screenshot) */}
-        <View style={styles.card}>
-          
-          {authSuccess ? (
-            <View style={styles.successContainer}>
-              <View style={styles.successCircle}>
-                <Ionicons name="checkmark" size={32} color="#0D0D12" />
-              </View>
-              <Text style={styles.successTitle}>Login Successful!</Text>
-              <Text style={styles.successSub}>Redirecting...</Text>
-            </View>
-          ) : isVerifying ? (
-            <View style={{ gap: 12 }}>
-              <Text style={styles.inputLabel}>6-DIGIT OTP VERIFICATION CODE</Text>
-              <TextInput
-                style={[styles.input, { letterSpacing: 6, textAlign: "center", fontSize: 20, fontWeight: "bold", color: "#FFB000" }]}
-                placeholder="123456"
-                placeholderTextColor="#666670"
-                value={otp}
-                onChangeText={(val) => {
-                  setOtp(val);
-                  setAuthError(null);
-                }}
-                keyboardType="number-pad"
-                maxLength={6}
-              />
-              <TouchableOpacity style={styles.btn} onPress={handleVerify} disabled={authLoading}>
-                {authLoading ? (
-                  <ActivityIndicator color="#000000" />
-                ) : (
-                  <Text style={styles.btnText}>VERIFY & LOG IN →</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={{ gap: 11 }}>
-              {isRegister && (
-                <>
-                  <View>
-                    <Text style={styles.inputLabel}>Full Name</Text>
-                    <View style={[styles.inputWrap, focusedInput === "name" && styles.inputWrapFocused]}>
-                      <Ionicons name="person-outline" size={16} color="#85858D" />
-                      <TextInput
-                        style={styles.inputText}
-                        placeholder="Rahul Sharma"
-                        placeholderTextColor="#666670"
-                        value={name}
-                        onFocus={() => setFocusedInput("name")}
-                        onBlur={() => setFocusedInput(null)}
-                        onChangeText={setName}
-                      />
-                    </View>
-                  </View>
-
-                  <View>
-                    <Text style={styles.inputLabel}>WhatsApp Number</Text>
-                    <View style={[styles.inputWrap, focusedInput === "phone" && styles.inputWrapFocused]}>
-                      <Text style={styles.prefix}>+91</Text>
-                      <TextInput
-                        style={styles.inputText}
-                        placeholder="10-digit number"
-                        placeholderTextColor="#666670"
-                        value={phone}
-                        onFocus={() => setFocusedInput("phone")}
-                        onBlur={() => setFocusedInput(null)}
-                        onChangeText={(val) => setPhone(val.replace(/\D/g, ""))}
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                      />
-                    </View>
-                  </View>
-                </>
-              )}
-
-              {/* Email Address */}
-              <View>
-                <Text style={styles.inputLabel}>Email Address</Text>
-                <View
-                  style={[
-                    styles.inputWrap,
-                    focusedInput === "email" && styles.inputWrapFocused,
-                  ]}
-                >
-                  <View style={styles.iconBox}>
-                    <Ionicons name="mail" size={15} color="#FFB000" />
-                  </View>
-                  <TextInput
-                    style={styles.inputText}
-                    placeholder="customer@rjshop.com"
-                    placeholderTextColor="#666670"
-                    value={email}
-                    onFocus={() => setFocusedInput("email")}
-                    onBlur={() => setFocusedInput(null)}
-                    onChangeText={(val) => {
-                      setEmail(val);
-                      setAuthError(null);
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+            {/* ── SUCCESS STATE ── */}
+            {authSuccess ? (
+              <View style={styles.successBox}>
+                <View style={styles.successCircle}>
+                  <Ionicons name="checkmark" size={30} color="#0D0D12" />
                 </View>
+                <Text style={styles.successTitle}>Login Successful!</Text>
+                <Text style={styles.successSub}>Redirecting...</Text>
               </View>
+            ) : (
 
-              {/* Password */}
-              <View>
-                <Text style={styles.inputLabel}>Password</Text>
-                <View
-                  style={[
-                    styles.inputWrap,
-                    authError && { borderColor: "#FF3B30" },
-                    focusedInput === "password" && styles.inputWrapFocused,
-                  ]}
-                >
-                  <View style={[styles.iconBox, authError && { backgroundColor: "rgba(255,59,48,0.15)" }]}>
-                    <Ionicons name="lock-closed" size={15} color={authError ? "#FF3B30" : "#FFB000"} />
-                  </View>
-                  <TextInput
-                    style={styles.inputText}
-                    placeholder="••••••••••••"
-                    placeholderTextColor="#666670"
-                    value={password}
-                    onFocus={() => setFocusedInput("password")}
-                    onBlur={() => setFocusedInput(null)}
-                    onChangeText={(val) => {
-                      setPassword(val);
-                      setAuthError(null);
-                    }}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    accessibilityLabel="Toggle password visibility"
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      size={18}
-                      color="#85858D"
+              <View style={styles.form}>
+
+                {/* ── Register extra fields ── */}
+                {mode === "register" && (
+                  <>
+                    <InputField
+                      label="Full Name"
+                      icon="person-outline"
+                      placeholder="Rahul Sharma"
+                      value={name}
+                      onChangeText={(v) => { setName(v); setAuthError(null); }}
+                      focused={focusedInput === "name"}
+                      onFocus={() => setFocusedInput("name")}
+                      onBlur={() => setFocusedInput(null)}
                     />
-                  </TouchableOpacity>
-                </View>
-
-                {authError && (
-                  <View style={styles.errorRow}>
-                    <Ionicons name="alert-circle" size={14} color="#FF3B30" />
-                    <Text style={styles.errorText}>{authError}</Text>
-                  </View>
+                    <InputField
+                      label="WhatsApp Number"
+                      prefixText="+91"
+                      placeholder="10-digit number"
+                      value={phone}
+                      onChangeText={(v) => { setPhone(v.replace(/\D/g, "")); setAuthError(null); }}
+                      focused={focusedInput === "phone"}
+                      onFocus={() => setFocusedInput("phone")}
+                      onBlur={() => setFocusedInput(null)}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                    />
+                    <InputField
+                      label="Current Phone Model (Optional)"
+                      icon="phone-portrait-outline"
+                      placeholder="iPhone 14, OnePlus 9..."
+                      value={currentDevice}
+                      onChangeText={setCurrentDevice}
+                      focused={focusedInput === "device"}
+                      onFocus={() => setFocusedInput("device")}
+                      onBlur={() => setFocusedInput(null)}
+                    />
+                  </>
                 )}
-              </View>
 
-              {/* Remember Me & Forgot Password Row */}
-              {!isRegister && (
-                <View style={styles.rowBetween}>
-                  <TouchableOpacity
-                    style={styles.rememberRow}
-                    onPress={() => setRememberMe(!rememberMe)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                      {rememberMe && <Ionicons name="checkmark" size={12} color="#000000" />}
+                {/* ── OTP field ── */}
+                {mode === "verify" && (
+                  <InputField
+                    label="6-Digit OTP Code"
+                    icon="key-outline"
+                    placeholder="1  2  3  4  5  6"
+                    value={otp}
+                    onChangeText={(v) => { setOtp(v); setAuthError(null); }}
+                    focused={focusedInput === "otp"}
+                    onFocus={() => setFocusedInput("otp")}
+                    onBlur={() => setFocusedInput(null)}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    centered
+                  />
+                )}
+
+                {/* ── Email ── */}
+                {mode !== "verify" && (
+                  <>
+                    <InputField
+                      label="Email Address"
+                      icon="mail"
+                      placeholder="customer@rjshop.com"
+                      value={email}
+                      onChangeText={(v) => { setEmail(v); setAuthError(null); }}
+                      focused={focusedInput === "email"}
+                      onFocus={() => setFocusedInput("email")}
+                      onBlur={() => setFocusedInput(null)}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+
+                    {/* ── Password ── */}
+                    <View>
+                      <Text style={styles.label}>Password</Text>
+                      <View
+                        style={[
+                          styles.inputWrap,
+                          focusedInput === "password" && styles.inputFocused,
+                          authError && styles.inputError,
+                        ]}
+                      >
+                        <View style={[styles.iconBox, authError && styles.iconBoxError]}>
+                          <Ionicons
+                            name="lock-closed"
+                            size={15}
+                            color={authError ? "#FF3B30" : "#FFB000"}
+                          />
+                        </View>
+                        <TextInput
+                          style={styles.inputText}
+                          placeholder="••••••••••••"
+                          placeholderTextColor="#555560"
+                          value={password}
+                          onChangeText={(v) => { setPassword(v); setAuthError(null); }}
+                          onFocus={() => setFocusedInput("password")}
+                          onBlur={() => setFocusedInput(null)}
+                          secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          style={styles.eyeBtn}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons
+                            name={showPassword ? "eye-off-outline" : "eye-outline"}
+                            size={18}
+                            color="#85858D"
+                          />
+                        </TouchableOpacity>
+                      </View>
+
+                      {authError && (
+                        <View style={styles.errorRow}>
+                          <Ionicons name="alert-circle" size={13} color="#FF3B30" />
+                          <Text style={styles.errorText}>{authError}</Text>
+                        </View>
+                      )}
                     </View>
-                    <Text style={styles.rememberText}>Remember Me</Text>
-                  </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => Alert.alert("Reset Password", "Password reset link sent to your registered email.")}>
-                    <Text style={styles.forgotText}>Forgot Password?</Text>
-                  </TouchableOpacity>
+                    {/* ── Remember Me + Forgot row ── */}
+                    {mode === "login" && (
+                      <View style={styles.rowBetween}>
+                        <TouchableOpacity
+                          style={styles.rememberRow}
+                          onPress={() => setRememberMe(!rememberMe)}
+                          activeOpacity={0.8}
+                        >
+                          <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                            {rememberMe && (
+                              <Ionicons name="checkmark" size={11} color="#000" />
+                            )}
+                          </View>
+                          <Text style={styles.rememberText}>Remember Me</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() =>
+                            Alert.alert(
+                              "Forgot Password",
+                              "Password reset link will be sent to your email."
+                            )
+                          }
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.forgotText}>Forgot Password?</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
+                )}
+
+                {/* ── Sign In Button ── */}
+                <TouchableOpacity
+                  style={[styles.signInBtn, authLoading && { opacity: 0.8 }]}
+                  onPress={handleSubmit}
+                  disabled={authLoading}
+                  activeOpacity={0.85}
+                >
+                  {authLoading ? (
+                    <ActivityIndicator color="#000000" size="small" />
+                  ) : (
+                    <View style={styles.signInRow}>
+                      <Text style={styles.signInText}>
+                        {mode === "login" && "Sign In"}
+                        {mode === "register" && "Create Account"}
+                        {mode === "verify" && "Verify & Log In"}
+                      </Text>
+                      <View style={styles.arrowCircle}>
+                        <Ionicons name="arrow-forward" size={14} color="#000000" />
+                      </View>
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                {/* ── OR Divider ── */}
+                <View style={styles.divider}>
+                  <View style={styles.divLine} />
+                  <Text style={styles.divText}>OR</Text>
+                  <View style={styles.divLine} />
                 </View>
-              )}
 
-              {/* Primary CTA Button */}
-              <TouchableOpacity
-                style={styles.btn}
-                onPress={handleAuth}
-                disabled={authLoading}
-                activeOpacity={0.85}
-              >
-                {authLoading ? (
-                  <ActivityIndicator color="#000000" />
-                ) : (
-                  <View style={styles.btnRow}>
-                    <Text style={styles.btnText}>
-                      {isRegister ? "Create Account" : "Sign In"}
+                {/* ── Toggle mode ── */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (mode === "login") setMode("register");
+                    else setMode("login");
+                    setAuthError(null);
+                  }}
+                  activeOpacity={0.8}
+                  style={styles.toggleRow}
+                >
+                  <Text style={styles.toggleBase}>
+                    {mode === "login"
+                      ? "New Customer?  "
+                      : "Already a member?  "}
+                    <Text style={styles.toggleAccent}>
+                      {mode === "login" ? "Create Account →" : "Sign In →"}
                     </Text>
-                    <View style={styles.arrowBadge}>
-                      <Ionicons name="arrow-forward" size={14} color="#000000" />
-                    </View>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* OR Divider */}
-              <View style={styles.dividerRow}>
-                <View style={styles.line} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.line} />
-              </View>
-
-              {/* Toggle Register / Login */}
-              <TouchableOpacity
-                style={styles.toggleBtn}
-                onPress={() => {
-                  setIsRegister(!isRegister);
-                  setAuthError(null);
-                }}
-              >
-                <Text style={styles.toggleSub}>
-                  {isRegister ? "Already have an account? " : "New Customer? "}
-                  <Text style={styles.toggleHighlight}>
-                    {isRegister ? "Sign In →" : "Create Account →"}
                   </Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+                </TouchableOpacity>
+
+              </View>
+            )}
+          </View>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+/* ─── Reusable InputField ──────────────────────────────────── */
+function InputField({
+  label,
+  icon,
+  prefixText,
+  placeholder,
+  value,
+  onChangeText,
+  focused,
+  onFocus,
+  onBlur,
+  keyboardType = "default",
+  autoCapitalize = "none",
+  maxLength,
+  centered = false,
+  secureTextEntry = false,
+}) {
+  return (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <View style={[styles.inputWrap, focused && styles.inputFocused]}>
+        {icon ? (
+          <View style={styles.iconBox}>
+            <Ionicons name={icon} size={15} color="#FFB000" />
+          </View>
+        ) : null}
+        {prefixText ? (
+          <Text style={styles.prefixText}>{prefixText}</Text>
+        ) : null}
+        <TextInput
+          style={[styles.inputText, centered && { textAlign: "center", letterSpacing: 6, fontSize: 16 }]}
+          placeholder={placeholder}
+          placeholderTextColor="#555560"
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          maxLength={maxLength}
+          secureTextEntry={secureTextEntry}
+        />
+      </View>
+    </View>
+  );
+}
+
+/* ─── Styles ───────────────────────────────────────────────── */
+const GOLD = "#FFB000";
+const BG = "#0D0D12";
+const CARD_BG = "#18181E";
+const INPUT_BG = "#141419";
+const BORDER = "#2A2A31";
+const TEXT = "#F5F5F5";
+const MUTED = "#85858D";
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0D12" },
-  scroll: { flexGrow: 1, justifyContent: "center", padding: 16, paddingVertical: 24 },
-  
-  header: { alignItems: "center", marginBottom: 12 },
-  badge: {
+  root: {
+    flex: 1,
+    backgroundColor: BG,
+  },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 0,
+  },
+
+  // Ambient glow blobs
+  glowTopRight: {
+    position: "absolute",
+    top: -60,
+    right: -60,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255,176,0,0.05)",
+  },
+  glowBottomLeft: {
+    position: "absolute",
+    bottom: -60,
+    left: -60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(255,160,0,0.04)",
+  },
+
+  inner: {
+    width: CARD_W,
+    alignItems: "center",
+  },
+
+  // Header
+  header: {
+    alignItems: "center",
+    marginBottom: 14,
+    width: "100%",
+  },
+
+  // Brand badge
+  brandBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
     backgroundColor: "#141419",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#2A2A31",
-    marginBottom: 2,
+    borderColor: BORDER,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 4,
   },
   badgeLogoBox: {
     width: 20,
     height: 20,
     borderRadius: 6,
-    backgroundColor: "rgba(255, 176, 0, 0.15)",
+    backgroundColor: "rgba(255,176,0,0.12)",
     borderWidth: 1,
-    borderColor: "#FFB000",
+    borderColor: GOLD,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+  },
+  badgeLogo: { width: 12, height: 12 },
+  brandText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: GOLD,
+    letterSpacing: 1.2,
+  },
+
+  // Mascot container
+  mascotWrap: {
+    width: 130,
+    height: 130,
     alignItems: "center",
     justifyContent: "center",
   },
-  logo: { width: 12, height: 12 },
-  brandTitle: { fontSize: 10, fontWeight: "900", color: "#FFB000", letterSpacing: 1 },
-  
-  title: { fontSize: 24, fontWeight: "900", color: "#F5F5F5", marginTop: 2 },
-  subtitle: { fontSize: 12, color: "#85858D", fontWeight: "600", marginTop: 2 },
-  
-  card: {
-    backgroundColor: "#18181E",
-    padding: 20,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255, 176, 0, 0.35)",
-    elevation: 8,
-    shadowColor: "#FFB000",
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
+
+  // Headings
+  heading: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: TEXT,
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 28,
+  },
+  subheading: {
+    fontSize: 12,
+    color: MUTED,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 4,
   },
 
-  successContainer: { paddingVertical: 20, alignItems: "center", justifyContent: "center", gap: 10 },
-  successCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#2ECC71", alignItems: "center", justifyContent: "center" },
-  successTitle: { fontSize: 18, fontWeight: "900", color: "#F5F5F5" },
-  successSub: { fontSize: 12, color: "#85858D", fontWeight: "600" },
-  
-  errorRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-  errorText: { fontSize: 11, color: "#FF3B30", fontWeight: "700" },
+  // Card
+  card: {
+    width: "100%",
+    backgroundColor: CARD_BG,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,176,0,0.4)",
+    padding: 20,
+    shadowColor: GOLD,
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
 
-  inputLabel: { fontSize: 11, fontWeight: "700", color: "#85858D", marginBottom: 4 },
+  form: {
+    gap: 12,
+  },
+
+  // Success
+  successBox: {
+    paddingVertical: 24,
+    alignItems: "center",
+    gap: 10,
+  },
+  successCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#22C55E",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#22C55E",
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+  successTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: TEXT,
+  },
+  successSub: {
+    fontSize: 12,
+    color: MUTED,
+    fontWeight: "500",
+  },
+
+  // Input
+  label: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: MUTED,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    marginBottom: 5,
+  },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
     height: 46,
-    backgroundColor: "#141419",
-    borderRadius: 14,
+    backgroundColor: INPUT_BG,
+    borderRadius: 13,
     borderWidth: 1,
-    borderColor: "#2A2A31",
-    paddingHorizontal: 8,
-    gap: 8,
+    borderColor: BORDER,
+    overflow: "hidden",
   },
-  inputWrapFocused: {
-    borderColor: "#FFB000",
-    shadowColor: "#FFB000",
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+  inputFocused: {
+    borderColor: GOLD,
+    shadowColor: GOLD,
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
+  },
+  inputError: {
+    borderColor: "#FF3B30",
+    shadowColor: "#FF3B30",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 176, 0, 0.15)",
+    width: 38,
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,176,0,0.10)",
+    marginRight: 2,
+  },
+  iconBoxError: {
+    backgroundColor: "rgba(255,59,48,0.12)",
+  },
+  prefixText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: GOLD,
+    paddingHorizontal: 10,
+    borderRightWidth: 1,
+    borderRightColor: BORDER,
+  },
+  inputText: {
+    flex: 1,
+    color: TEXT,
+    fontSize: 13,
+    fontWeight: "600",
+    paddingHorizontal: 8,
+    height: "100%",
+  },
+  eyeBtn: {
+    paddingHorizontal: 12,
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
-  inputText: { flex: 1, color: "#F5F5F5", fontSize: 13, fontWeight: "600", paddingHorizontal: 4 },
-  prefix: { color: "#FFB000", fontSize: 12, fontWeight: "900", paddingRight: 6, borderRightWidth: 1, borderRightColor: "#2A2A31" },
 
-  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 2 },
-  rememberRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: "#2A2A31", backgroundColor: "#141419", alignItems: "center", justifyContent: "center" },
-  checkboxChecked: { backgroundColor: "#FFB000", borderColor: "#FFB000" },
-  rememberText: { fontSize: 12, color: "#F5F5F5", fontWeight: "600" },
-  forgotText: { fontSize: 12, color: "#FFB000", fontWeight: "700" },
+  // Error
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  errorText: {
+    fontSize: 11,
+    color: "#FF3B30",
+    fontWeight: "600",
+    flex: 1,
+  },
 
-  btn: {
+  // Remember + Forgot
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  checkbox: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: BORDER,
+    backgroundColor: INPUT_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+  },
+  rememberText: {
+    fontSize: 12,
+    color: TEXT,
+    fontWeight: "600",
+  },
+  forgotText: {
+    fontSize: 12,
+    color: GOLD,
+    fontWeight: "700",
+  },
+
+  // Sign In Button
+  signInBtn: {
     height: 48,
-    backgroundColor: "#FFB000",
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
-    shadowColor: "#FFB000",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 4,
+    backgroundColor: GOLD,
+    shadowColor: GOLD,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
+    marginTop: 4,
   },
-  btnRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  btnText: { color: "#000000", fontSize: 14, fontWeight: "900" },
-  arrowBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: "rgba(0, 0, 0, 0.15)", alignItems: "center", justifyContent: "center" },
+  signInRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  signInText: {
+    color: "#000000",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0.3,
+  },
+  arrowCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 12 },
-  line: { flex: 1, height: 1, backgroundColor: "#2A2A31" },
-  dividerText: { marginHorizontal: 10, fontSize: 11, fontWeight: "700", color: "#85858D" },
+  // OR Divider
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  divLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BORDER,
+  },
+  divText: {
+    marginHorizontal: 10,
+    fontSize: 11,
+    fontWeight: "700",
+    color: MUTED,
+  },
 
-  toggleBtn: { alignItems: "center" },
-  toggleSub: { fontSize: 12, color: "#F5F5F5", fontWeight: "600" },
-  toggleHighlight: { color: "#FFB000", fontWeight: "900" },
+  // Toggle
+  toggleRow: {
+    alignItems: "center",
+  },
+  toggleBase: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: TEXT,
+    textAlign: "center",
+  },
+  toggleAccent: {
+    color: GOLD,
+    fontWeight: "900",
+  },
 });
