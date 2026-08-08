@@ -22,27 +22,51 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
   const eyeOffset = Math.min(8, Math.max(-8, (emailLength - 8) * 0.7));
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none my-1">
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", userSelect: "none" }}>
       {/* Golden Radial Glow Background Ring */}
       <div
-        className={`absolute w-36 h-36 rounded-full bg-[#FFB000]/15 blur-lg pointer-events-none transition-all duration-500 ${
-          state === "login_success"
-            ? "bg-[#22C55E]/25 shadow-[0_0_50px_rgba(34,197,94,0.4)]"
-            : state === "login_error"
-            ? "bg-[#FF3B30]/20 shadow-[0_0_40px_rgba(255,59,48,0.3)]"
-            : "shadow-[0_0_35px_rgba(255,176,0,0.25)]"
-        }`}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          borderRadius: "50%",
+          background:
+            state === "login_success"
+              ? "rgba(34,197,94,0.18)"
+              : state === "login_error"
+              ? "rgba(255,59,48,0.15)"
+              : "rgba(255,176,0,0.12)",
+          filter: "blur(14px)",
+          pointerEvents: "none",
+          transition: "background 0.4s",
+        }}
       />
 
       {/* Outer Golden Aura Circle Frame */}
       <div
-        className={`relative grid place-items-center w-28 h-28 rounded-full border border-[#FFB000]/40 bg-[#18181E]/90 backdrop-blur-md shadow-[0_0_25px_rgba(255,176,0,0.18)] transition-all duration-300 ${
-          state === "login_success"
-            ? "border-[#22C55E] shadow-[0_0_35px_rgba(34,197,94,0.35)]"
-            : state === "login_error"
-            ? "border-[#FF3B30] shadow-[0_0_30px_rgba(255,59,48,0.3)] animate-shake"
-            : ""
-        }`}
+        style={{
+          position: "relative",
+          display: "grid",
+          placeItems: "center",
+          width: "100%",
+          height: "100%",
+          borderRadius: "50%",
+          border:
+            state === "login_success"
+              ? "1.5px solid rgba(34,197,94,0.6)"
+              : state === "login_error"
+              ? "1.5px solid rgba(255,59,48,0.5)"
+              : "1.5px solid rgba(255,176,0,0.35)",
+          background: "rgba(24,24,30,0.88)",
+          boxShadow:
+            state === "login_success"
+              ? "0 0 24px rgba(34,197,94,0.3)"
+              : state === "login_error"
+              ? "0 0 22px rgba(255,59,48,0.25)"
+              : "0 0 18px rgba(255,176,0,0.15)",
+          transition: "all 0.3s",
+        }}
+        className={state === "login_error" ? "animate-shake" : ""}
       >
         {/* Subtle Background Particles */}
         <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
@@ -50,17 +74,18 @@ export default function RJMascot({ state = "idle", emailLength = 0 }) {
           <span className="absolute bottom-3 right-4 w-1 h-1 rounded-full bg-[#FF9900]/80 animate-pulse" />
         </div>
 
-        {/* Mascot Robot SVG */}
+        {/* Mascot Robot SVG — fills the circle */}
         <div
-          className={`relative w-22 h-22 transition-transform duration-300 ${
+          style={{ position: "relative", width: "80%", height: "80%" }}
+          className={
             state === "idle"
               ? "animate-float"
               : state === "login_error"
               ? "animate-shake"
               : state === "login_success"
-              ? "scale-105"
+              ? ""
               : ""
-          }`}
+          }
         >
           <svg viewBox="0 0 160 160" className="w-full h-full drop-shadow-lg">
             <defs>
