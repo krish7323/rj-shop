@@ -188,7 +188,7 @@ function Storefront() {
   }
 
   return (
-    <div id="top" className="min-h-screen bg-slate-100 scroll-smooth">
+    <div id="top" className="min-h-screen bg-[#0B0B0F] scroll-smooth">
       <Navbar
         search={search}
         onSearch={setSearch}
